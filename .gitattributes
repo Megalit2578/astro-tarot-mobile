@@ -1,0 +1,24 @@
+# Chuan hoa ket thuc dong.
+#
+# Khong co file nay thi moi lan commit tren Windows deu in mot dong canh bao
+# "LF will be replaced by CRLF" cho tung tep — nhieu toi muc che mat ket qua
+# that cua lenh commit.
+#
+# text=auto: git luu LF trong kho, tra ve theo he dieu hanh khi checkout.
+* text=auto
+
+# Script shell phai la LF ngay ca tren Windows, neu khong Gradle wrapper va
+# cac script CI se chet voi loi kho doan.
+*.sh text eol=lf
+gradlew text eol=lf
+
+# Nhi phan: dung dung vao.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.jar binary
+*.keystore binary
+*.jks binary
