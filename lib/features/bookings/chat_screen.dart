@@ -7,6 +7,8 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import 'booking.dart';
+import 'call_controller.dart';
+import 'call_panel.dart';
 import 'message.dart';
 
 /// Hộp trao đổi của một buổi tư vấn.
@@ -34,6 +36,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _dangGui = false;
   String? _loi;
   VoidCallback? _huyNghe;
+  CallController? _goi;
 
   String get _bookingId => widget.booking.id;
 
@@ -42,10 +45,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     _tai();
     _nghe();
+    _dungBoGoi();
+  }
+
+  Future<void> _dungBoGoi() async {
+    final c = CallController(
+      bookingId: _bookingId,
+      api: ref.read(apiClientProvider),
+      realtime: ref.read(realtimeProvider),
+    );
+    await c.khoiTaoRenderer();
+    if (!mounted) {
+      c.dispose();
+      return;
+    }
+    setState(() => _goi = c);
   }
 
   @override
   void dispose() {
+    // Dọn cuộc gọi TRƯỚC mọi thứ khác: rời màn hình mà quên tắt là đèn camera
+    // vẫn sáng, và người dùng tưởng bị quay lén.
+    _goi?.dispose();
     _huyNghe?.call();
     _o.dispose();
     _cuon.dispose();
@@ -186,9 +207,48 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
+        actions: [
+          if (widget.booking.chatMo && _goi != null) ...[
+            IconButton(
+              onPressed: () => _goi!.goi(video: false),
+              tooltip: 'Gọi thoại',
+              icon: const Icon(Icons.call, size: 20),
+            ),
+            IconButton(
+              onPressed: () => _goi!.goi(video: true),
+              tooltip: 'Gọi video',
+              icon: const Icon(Icons.videocam, size: 20),
+            ),
+          ],
+        ],
       ),
       body: Column(
         children: [
+          if (_goi != null)
+            ListenableBuilder(
+              listenable: _goi!,
+              builder: (_, _) => Column(
+                children: [
+                  CallPanel(c: _goi!),
+                  // Cảnh báo trước khi gọi, không phải sau khi thất bại.
+                  // Dự án chạy chỉ STUN nên hai máy cùng sau NAT đối xứng sẽ
+                  // không nối được — để người dùng biết trước còn hơn ngồi
+                  // nhìn "đang kết nối" cho tới khi hết giờ.
+                  if (!_goi!.coTurn && _goi!.trangThai == TrangThaiGoi.rong)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      color: const Color(0x18E0B341),
+                      child: const Text(
+                        'Cuộc gọi chỉ chạy khi hai bên cùng mạng wifi thông '
+                        'thường. Dùng 4G có thể không nối được — nhắn tin vẫn '
+                        'bình thường.',
+                        style: TextStyle(fontSize: 10.5, height: 1.5),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           if (!widget.booking.chatMo)
             Container(
               width: double.infinity,
