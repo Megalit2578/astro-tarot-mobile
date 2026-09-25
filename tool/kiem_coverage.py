@@ -7,6 +7,14 @@ nên CI xanh ở đây nghĩa là Sonar cũng qua ngưỡng.
 """
 import sys
 
+# Windows mac dinh dung cp1252 cho stdout, va dong ket qua co chu "dong" kem
+# dau. Khong dat lai encoding thi script chet bang UnicodeEncodeError NGAY SAU
+# khi da tinh xong — tuc la mat ket qua vi mot ly do chang lien quan gi toi
+# coverage. Tren CI (Ubuntu, UTF-8) khong dinh, nen loi nay chi lo ra o may dev,
+# va lo ra dung luc nguoi ta muon xem con so truoc khi day code.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 nguong = float(sys.argv[1]) if len(sys.argv) > 1 else 80.0
 tong = trung = 0
 for dong in open("coverage/lcov.info", encoding="utf-8"):
