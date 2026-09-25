@@ -83,6 +83,12 @@ class SupportRepository {
         '${Endpoints.support}/tickets/$id/messages',
         body: {'body': noiDung.trim()},
       );
+
+  /// Nhân viên chuyển trạng thái phiếu (PENDING / RESOLVED / CLOSED).
+  Future<void> doiTrangThai(String id, String trangThai) => _api.patch(
+        '${Endpoints.support}/tickets/$id/status',
+        body: {'status': trangThai},
+      );
 }
 
 final supportRepositoryProvider =
@@ -97,11 +103,19 @@ final ticketChiTietProvider =
   (ref, id) => ref.watch(supportRepositoryProvider).chiTiet(id),
 );
 
-/// Nhãn tiếng Việt cho trạng thái phiếu.
-String nhanTrangThaiTicket(String s) => switch (s.toUpperCase()) {
-      'OPEN' || 'PENDING' => 'Đang chờ',
-      'WAITING_CUSTOMER' || 'WAITING' => 'Chờ bạn phản hồi',
-      'RESOLVED' || 'DONE' => 'Đã giải quyết',
+/// Nhãn tiếng Việt cho trạng thái phiếu, khớp TICKET_STATUS_LABEL của web.
+///
+/// PENDING nghĩa là **đang chờ khách trả lời**, không phải "đang chờ xử lý"
+/// — bản đầu gộp nó với OPEN nên khách không biết là tới lượt mình. Nhìn từ
+/// phía khách thì nói "chờ bạn", từ phía nhân viên thì nói "chờ khách".
+String nhanTrangThaiTicket(String s, {bool nhanVien = false}) =>
+    switch (s.toUpperCase()) {
+      'OPEN' => 'Đang chờ',
+      'PENDING' => nhanVien ? 'Chờ khách phản hồi' : 'Chờ bạn phản hồi',
+      'RESOLVED' => 'Đã giải quyết',
       'CLOSED' => 'Đã đóng',
       _ => s,
     };
+
+/// Trạng thái nhân viên được chuyển sang.
+const trangThaiNhanVienChuyen = ['PENDING', 'RESOLVED', 'CLOSED'];

@@ -5,10 +5,14 @@ import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
+import '../astrology/astrology_screen.dart';
 import '../blog/blog_screen.dart';
+import '../feedback/feedback_screen.dart';
 import '../profile/profile_screen.dart';
+import '../readerapply/reader_apply_screen.dart';
 import '../shop/shop_screen.dart';
 import '../support/support_screen.dart';
+import '../tarot/tarot_history_screen.dart';
 
 /// Tài khoản, và cũng là cửa vào khu Quản trị.
 ///
@@ -107,6 +111,30 @@ class AccountScreen extends ConsumerWidget {
           ),
 
           _Muc(
+            icon: Icons.auto_awesome_outlined,
+            nhan: 'Bản đồ sao',
+            phu: 'Ngày giờ nơi sinh — AI đọc bài dựa trên hồ sơ chính',
+            onTap: () => _mo(context, const AstrologyScreen()),
+          ),
+
+          _Muc(
+            icon: Icons.history,
+            nhan: 'Lịch sử trải bài',
+            phu: 'Xem lại lời giải AI đã lưu',
+            onTap: () => _mo(context, const TarotHistoryScreen()),
+          ),
+
+          // Nhân sự đã có hồ sơ Reader thì mục này thừa; người dùng thường
+          // thì đây là cửa duy nhất để trở thành Reader trên điện thoại.
+          if (u.co('READER_APPLY') && !u.co('READER_MANAGE_PROFILE'))
+            _Muc(
+              icon: Icons.workspace_premium_outlined,
+              nhan: 'Đăng ký làm Reader',
+              phu: 'Nộp đơn hoặc xem trạng thái đơn',
+              onTap: () => _mo(context, const ReaderApplyScreen()),
+            ),
+
+          _Muc(
             icon: Icons.article_outlined,
             nhan: 'Bài viết',
             phu: 'Kiến thức Tarot và chiêm tinh',
@@ -126,6 +154,14 @@ class AccountScreen extends ConsumerWidget {
             phu: 'Gửi yêu cầu và xem phản hồi',
             onTap: () => _mo(context, const SupportScreen()),
           ),
+
+          if (ref.watch(tinhTrangGopYProvider).asData?.value?.daGui != true)
+            _Muc(
+              icon: Icons.rate_review_outlined,
+              nhan: 'Góp ý',
+              phu: 'Khảo sát ngắn — ASTROTAROT có giúp bạn không?',
+              onTap: () => _mo(context, const FeedbackScreen()),
+            ),
 
           const SizedBox(height: 22),
           _HopQuyen(quyen: u.permissions),

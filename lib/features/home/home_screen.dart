@@ -8,7 +8,10 @@ import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
 import '../notifications/notifications_screen.dart';
+import '../astrology/astrology_screen.dart';
+import '../tarot/tarot_history_screen.dart';
 import '../tarot/tarot_screen.dart';
+import 'daily_card.dart';
 import 'home_repository.dart';
 
 /// Trang chủ.
@@ -82,25 +85,57 @@ class HomeScreen extends ConsumerWidget {
               for (final b in sapToi.take(2)) _TheSapToi(booking: b),
             ],
 
+            const SizedBox(height: 18),
+            const RutBaiHangNgay(),
+
             ...switch (readings.asData?.value) {
               final ds? when ds.isNotEmpty => [
                   const SizedBox(height: 24),
-                  const _Nhan('Lần trải bài gần đây'),
-                  const SizedBox(height: 10),
-                  for (final r in ds) _TheTraiBai(lan: r),
+                  Row(
+                    children: [
+                      const Expanded(child: _Nhan('Lần trải bài gần đây')),
+                      TextButton(
+                        onPressed: () => _mo(context, const TarotHistoryScreen()),
+                        style: TextButton.styleFrom(foregroundColor: Mau.vang),
+                        child: const Text('Xem tất cả',
+                            style: TextStyle(fontSize: 12.5)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  for (final r in ds)
+                    _TheTraiBai(
+                      lan: r,
+                      onTap: () => _mo(context, const TarotHistoryScreen()),
+                    ),
                 ],
               _ => const <Widget>[],
             },
 
             const SizedBox(height: 24),
-            const _Nhan('Bản đồ sao của bạn'),
-            const SizedBox(height: 10),
-            _TheBanDoSao(duLieu: banDoSao.asData?.value),
+            Row(
+              children: [
+                const Expanded(child: _Nhan('Bản đồ sao của bạn')),
+                TextButton(
+                  onPressed: () => _mo(context, const AstrologyScreen()),
+                  style: TextButton.styleFrom(foregroundColor: Mau.vang),
+                  child: const Text('Quản lý', style: TextStyle(fontSize: 12.5)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            _TheBanDoSao(
+              duLieu: banDoSao.asData?.value,
+              khai: () => _mo(context, const AstrologyScreen()),
+            ),
           ],
         ),
       ),
     );
   }
+
+  static void _mo(BuildContext context, Widget man) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => man));
 
   /// Buổi "sắp tới": chưa huỷ, chưa xong, và chưa quá giờ kết thúc.
   ///
@@ -288,14 +323,18 @@ class _TheSapToi extends StatelessWidget {
 }
 
 class _TheTraiBai extends StatelessWidget {
-  const _TheTraiBai({required this.lan});
+  const _TheTraiBai({required this.lan, required this.onTap});
   final LanTraiBai lan;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
@@ -322,14 +361,16 @@ class _TheTraiBai extends StatelessWidget {
             ),
           ],
         ),
+        ),
       ),
     );
   }
 }
 
 class _TheBanDoSao extends StatelessWidget {
-  const _TheBanDoSao({required this.duLieu});
+  const _TheBanDoSao({required this.duLieu, required this.khai});
   final Map<String, dynamic>? duLieu;
+  final VoidCallback khai;
 
   @override
   Widget build(BuildContext context) {
@@ -353,9 +394,13 @@ class _TheBanDoSao extends StatelessWidget {
                     TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Khai trên astrotarot.date — màn hình này chưa dựng.',
-                style: TextStyle(fontSize: 11.5, color: Mau.vang),
+              OutlinedButton(
+                onPressed: khai,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Mau.vang,
+                  side: const BorderSide(color: Mau.vien),
+                ),
+                child: const Text('Khai ngày giờ nơi sinh'),
               ),
             ],
           ),

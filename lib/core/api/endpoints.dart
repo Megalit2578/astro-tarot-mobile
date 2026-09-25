@@ -54,6 +54,11 @@ class Endpoints {
   static String reader(String id) => '/api/v1/readers/$id';
   static String readerSlots(String id) => '/api/v1/readers/$id/slots';
   static String readerReviews(String id) => '/api/v1/readers/$id/reviews';
+  static String readerNextAvailable(String id) =>
+      '/api/v1/readers/$id/slots/next-available';
+  static const readerApply = '/api/v1/readers/apply';
+  static const myReaderApplication = '/api/v1/readers/applications/me';
+  static const unavailableDates = '/api/v1/unavailable-dates';
 
   // ---- Lịch hẹn ----
   static const myBookings = '/api/v1/bookings/me';
@@ -83,6 +88,8 @@ class Endpoints {
   // ---- Bản đồ sao: /api/me/…, KHÔNG có /v1 ----
   static const astrologyProfiles = '/api/me/astrology/profiles';
   static const astrologyPrimary = '/api/me/astrology/profiles/primary';
+  static String astrologyProfile(String id) =>
+      '/api/me/astrology/profiles/$id';
 
   // ---- Quản trị ----
   static const adminStats = '/api/v1/admin/stats';
@@ -145,6 +152,10 @@ class Endpoints {
   ///
   /// Nhận **slug**, không phải id: gửi id là 404. Trả `{url}` để mở.
   static String shopClick(String slug) => '/api/v1/shop/products/$slug/click';
+
+  // ---- Khảo sát ----
+  static const feedback = '/api/v1/feedback';
+  static const feedbackStatus = '/api/v1/feedback/me/status';
 
   // ---- Blog ----
   static const blogs = '/api/v1/blogs';

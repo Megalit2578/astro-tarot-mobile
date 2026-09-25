@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
+import '../../core/api/trang.dart';
 import '../../core/auth/auth_controller.dart';
+import '../home/home_repository.dart';
 
 /// Một lá bài đã rút.
 class LaBai {
@@ -102,6 +104,26 @@ class TarotRepository {
           'stream': false,
         },
       );
+
+  /// Lịch sử trải bài của chính mình, mới nhất trước. Máy chủ lấy danh tính
+  /// từ token — không nhận userId từ ngoài.
+  Future<Trang<LanTraiBai>> lichSu({int trang = 0, int co = 20}) async {
+    final d = await _api.get<dynamic>(Endpoints.aiReadings,
+        query: {'page': trang, 'size': co});
+    return Trang.tu(d, LanTraiBai.fromJson);
+  }
+
+  /// Chỉ các lời giải AI đã lưu của một lượt, theo thứ tự.
+  Future<List<String>> loiGiaiDaLuu(String readingId) async {
+    final ds = await tinNhanAi(readingId);
+    return [
+      for (final m in ds)
+        if ((m['senderType'] ?? m['sender'] ?? '').toString().toUpperCase() ==
+                'AI' &&
+            (m['content'] ?? '').toString().trim().isNotEmpty)
+          (m['content'] as String).trim(),
+    ];
+  }
 
   Future<List<Map<String, dynamic>>> tinNhanAi(String readingId) async {
     final d =

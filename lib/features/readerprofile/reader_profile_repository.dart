@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/api/endpoints.dart';
 import '../../core/auth/auth_controller.dart';
 
 /// Hồ sơ Reader của chính mình.
@@ -102,7 +103,6 @@ class ReaderProfileRepository {
     int? gia15,
     int? gia30,
     int? gia60,
-    bool? nhanLich,
   }) {
     final body = <String, dynamic>{
       'bio': ?gioiThieu,
@@ -111,7 +111,10 @@ class ReaderProfileRepository {
       'pricePer15m': ?gia15,
       'pricePer30m': ?gia30,
       'pricePer60m': ?gia60,
-      'available': ?nhanLich,
+      // KHÔNG gửi `available`: UpdateProfileRequest của backend không có
+      // trường đó, và cũng không endpoint nào đặt được cờ này. Bản đầu có
+      // công tắc "Đang nhận lịch" gửi trường ấy — bấm thì trông như đã lưu,
+      // thật ra máy chủ bỏ qua. Muốn tạm nghỉ thì khai Ngày nghỉ.
     };
     return _api.patch(_hoSo, body: body);
   }
@@ -144,6 +147,42 @@ class ReaderProfileRepository {
       });
 
   Future<void> xoaKhung(String id) => _api.delete('$_ranh/$id');
+
+  // ---- Ngày nghỉ ----
+
+  Future<List<NgayNghi>> ngayNghi() async {
+    final d = await _api.get<dynamic>(Endpoints.unavailableDates);
+    if (d is! List) return const [];
+    return d.whereType<Map<String, dynamic>>().map(NgayNghi.fromJson).toList()
+      ..sort((a, b) => a.ngay.compareTo(b.ngay));
+  }
+
+  /// Thêm một ngày nghỉ. Ngày gửi dạng `YYYY-MM-DD` — không có múi giờ.
+  Future<void> themNgayNghi(String ngay, {String? lyDo}) =>
+      _api.post(Endpoints.unavailableDates, body: {
+        'unavailableDate': ngay,
+        if (lyDo != null && lyDo.trim().isNotEmpty) 'reason': lyDo.trim(),
+      });
+
+  Future<void> xoaNgayNghi(String id) =>
+      _api.delete('${Endpoints.unavailableDates}/$id');
+}
+
+/// Một ngày Reader không nhận lịch.
+class NgayNghi {
+  const NgayNghi({required this.id, required this.ngay, this.lyDo});
+  final String id;
+
+  /// `YYYY-MM-DD`. Web từng đọc nhầm tên trường là `date` — đúng là
+  /// `unavailableDate`.
+  final String ngay;
+  final String? lyDo;
+
+  factory NgayNghi.fromJson(Map<String, dynamic> j) => NgayNghi(
+        id: (j['id'] ?? '').toString(),
+        ngay: (j['unavailableDate'] ?? '') as String,
+        lyDo: j['reason'] as String?,
+      );
 }
 
 final readerProfileRepositoryProvider =
@@ -154,6 +193,9 @@ final hoSoReaderProvider = FutureProvider<HoSoReader?>(
 
 final khungRanhProvider = FutureProvider<List<KhungRanh>>(
     (ref) => ref.watch(readerProfileRepositoryProvider).khungRanh());
+
+final ngayNghiProvider = FutureProvider<List<NgayNghi>>(
+    (ref) => ref.watch(readerProfileRepositoryProvider).ngayNghi());
 
 const tenThu = ['', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu',
                 'Thứ Bảy', 'Chủ nhật'];

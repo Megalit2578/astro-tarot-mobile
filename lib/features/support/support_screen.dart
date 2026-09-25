@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import 'support_repository.dart';
 
@@ -195,8 +197,15 @@ class _TaoTicketScreenState extends ConsumerState<_TaoTicketScreen> {
 }
 
 class TicketDetailScreen extends ConsumerStatefulWidget {
-  const TicketDetailScreen({super.key, required this.ticket});
+  const TicketDetailScreen({
+    super.key,
+    required this.ticket,
+    this.nhanVien = false,
+  });
   final Ticket ticket;
+
+  /// Mở từ hàng chờ của nhân viên: có nút đổi trạng thái.
+  final bool nhanVien;
 
   @override
   ConsumerState<TicketDetailScreen> createState() =>
@@ -234,10 +243,33 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     }
   }
 
+  Future<void> _doiTrangThai(String moi) async {
+    try {
+      await ref
+          .read(supportRepositoryProvider)
+          .doiTrangThai(widget.ticket.id, moi);
+      ref.invalidate(ticketChiTietProvider(widget.ticket.id));
+      if (mounted) {
+        baoTin(context,
+            'Đã chuyển sang "${nhanTrangThaiTicket(moi, nhanVien: true)}".');
+      }
+    } catch (e) {
+      if (mounted) baoLoi(context, e, 'Không đổi được trạng thái.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ct = ref.watch(ticketChiTietProvider(widget.ticket.id));
-    final dong = widget.ticket.trangThai.toUpperCase() == 'CLOSED';
+    // Đọc trạng thái từ bản chi tiết mới nhất, không từ dòng trong danh sách
+    // lúc bấm vào: nhân viên vừa đóng phiếu thì ô trả lời phải khoá ngay.
+    final trangThai =
+        (ct.asData?.value['status'] ?? widget.ticket.trangThai).toString();
+    final dong = trangThai.toUpperCase() == 'CLOSED';
+    final u = ref.watch(authControllerProvider).user;
+    // Quản lý có SUPPORT_VIEW nhưng KHÔNG có SUPPORT_RESPOND: họ giám sát hàng
+    // chờ chứ không trả lời khách.
+    final traLoiDuoc = !widget.nhanVien || (u?.co('SUPPORT_RESPOND') ?? false);
 
     return Scaffold(
       appBar: AppBar(
@@ -245,6 +277,23 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 15)),
+        actions: [
+          if (widget.nhanVien && traLoiDuoc)
+            PopupMenuButton<String>(
+              tooltip: 'Đổi trạng thái',
+              color: Mau.the,
+              icon: const Icon(Icons.flag_outlined),
+              onSelected: _doiTrangThai,
+              itemBuilder: (_) => [
+                for (final t in trangThaiNhanVienChuyen)
+                  if (t != trangThai.toUpperCase())
+                    PopupMenuItem(
+                      value: t,
+                      child: Text(nhanTrangThaiTicket(t, nhanVien: true)),
+                    ),
+              ],
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -284,7 +333,18 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               },
             ),
           ),
-          if (dong)
+          if (!dong && !traLoiDuoc)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: Mau.the,
+              child: const Text(
+                'Bạn đang xem ở chế độ giám sát — tài khoản này không trả lời '
+                'khách.',
+                style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
+              ),
+            )
+          else if (dong)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),

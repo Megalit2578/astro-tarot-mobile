@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../theme.dart';
+import 'ngay_nghi_view.dart';
 import '../../widgets/trang_thai.dart';
 import '../readers/readers_repository.dart';
 import 'reader_profile_repository.dart';
@@ -25,6 +26,7 @@ class ReaderProfileView extends ConsumerWidget {
       onRefresh: () async {
         ref.invalidate(hoSoReaderProvider);
         ref.invalidate(khungRanhProvider);
+        ref.invalidate(ngayNghiProvider);
         await ref.read(hoSoReaderProvider.future);
       },
       child: hs.when(
@@ -62,7 +64,7 @@ class _NoiState extends ConsumerState<_Noi> {
   late final TextEditingController _g15;
   late final TextEditingController _g30;
   late final TextEditingController _g60;
-  late bool _nhanLich;
+  late final TextEditingController _chuyenMon;
   bool _dangLuu = false;
 
   @override
@@ -74,7 +76,7 @@ class _NoiState extends ConsumerState<_Noi> {
     _g15 = TextEditingController(text: h.gia15?.toString() ?? '');
     _g30 = TextEditingController(text: h.gia30?.toString() ?? '');
     _g60 = TextEditingController(text: h.gia60?.toString() ?? '');
-    _nhanLich = h.nhanLich;
+    _chuyenMon = TextEditingController(text: h.chuyenMon.join(', '));
   }
 
   @override
@@ -84,6 +86,7 @@ class _NoiState extends ConsumerState<_Noi> {
     _g15.dispose();
     _g30.dispose();
     _g60.dispose();
+    _chuyenMon.dispose();
     super.dispose();
   }
 
@@ -103,7 +106,11 @@ class _NoiState extends ConsumerState<_Noi> {
             gia15: _so(_g15),
             gia30: _so(_g30),
             gia60: _so(_g60),
-            nhanLich: _nhanLich,
+            chuyenMon: _chuyenMon.text
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList(),
           );
       ref.invalidate(hoSoReaderProvider);
       // Danh sách Reader công khai có thể vừa đổi (thêm/bớt chính mình).
@@ -133,21 +140,7 @@ class _NoiState extends ConsumerState<_Noi> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
-        _KhoiTinhTrang(hienCongKhai: h.hienCongKhai, coKhung: coKhung),
-
-        const SizedBox(height: 22),
-        SwitchListTile(
-          value: _nhanLich,
-          onChanged: (v) => setState(() => _nhanLich = v),
-          contentPadding: EdgeInsets.zero,
-          activeThumbColor: Mau.vang,
-          title: const Text('Đang nhận lịch', style: TextStyle(fontSize: 14)),
-          subtitle: const Text(
-            'Tắt đi khi bạn bận — hồ sơ sẽ ẩn khỏi danh sách, lịch đã nhận '
-            'thì không bị ảnh hưởng.',
-            style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.5),
-          ),
-        ),
+        _KhoiTinhTrang(h: h, coKhung: coKhung),
 
         const SizedBox(height: 10),
         const _Nhan('Giới thiệu'),
@@ -162,6 +155,15 @@ class _NoiState extends ConsumerState<_Noi> {
             hintText: 'Bạn xem theo hướng nào, hợp với ai, phong cách ra sao.',
             counterText: '',
           ),
+        ),
+
+        const SizedBox(height: 14),
+        const _Nhan('Thế mạnh'),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _chuyenMon,
+          decoration: const InputDecoration(
+              hintText: 'Tarot, Chiêm tinh, Thần số học'),
         ),
 
         const SizedBox(height: 14),
@@ -207,6 +209,17 @@ class _NoiState extends ConsumerState<_Noi> {
         const _Nhan('Khung giờ rảnh hằng tuần'),
         const SizedBox(height: 10),
         _KhungRanh(ranh: ranh),
+
+        const SizedBox(height: 28),
+        const _Nhan('Ngày nghỉ'),
+        const SizedBox(height: 4),
+        const Text(
+          'Ngày bạn bận việc riêng hay đi xa. Khách không đặt được vào những '
+          'ngày này, lịch đã nhận thì không bị ảnh hưởng.',
+          style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.6),
+        ),
+        const SizedBox(height: 10),
+        const NgayNghiView(),
       ],
     );
   }
@@ -245,15 +258,19 @@ class _OGia extends StatelessWidget {
 
 /// Nói thẳng hồ sơ có đang hiện ra cho khách hay không, và thiếu gì.
 class _KhoiTinhTrang extends StatelessWidget {
-  const _KhoiTinhTrang({required this.hienCongKhai, required this.coKhung});
-  final bool hienCongKhai;
+  const _KhoiTinhTrang({required this.h, required this.coKhung});
+  final HoSoReader h;
   final bool coKhung;
 
   @override
   Widget build(BuildContext context) {
-    final ok = hienCongKhai && coKhung;
+    final ok = h.hienCongKhai && coKhung;
+    final coGia = h.gia15 != null || h.gia30 != null || h.gia60 != null;
     final thieu = <String>[
-      if (!hienCongKhai) 'bật "đang nhận lịch" và điền ít nhất một mức giá',
+      // Cờ nhận lịch do máy chủ quản, Reader không tự bật được — nói rõ để
+      // họ biết phải hỏi ai thay vì đi tìm một công tắc không tồn tại.
+      if (!h.nhanLich) 'quản trị viên mở lại quyền nhận lịch cho hồ sơ',
+      if (!coGia) 'điền ít nhất một mức giá',
       if (!coKhung) 'thêm khung giờ rảnh',
     ];
 
@@ -520,6 +537,7 @@ class _DongKhung extends ConsumerWidget {
                     .read(readerProfileRepositoryProvider)
                     .xoaKhung(k.id);
                 ref.invalidate(khungRanhProvider);
+        ref.invalidate(ngayNghiProvider);
               } on ApiException catch (e) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
 import '../../core/auth/auth_controller.dart';
+import '../money/payment_sheet.dart';
 import 'booking.dart';
 
 class BookingsRepository {
@@ -81,16 +82,30 @@ class BookingsRepository {
     return Booking.fromJson(data);
   }
 
-  /// Tạo giao dịch thanh toán, trả về liên kết để mở trình duyệt.
-  Future<String?> taoThanhToan(String bookingId) async {
-    final data = await _api.post<Map<String, dynamic>>(
-      Endpoints.bookingPayment(bookingId),
-    );
-    // Backend đặt tên trường khác nhau tuỳ cổng; nhận cả hai để khỏi phải sửa
-    // khi đổi cổng thanh toán.
-    return (data['checkoutUrl'] ?? data['paymentUrl'] ?? data['url'])
-        as String?;
-  }
+  /// Tạo (hoặc lấy lại) giao dịch thanh toán cho một buổi.
+  ///
+  /// Có thể là PayOS (kèm link) hoặc chuyển khoản tay (chỉ có số tài khoản
+  /// và nội dung). Gọi lại khi đã có giao dịch chờ thì máy chủ trả đúng giao
+  /// dịch cũ, không tạo thêm.
+  Future<HuongDanThanhToan> taoThanhToan(String bookingId) async =>
+      HuongDanThanhToan.fromJson(await _api.post<Map<String, dynamic>>(
+        Endpoints.bookingPayment(bookingId),
+      ));
+
+  /// Báo cáo người kia trong một buổi xem. Người bị báo cáo không biết ai
+  /// đã báo.
+  Future<void> baoCao({
+    required String nguoiBiBao,
+    required String loai,
+    String? moTa,
+    String? bookingId,
+  }) =>
+      _api.post(Endpoints.reports, body: {
+        'reportedUserId': nguoiBiBao,
+        'reportType': loai,
+        if (moTa != null && moTa.trim().isNotEmpty) 'description': moTa.trim(),
+        'bookingId': ?bookingId,
+      });
 }
 
 final bookingsRepositoryProvider = Provider(

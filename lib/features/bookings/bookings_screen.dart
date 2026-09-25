@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
+import '../money/payment_sheet.dart';
 import 'booking.dart';
 import 'bookings_repository.dart';
 import 'chat_screen.dart';
+import 'report_sheet.dart';
 import 'review_sheet.dart';
 
 class BookingsScreen extends ConsumerWidget {
@@ -69,33 +71,11 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
   Future<void> _thanhToan() async {
     setState(() => _dangTra = true);
     try {
-      final url =
-          await ref.read(bookingsRepositoryProvider).taoThanhToan(b.id);
-      if (url == null || url.isEmpty) {
-        throw ApiException('Máy chủ không trả về liên kết thanh toán.');
-      }
-      final ok = await launchUrl(
-        Uri.parse(url),
-        // Mở trình duyệt ngoài chứ không phải WebView trong app: trang thanh
-        // toán của ngân hàng thường chặn WebView, và người dùng cũng cần thấy
-        // thanh địa chỉ để tin là mình đang ở đúng nơi.
-        mode: LaunchMode.externalApplication,
-      );
-      if (!ok) throw ApiException('Không mở được trang thanh toán.');
+      final h = await ref.read(bookingsRepositoryProvider).taoThanhToan(b.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Thanh toán xong thì quay lại đây và kéo xuống để làm mới.',
-          ),
-          backgroundColor: Mau.the,
-        ),
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Mau.the),
-      );
+      await moHuongDanThanhToan(context, h);
+    } catch (e) {
+      if (mounted) baoLoi(context, e, 'Không tạo được thanh toán.');
     } finally {
       if (mounted) setState(() => _dangTra = false);
     }
@@ -230,6 +210,23 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     child: Text('Bạn đã đánh giá buổi này',
                         style:
                             TextStyle(fontSize: 11.5, color: Mau.chuMo)),
+                  ),
+                // Báo cáo chỉ cho buổi đã xong, như web: trước đó chưa có gì
+                // để báo, và nút đỏ trên buổi sắp tới chỉ làm khách lo lắng.
+                if (b.trangThai == TrangThaiBuoi.completed)
+                  TextButton.icon(
+                    onPressed: () => moBaoCao(
+                      context,
+                      nguoiBiBao: b.readerUserId,
+                      tenNguoiBiBao: b.readerName,
+                      bookingId: b.id,
+                    ),
+                    icon: const Icon(Icons.flag_outlined, size: 16),
+                    label: const Text('Báo cáo'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFE5645E),
+                      minimumSize: const Size(0, 40),
+                    ),
                   ),
                 if (b.chatMo)
                   OutlinedButton.icon(
