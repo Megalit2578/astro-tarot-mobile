@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/dai_chon.dart';
 import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import '../money/payment_sheet.dart';
@@ -13,15 +14,42 @@ import 'chat_screen.dart';
 import 'report_sheet.dart';
 import 'review_sheet.dart';
 
-class BookingsScreen extends ConsumerWidget {
+class BookingsScreen extends ConsumerStatefulWidget {
   const BookingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
+}
+
+class _BookingsScreenState extends ConsumerState<BookingsScreen> {
+  /// Lọc theo trạng thái như web. null = tất cả.
+  static const _loc = <(String, TrangThaiBuoi?)>[
+    ('Tất cả', null),
+    ('Chờ nhận', TrangThaiBuoi.pending),
+    ('Đã nhận', TrangThaiBuoi.confirmed),
+    ('Hoàn tất', TrangThaiBuoi.completed),
+    ('Đã huỷ', TrangThaiBuoi.cancelled),
+  ];
+  int _chon = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final ds = ref.watch(myBookingsProvider);
+    final loc = _loc[_chon].$2;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lịch hẹn của tôi')),
+      appBar: AppBar(
+        title: const Text('Lịch hẹn của tôi'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(46),
+          child: DaiChon(
+            cuon: true,
+            nhan: [for (final l in _loc) l.$1],
+            chon: _chon,
+            khiChon: (i) => setState(() => _chon = i),
+          ),
+        ),
+      ),
       body: RefreshIndicator(
         color: Mau.vang,
         backgroundColor: Mau.the,
@@ -36,19 +64,32 @@ class BookingsScreen extends ConsumerWidget {
                 : 'Không tải được lịch hẹn.',
             thuLai: () => ref.invalidate(myBookingsProvider),
           ),
-          data: (list) => list.isEmpty
-              ? const KhoiTrong(
-                  icon: Icons.event_available,
-                  tieuDe: 'Chưa có lịch hẹn nào',
-                  moTa: 'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt '
-                      'một khung giờ.',
-                )
-              : ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: list.length,
-                  itemBuilder: (_, i) => _TheBuoi(booking: list[i]),
-                ),
+          data: (tatCa) {
+            final list = loc == null
+                ? tatCa
+                : [for (final b in tatCa) if (b.trangThai == loc) b];
+            if (tatCa.isEmpty) {
+              return const KhoiTrong(
+                icon: Icons.event_available,
+                tieuDe: 'Chưa có lịch hẹn nào',
+                moTa: 'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt '
+                    'một khung giờ.',
+              );
+            }
+            if (list.isEmpty) {
+              return KhoiTrong(
+                icon: Icons.filter_alt_off_outlined,
+                tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
+                moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
+              );
+            }
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              itemCount: list.length,
+              itemBuilder: (_, i) => _TheBuoi(booking: list[i]),
+            );
+          },
         ),
       ),
     );
@@ -80,6 +121,34 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
       if (mounted) setState(() => _dangTra = false);
     }
   }
+
+  /// Khách huỷ buổi chưa diễn ra. Lý do không bắt buộc; Reader đọc được.
+  Future<void> _huy() async {
+    final lyDo = await hoiNoiDung(
+      context,
+      tieuDe: 'Huỷ lịch hẹn?',
+      goiY: 'Lý do huỷ — Reader sẽ đọc được (không bắt buộc)',
+      gui: 'Xác nhận huỷ',
+    );
+    // null = bấm Thoát, giữ lịch. Chuỗi rỗng = huỷ mà không ghi lý do.
+    if (lyDo == null || !mounted) return;
+    setState(() => _dangTra = true);
+    try {
+      await ref
+          .read(bookingsRepositoryProvider)
+          .huy(b.id, lyDo.trim().isEmpty ? null : lyDo.trim());
+      ref.invalidate(myBookingsProvider);
+      if (mounted) baoTin(context, 'Đã huỷ lịch hẹn');
+    } catch (e) {
+      if (mounted) baoLoi(context, e, 'Không huỷ được lịch hẹn.');
+    } finally {
+      if (mounted) setState(() => _dangTra = false);
+    }
+  }
+
+  bool get _huyDuoc =>
+      b.trangThai == TrangThaiBuoi.pending ||
+      b.trangThai == TrangThaiBuoi.confirmed;
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +292,16 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     ),
                     icon: const Icon(Icons.flag_outlined, size: 16),
                     label: const Text('Báo cáo'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFE5645E),
+                      minimumSize: const Size(0, 40),
+                    ),
+                  ),
+                if (_huyDuoc)
+                  TextButton.icon(
+                    onPressed: _dangTra ? null : _huy,
+                    icon: const Icon(Icons.close, size: 16),
+                    label: const Text('Huỷ lịch'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE5645E),
                       minimumSize: const Size(0, 40),

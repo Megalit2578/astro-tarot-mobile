@@ -222,8 +222,14 @@ class _RutBaiHangNgayState extends State<RutBaiHangNgay> {
           children: [
             Row(
               children: [
+                // Ngôi sao vẽ bằng biểu tượng chứ không dùng ký tự "✦": phông
+                // mặc định của nhiều máy Android không có ký tự này, hiện ô
+                // vuông trống.
+                Icon(Icons.auto_awesome,
+                    size: 12, color: Mau.vang.withValues(alpha: 0.85)),
+                const SizedBox(width: 6),
                 Text(
-                  '✦ RÚT THỬ MỘT LÁ',
+                  'RÚT THỬ MỘT LÁ',
                   style: TextStyle(
                     fontSize: 11,
                     letterSpacing: 2,

@@ -270,6 +270,53 @@ void main() {
       expect(find.text('Bạn đã báo cáo buổi này'), findsOneWidget);
     });
 
+    testWidgets('lọc theo trạng thái; khách huỷ buổi chưa diễn ra',
+        (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra('GET /api/v1/bookings/me', trang([
+        mauBooking(),
+        mauBooking(id: 'b2', trangThai: 'COMPLETED', traTien: 'PAID',
+            chatMo: false),
+      ]));
+      m.mayChu.tra('PATCH /api/v1/bookings/b1/cancel',
+          mauBooking(trangThai: 'CANCELLED'));
+      await m.dung(t, const BookingsScreen());
+      // Buổi đã xong thì không còn nút huỷ.
+      expect(find.text('Huỷ lịch'), findsOneWidget);
+
+      await bam(t, find.text('Hoàn tất'));
+      expect(find.text('Huỷ lịch'), findsNothing);
+      expect(find.text('Đánh giá'), findsOneWidget);
+      await bam(t, find.text('Đã huỷ'));
+      expect(find.text('Không có buổi nào "Đã huỷ"'), findsOneWidget);
+      await bam(t, find.text('Tất cả'));
+
+      // Bấm Thoát thì giữ lịch, không gọi máy chủ.
+      await bam(t, find.text('Huỷ lịch'));
+      await bam(t, find.text('Thoát'));
+      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel'), isNull);
+
+      await bam(t, find.text('Huỷ lịch'));
+      await t.enterText(find.byType(TextField).last, '  Bận đột xuất ');
+      await bam(t, find.text('Xác nhận huỷ'));
+      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel')!.than,
+          {'reason': 'Bận đột xuất'});
+      expect(find.text('Đã huỷ lịch hẹn'), findsOneWidget);
+    });
+
+    testWidgets('huỷ không ghi lý do; máy chủ từ chối', (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra('GET /api/v1/bookings/me',
+          trang([mauBooking(trangThai: 'PENDING')]));
+      m.mayChu.loi('PATCH /api/v1/bookings/b1/cancel', 'Quá hạn huỷ');
+      await m.dung(t, const BookingsScreen());
+      await bam(t, find.text('Huỷ lịch'));
+      await bam(t, find.text('Xác nhận huỷ'));
+      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel')!.than,
+          {'reason': null});
+      expect(find.text('Quá hạn huỷ'), findsOneWidget);
+    });
+
     testWidgets('rỗng và lỗi', (t) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/bookings/me', trang([]));

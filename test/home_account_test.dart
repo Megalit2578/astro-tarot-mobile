@@ -64,15 +64,42 @@ void khaiTrangChu(MayChuGia m) {
 
 void main() {
   group('Khung chính và trang chủ', () {
+    test('chào bằng tên gọi; ngày giờ sinh viết kiểu Việt', () {
+      expect(tenGoi('Hoàng  Văn An '), 'An');
+      expect(tenGoi(''), 'bạn');
+      expect(tenGoi(null), 'bạn');
+      expect(ngayIso('1998-04-10'), '10/04/1998');
+      expect(ngayIso('10/04/1998'), '10/04/1998');
+      expect(ngayIso(null), isNull);
+      expect(gioNgan('09:30:00'), '09:30');
+      expect(gioNgan('sáng'), 'sáng');
+      expect(gioNgan(null), isNull);
+    });
+
+    testWidgets('lối tắt trên trang chủ mở đúng màn', (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      khaiTrangChu(m.mayChu);
+      m.mayChu.tra('GET /api/v1/shop/categories', []);
+      m.mayChu.tra('GET /api/v1/shop/products', trang([]));
+      await m.dung(t, const HomeScreen());
+      await bam(t, find.text('Gian hàng'));
+      expect(find.text('Gian hàng đang trống'), findsOneWidget);
+    });
+
     testWidgets('người dùng: bốn tab, trang chủ đủ khối', (t) async {
       final m = MoiTruong(user: nguoiDung());
       khaiTrangChu(m.mayChu);
       m.mayChu.tra('GET /api/v1/readers', [mauReader()]);
       await m.dung(t, const HomeShell());
-      expect(find.text('Chào Minh Anh,'), findsOneWidget);
+      expect(find.text('Chào Anh,'), findsOneWidget);
       expect(find.text('Bàn làm việc'), findsNothing);
       expect(find.text('3'), findsOneWidget); // chấm chưa đọc
       expect(find.text('Đơn làm Reader chưa được duyệt'), findsOneWidget);
+      // Lý do từ chối hiện luôn trên trang chủ, như web.
+      expect(find.textContaining('Thiếu kinh nghiệm'), findsOneWidget);
+      for (final n in ['Lịch sử bài', 'Bản đồ sao', 'Gian hàng', 'Bài viết']) {
+        expect(find.text(n), findsWidgets, reason: n);
+      }
       await cuonToi(t, find.text('Công việc tháng này?'));
       expect(find.text('Công việc tháng này?'), findsOneWidget);
       await cuonToi(t, find.text('Hà Nội'));
@@ -105,7 +132,7 @@ void main() {
       m.mayChu.tra('GET /api/v1/readers/applications/me', null);
       await m.dung(t, const HomeScreen());
       // Bản cũ sập ở đây (sort trên const []).
-      expect(find.text('Chào Minh Anh,'), findsOneWidget);
+      expect(find.text('Chào Anh,'), findsOneWidget);
       expect(find.text('Bạn chưa khai ngày giờ nơi sinh'), findsOneWidget);
       await bam(t, find.text('Khai ngày giờ nơi sinh'));
       expect(find.text('Bản đồ sao'), findsOneWidget);

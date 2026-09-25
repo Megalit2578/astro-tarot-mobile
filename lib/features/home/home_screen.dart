@@ -9,6 +9,8 @@ import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../astrology/astrology_screen.dart';
+import '../blog/blog_screen.dart';
+import '../shop/shop_screen.dart';
 import '../tarot/tarot_history_screen.dart';
 import '../tarot/tarot_screen.dart';
 import '../readerapply/reader_apply_screen.dart';
@@ -68,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
             Text(
-              'Chào ${u?.fullName.isNotEmpty == true ? u!.fullName : 'bạn'},',
+              'Chào ${tenGoi(u?.fullName)},',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
@@ -88,6 +90,34 @@ class HomeScreen extends ConsumerWidget {
             // mục còn khoảng sáu mươi pixel, nhãn bị cắt. Đặt ở đây hợp hơn —
             // trang chủ vừa hỏi xong "hôm nay bạn muốn hỏi điều gì".
             _TheTarot(),
+            const SizedBox(height: 12),
+            // Web có khối "Lối tắt" sáu ô. Trên điện thoại gom thành một hàng
+            // bốn ô nhỏ — đủ để tới gian hàng, bài viết mà không phải vào tab
+            // Tài khoản, và không đẩy lịch hẹn sắp tới xuống quá sâu.
+            Row(
+              children: [
+                _LoiTat(
+                  icon: Icons.history,
+                  nhan: 'Lịch sử bài',
+                  onTap: () => _mo(context, const TarotHistoryScreen()),
+                ),
+                _LoiTat(
+                  icon: Icons.auto_awesome_outlined,
+                  nhan: 'Bản đồ sao',
+                  onTap: () => _mo(context, const AstrologyScreen()),
+                ),
+                _LoiTat(
+                  icon: Icons.storefront_outlined,
+                  nhan: 'Gian hàng',
+                  onTap: () => _mo(context, const ShopScreen()),
+                ),
+                _LoiTat(
+                  icon: Icons.article_outlined,
+                  nhan: 'Bài viết',
+                  onTap: () => _mo(context, const BlogScreen()),
+                ),
+              ],
+            ),
 
             if (sapToi.isNotEmpty) ...[
               const SizedBox(height: 26),
@@ -181,7 +211,10 @@ class _TrangThaiDonReader extends ConsumerWidget {
           subtitle: Text(
             cho
                 ? 'Bạn sẽ nhận thông báo khi có kết quả.'
-                : 'Xem lý do và gửi lại.',
+                // Như web: nói luôn lý do, khỏi bấm vào mới biết.
+                : '${d.lyDoTuChoi ?? 'Không có lý do cụ thể.'} Bấm để sửa và gửi lại.',
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
           ),
           trailing: const Icon(Icons.chevron_right, color: Mau.chuMo),
@@ -284,6 +317,69 @@ class _TheTarot extends StatelessWidget {
             ),
             const Icon(Icons.chevron_right, color: Mau.vang, size: 20),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tên để chào. Tên người Việt đặt tên gọi ở CUỐI ("Hoàng Văn An" → "An");
+/// lấy chữ đầu thì thành chào bằng họ.
+String tenGoi(String? hoTen) {
+  final t = (hoTen ?? '').trim();
+  if (t.isEmpty) return 'bạn';
+  return t.split(RegExp(r'\s+')).last;
+}
+
+/// "1998-04-10" → "10/04/1998". Chuỗi lạ thì để nguyên.
+String? ngayIso(Object? v) {
+  if (v == null) return null;
+  final m = RegExp(r'^(\d{4})-(\d{2})-(\d{2})').firstMatch(v.toString());
+  return m == null ? v.toString() : '${m[3]}/${m[2]}/${m[1]}';
+}
+
+/// "12:00:00" → "12:00".
+String? gioNgan(Object? v) {
+  if (v == null) return null;
+  final m = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(v.toString());
+  return m == null ? v.toString() : m[1];
+}
+
+class _LoiTat extends StatelessWidget {
+  const _LoiTat({required this.icon, required this.nhan, required this.onTap});
+  final IconData icon;
+  final String nhan;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Mau.the,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Mau.vien),
+                ),
+                child: Icon(icon, size: 20, color: Mau.vang),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                nhan,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, color: Mau.chu),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -453,8 +549,8 @@ class _TheBanDoSao extends StatelessWidget {
       );
     }
 
-    final ngaySinh = d['birthDate'] ?? d['birth_date'];
-    final gioSinh = d['birthTime'] ?? d['birth_time'];
+    final ngaySinh = ngayIso(d['birthDate'] ?? d['birth_date']);
+    final gioSinh = gioNgan(d['birthTime'] ?? d['birth_time']);
     final noiSinh = d['birthPlace'] ?? d['birth_place'] ?? d['placeName'];
 
     return Card(

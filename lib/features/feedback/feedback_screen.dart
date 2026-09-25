@@ -85,12 +85,12 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     }
   }
 
-  Widget _o(int so, bool chon, VoidCallback bam) => InkWell(
+  Widget _o(int so, bool chon, VoidCallback bam, {double co = 40}) => InkWell(
         key: ValueKey('o-diem-$so-$chon'),
         onTap: bam,
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          width: 40,
+          width: co,
           height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -133,10 +133,20 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                   style: TextStyle(fontSize: 13.5, height: 1.5),
                 ),
                 const SizedBox(height: 10),
-                Wrap(spacing: 6, runSpacing: 6, children: [
-                  for (var i = 0; i <= 10; i++)
-                    _o(i, _nps == i, () => setState(() => _nps = i)),
-                ]),
+                // Mười một ô trên MỘT hàng, chia đều bề ngang: thang điểm
+                // phải đọc liền một mạch từ 0 tới 10, gãy làm hai dòng thì
+                // "7" trông như điểm đầu của một thang khác.
+                LayoutBuilder(builder: (_, kt) {
+                  final co = ((kt.maxWidth - 10 * 4) / 11).clamp(24.0, 40.0);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      for (var i = 0; i <= 10; i++)
+                        _o(i, _nps == i, () => setState(() => _nps = i),
+                            co: co),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 20),
                 const Text('Đánh giá trải nghiệm (tuỳ chọn)',
                     style: TextStyle(fontSize: 13.5)),

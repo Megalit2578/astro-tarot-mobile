@@ -173,7 +173,7 @@ void main() {
       final m = MoiTruong();
       khai(m.mayChu);
       await m.dung(t, const ShopScreen());
-      await bam(t, find.text('Bộ bài kinh điển cho người mới.').first);
+      await bam(t, find.text('Bộ bài Rider-Waite').first);
       expect(find.byType(ProductDetailScreen), findsOneWidget);
       expect(find.text('-17%'), findsOneWidget);
       expect(find.text('42 lượt xem trên sàn'), findsOneWidget);
@@ -222,6 +222,34 @@ void main() {
   });
 
   group('Tarot AI', () {
+    test('tên vị trí lá bài theo kiểu trải', () {
+      expect(tenViTri(0, 1), 'Thông điệp');
+      expect(tenViTri(2, 3), 'Tương lai');
+      expect(tenViTri(3, 5), 'Lời khuyên');
+      expect(tenViTri(4, 5), 'Kết quả');
+      expect(tenViTri(6, 7), 'Lá 7');
+    });
+
+    testWidgets('năm lá xếp thành dải cuộn ngang', (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra('GET /api/me/astrology/profiles/primary', {'id': 'p'});
+      m.mayChu.tra('POST /api/ai-readings', {
+        'readingId': '',
+        'userQuestion': 'Tình cảm?',
+        'drawnCards': [
+          for (var i = 0; i < 5; i++)
+            {'cardName': 'Lá số $i', 'position': i, 'reversed': false},
+        ],
+        'aiInterpretation': '',
+      });
+      await m.dung(t, const TarotScreen());
+      await t.enterText(find.byType(TextField).first, 'Tình cảm?');
+      await bam(t, find.text('Năm lá'));
+      await bam(t, find.text('Trải bài'));
+      expect(find.text('Mô hình không trả về lời giải nào.'), findsOneWidget);
+      expect(find.text('NGUYÊN NHÂN'), findsOneWidget);
+    });
+
     testWidgets('trải bài, hỏi tiếp; nhắc khai bản đồ sao', (t) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.loi('GET /api/me/astrology/profiles/primary', 'Chưa có', ma: 404);
@@ -252,6 +280,11 @@ void main() {
       expect(g.than['includeReversed'], isFalse);
       expect(find.text('Một khởi đầu mới.'), findsOneWidget);
       expect(find.text('ngược'), findsOneWidget);
+      expect(find.text('xuôi'), findsOneWidget);
+      // Máy chủ đánh số từ 0; người đọc thấy số từ 1 (hai lá không khớp
+      // kiểu trải nào nên không có tên vị trí).
+      expect(find.text('LÁ 1'), findsOneWidget);
+      expect(find.text('LÁ 2'), findsOneWidget);
 
       await cuonToi(t, find.byKey(const ValueKey('o-hoi-tiep')));
       await t.enterText(find.byKey(const ValueKey('o-hoi-tiep')), 'Còn lá Sun?');
