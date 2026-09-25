@@ -97,29 +97,39 @@ sau lần đứt đầu tiên trong khi vẫn hiện "đang kết nối". Xem
 
 ## Đã dựng
 
-| Màn | Trạng thái |
-|---|---|
-| Đăng nhập, giữ phiên, tự làm mới token | đã chạy thật trên máy ảo |
-| Tìm Reader (tìm kiếm, kéo làm mới) | đã chạy thật với dữ liệu production |
-| Hồ sơ Reader + chọn giờ + đặt lịch | đã chạy thật; phần đặt lịch chưa thử vì cần đăng nhập |
-| Lịch hẹn của tôi + thanh toán | chưa thử, cần đăng nhập |
-| Hộp trò chuyện realtime | chưa thử, cần đăng nhập |
-| Cuộc gọi WebRTC (thoại + video) | chưa thử, cần HAI tài khoản cùng lúc |
-| Bàn làm việc Reader | chưa thử, cần tài khoản có quyền nhân sự |
-| Khu quản trị (3 hàng chờ) | chưa thử, cần tài khoản quản trị |
-| Trang chủ | chưa thử, cần đăng nhập |
+Ngang với web ở mọi luồng chính.
 
-Khách **chưa đăng nhập** vẫn xem được danh sách và hồ sơ Reader — giống web.
+| Khu | Màn | Đã chạy thử? |
+|---|---|---|
+| Xác thực | Đăng nhập, đăng ký, quên mật khẩu, đổi mật khẩu | ✅ đăng nhập và đăng ký chạy thật trên máy ảo |
+| Khách | Trang chủ, Tarot AI, tìm Reader, hồ sơ Reader, đặt lịch | ✅ tìm Reader và chọn giờ chạy thật với dữ liệu production |
+| Khách | Lịch hẹn, thanh toán, đánh giá sau buổi | chưa, cần đăng nhập |
+| Khách | Trò chuyện realtime, gọi thoại/video WebRTC | chưa, cuộc gọi cần HAI tài khoản cùng lúc |
+| Khách | Hồ sơ cá nhân, ảnh đại diện, thông báo, hỗ trợ | chưa, cần đăng nhập |
+| Khách | Gian hàng (liên kết tiếp thị), bài viết | chưa, cần đăng nhập |
+| Reader | Lịch hẹn nhận được, hàng chờ hỗ trợ, thu nhập, hồ sơ Reader | chưa, cần tài khoản nhân sự |
+| Quản trị | Đối soát thanh toán, duyệt rút tiền, duyệt đơn Reader | chưa, cần tài khoản quản trị |
 
-## Chưa dựng
+Khách **chưa đăng nhập** xem được danh sách và hồ sơ Reader — giống web.
 
-Hồ sơ cá nhân, hỗ trợ, Tarot AI, gian hàng, và phần còn lại của khu quản trị
-(tài khoản, đơn hàng, nhật ký). Tất cả đều đã có endpoint sẵn; xem chú thích
-trong `lib/features/placeholder/`.
+## Cố ý KHÔNG dựng
+
+**Giỏ hàng và đơn hàng.** Backend có sẵn, nhưng web không dùng: gian hàng là
+liên kết tiếp thị sang Shopee, doanh thu đến từ hoa hồng. Dựng giỏ là dựng
+một luồng không ai đi rồi phải bảo trì mãi.
+
+**Bản đồ sao (tạo mới).** Cần kinh độ và vĩ độ, tức là cần bộ chọn địa điểm
+có geocoding. Màn hình hiện chỉ đọc và mời sang web để khai.
+
+**Nộp đơn làm Reader.** Vẫn làm trên web.
+
+**Quản trị: tài khoản, đơn hàng, nhật ký.** Ba hàng chờ gắn với thời điểm thì
+có (thanh toán, rút tiền, duyệt Reader) — phần còn lại nói thẳng trong giao
+diện là nên làm trên web.
 
 Gọi WebRTC dùng `flutter_webrtc`, tín hiệu đi qua đúng hai đích STOMP mà web
-đang dùng. Lưu ý dự án chạy **chỉ STUN, không TURN** — hai máy cùng sau NAT
-đối xứng (rất phổ biến với 4G ở Việt Nam) sẽ không nối được cuộc gọi.
+đang dùng. Dự án chạy **chỉ STUN, không TURN** — hai máy cùng sau NAT đối
+xứng (rất phổ biến với 4G ở Việt Nam) sẽ không nối được cuộc gọi.
 
 ## Kiểm tra
 
