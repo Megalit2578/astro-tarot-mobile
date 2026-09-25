@@ -72,6 +72,7 @@ class YeuCauRut {
     this.nganHang,
     this.soTaiKhoan,
     this.luc,
+    this.lyDoTuChoi,
   });
 
   final String id;
@@ -80,14 +81,21 @@ class YeuCauRut {
   final String? nganHang;
   final String? soTaiKhoan;
   final DateTime? luc;
+  final String? lyDoTuChoi;
 
   factory YeuCauRut.fromJson(Map<String, dynamic> j) => YeuCauRut(
         id: (j['id'] ?? '').toString(),
         soTien: (j['amount'] as num?)?.toInt() ?? 0,
         trangThai: (j['status'] ?? '') as String,
         nganHang: j['bankName'] as String?,
-        soTaiKhoan: j['bankAccount'] as String?,
-        luc: DateTime.tryParse((j['createdAt'] ?? '').toString()),
+        // PayoutResponse trả `bankAccountMasked` (bốn số cuối) và
+        // `requestedAt`. Bản đầu đọc `bankAccount` / `createdAt` — hai trường
+        // không tồn tại — nên lịch sử rút không bao giờ có số tài khoản hay
+        // ngày yêu cầu.
+        soTaiKhoan: (j['bankAccountMasked'] ?? j['bankAccount']) as String?,
+        luc: DateTime.tryParse(
+            (j['requestedAt'] ?? j['createdAt'] ?? '').toString()),
+        lyDoTuChoi: j['rejectReason'] as String?,
       );
 }
 
@@ -149,14 +157,34 @@ final yeuCauRutProvider = FutureProvider<List<YeuCauRut>>(
     (ref) => ref.watch(moneyRepositoryProvider).yeuCauRut());
 
 /// Nhãn tiếng Việt cho loại giao dịch ký quỹ.
+/// Nhãn loại dòng sổ ký quỹ, khớp ESCROW_KIND_LABEL của web.
+///
+/// Bản đầu chỉ biết năm loại, trong đó hai loại backend không hề có
+/// (PAYOUT, COMMISSION); các loại thật như PAYOUT_RESERVE hiện nguyên mã.
 String nhanLoaiGiaoDich(String k) => switch (k.toUpperCase()) {
-      'HOLD' => 'Giữ tiền buổi xem',
-      'RELEASE' => 'Trả về số dư',
-      'REFUND' => 'Hoàn cho khách',
-      'PAYOUT' => 'Chi ra',
-      'PENALTY' => 'Trừ phạt',
-      'COMMISSION' => 'Hoa hồng sàn',
+      'HOLD' => 'Khách đã trả, đang giữ',
+      'RELEASE' => 'Nhận từ buổi xem',
+      'REFUND' => 'Hoàn lại cho khách',
+      'PENALTY' => 'Trừ do vi phạm',
+      'PENALTY_DEBT' => 'Ghi nợ tiền phạt',
+      'DEBT_COLLECTED' => 'Thu tiền phạt còn nợ',
+      'PAYOUT_RESERVE' => 'Giữ chỗ để rút',
+      'PAYOUT_RETURN' => 'Hoàn lại do từ chối rút',
+      'PAYOUT_SETTLE' => 'Đã chuyển khoản',
       _ => k,
+    };
+
+/// Dòng này làm số dư RÚT ĐƯỢC tăng (1), giảm (-1) hay không đổi (0)?
+///
+/// Số tiền backend trả **luôn dương** — hướng tiền nằm ở loại dòng. Bản đầu
+/// đoán theo dấu số tiền nên mọi dòng, kể cả tiền phạt và tiền rút, đều hiện
+/// "+" xanh. HOLD/REFUND chỉ đụng phần đang giữ; PAYOUT_SETTLE và PENALTY_DEBT
+/// chỉ ghi nhận — tiền đã trừ từ bước trước. Gộp chúng vào "giảm" là sổ nói
+/// sai.
+int huongTien(String k) => switch (k.toUpperCase()) {
+      'RELEASE' || 'PAYOUT_RETURN' => 1,
+      'PENALTY' || 'DEBT_COLLECTED' || 'PAYOUT_RESERVE' => -1,
+      _ => 0,
     };
 
 String nhanTrangThaiRut(String s) => switch (s.toUpperCase()) {

@@ -8,7 +8,11 @@ import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
 import '../notifications/notifications_screen.dart';
+import '../astrology/astrology_screen.dart';
+import '../tarot/tarot_history_screen.dart';
 import '../tarot/tarot_screen.dart';
+import '../readerapply/reader_apply_screen.dart';
+import 'daily_card.dart';
 import 'home_repository.dart';
 
 /// Trang chủ.
@@ -25,8 +29,12 @@ class HomeScreen extends ConsumerWidget {
     final readings = ref.watch(lichSuTraiBaiProvider);
     final banDoSao = ref.watch(banDoSaoProvider);
 
-    final sapToi = bookings.asData?.value.where(_sapToi).toList() ?? const [];
-    sapToi.sort((a, b) => a.batDau.compareTo(b.batDau));
+    // Danh sách MỚI, sửa được: bản đầu lùi về `const []` khi lịch hẹn chưa
+    // tải xong rồi gọi sort() trên nó — ném "Cannot modify an unmodifiable
+    // list", và nếu API lịch hẹn lỗi thì cả trang chủ thành ô xám mãi.
+    final sapToi = <Booking>[
+      ...?bookings.asData?.value.where(_sapToi),
+    ]..sort((a, b) => a.batDau.compareTo(b.batDau));
 
     return Scaffold(
       appBar: AppBar(
@@ -52,6 +60,7 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(myBookingsProvider);
           ref.invalidate(lichSuTraiBaiProvider);
           ref.invalidate(banDoSaoProvider);
+          ref.invalidate(donCuaToiProvider);
           await ref.read(myBookingsProvider.future);
         },
         child: ListView(
@@ -68,6 +77,11 @@ class HomeScreen extends ConsumerWidget {
               style: TextStyle(color: Mau.chuMo, fontSize: 13),
             ),
 
+            if (u != null &&
+                u.co('READER_APPLY') &&
+                !u.co('READER_MANAGE_PROFILE'))
+              const _TrangThaiDonReader(),
+
             const SizedBox(height: 18),
             // Tarot AI là một trong hai trụ cột của sản phẩm, nhưng KHÔNG đưa
             // lên thanh tab: thêm vào là sáu mục, và trên máy 360dp thì mỗi
@@ -82,25 +96,57 @@ class HomeScreen extends ConsumerWidget {
               for (final b in sapToi.take(2)) _TheSapToi(booking: b),
             ],
 
+            const SizedBox(height: 18),
+            const RutBaiHangNgay(),
+
             ...switch (readings.asData?.value) {
               final ds? when ds.isNotEmpty => [
                   const SizedBox(height: 24),
-                  const _Nhan('Lần trải bài gần đây'),
-                  const SizedBox(height: 10),
-                  for (final r in ds) _TheTraiBai(lan: r),
+                  Row(
+                    children: [
+                      const Expanded(child: _Nhan('Lần trải bài gần đây')),
+                      TextButton(
+                        onPressed: () => _mo(context, const TarotHistoryScreen()),
+                        style: TextButton.styleFrom(foregroundColor: Mau.vang),
+                        child: const Text('Xem tất cả',
+                            style: TextStyle(fontSize: 12.5)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  for (final r in ds)
+                    _TheTraiBai(
+                      lan: r,
+                      onTap: () => _mo(context, const TarotHistoryScreen()),
+                    ),
                 ],
               _ => const <Widget>[],
             },
 
             const SizedBox(height: 24),
-            const _Nhan('Bản đồ sao của bạn'),
-            const SizedBox(height: 10),
-            _TheBanDoSao(duLieu: banDoSao.asData?.value),
+            Row(
+              children: [
+                const Expanded(child: _Nhan('Bản đồ sao của bạn')),
+                TextButton(
+                  onPressed: () => _mo(context, const AstrologyScreen()),
+                  style: TextButton.styleFrom(foregroundColor: Mau.vang),
+                  child: const Text('Quản lý', style: TextStyle(fontSize: 12.5)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            _TheBanDoSao(
+              duLieu: banDoSao.asData?.value,
+              khai: () => _mo(context, const AstrologyScreen()),
+            ),
           ],
         ),
       ),
     );
   }
+
+  static void _mo(BuildContext context, Widget man) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => man));
 
   /// Buổi "sắp tới": chưa huỷ, chưa xong, và chưa quá giờ kết thúc.
   ///
@@ -111,6 +157,40 @@ class HomeScreen extends ConsumerWidget {
       b.trangThai != TrangThaiBuoi.cancelled &&
       b.trangThai != TrangThaiBuoi.completed &&
       b.ketThuc.toLocal().isAfter(DateTime.now());
+}
+
+/// Trạng thái đơn xin làm Reader — chỉ hiện khi có đơn đang chờ hoặc bị từ
+/// chối. Chưa nộp thì im lặng: trang chủ không phải chỗ mời chào.
+class _TrangThaiDonReader extends ConsumerWidget {
+  const _TrangThaiDonReader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final d = ref.watch(donCuaToiProvider).asData?.value;
+    if (d == null || d.trangThai == 'APPROVED') return const SizedBox.shrink();
+    final cho = d.trangThai == 'PENDING';
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Card(
+        child: ListTile(
+          leading: Icon(cho ? Icons.schedule : Icons.info_outline,
+              color: cho ? Mau.vang : const Color(0xFFE5645E)),
+          title: Text(
+              cho ? 'Đơn làm Reader đang chờ duyệt' : 'Đơn làm Reader chưa được duyệt',
+              style: const TextStyle(fontSize: 13.5)),
+          subtitle: Text(
+            cho
+                ? 'Bạn sẽ nhận thông báo khi có kết quả.'
+                : 'Xem lý do và gửi lại.',
+            style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: Mau.chuMo),
+          onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ReaderApplyScreen())),
+        ),
+      ),
+    );
+  }
 }
 
 /// Chuông kèm số chưa đọc.
@@ -288,14 +368,18 @@ class _TheSapToi extends StatelessWidget {
 }
 
 class _TheTraiBai extends StatelessWidget {
-  const _TheTraiBai({required this.lan});
+  const _TheTraiBai({required this.lan, required this.onTap});
   final LanTraiBai lan;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
@@ -322,14 +406,16 @@ class _TheTraiBai extends StatelessWidget {
             ),
           ],
         ),
+        ),
       ),
     );
   }
 }
 
 class _TheBanDoSao extends StatelessWidget {
-  const _TheBanDoSao({required this.duLieu});
+  const _TheBanDoSao({required this.duLieu, required this.khai});
   final Map<String, dynamic>? duLieu;
+  final VoidCallback khai;
 
   @override
   Widget build(BuildContext context) {
@@ -353,9 +439,13 @@ class _TheBanDoSao extends StatelessWidget {
                     TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Khai trên astrotarot.date — màn hình này chưa dựng.',
-                style: TextStyle(fontSize: 11.5, color: Mau.vang),
+              OutlinedButton(
+                onPressed: khai,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Mau.vang,
+                  side: const BorderSide(color: Mau.vien),
+                ),
+                child: const Text('Khai ngày giờ nơi sinh'),
               ),
             ],
           ),

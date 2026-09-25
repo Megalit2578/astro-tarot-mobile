@@ -6,7 +6,61 @@ import '../../core/api/endpoints.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
+import '../bookings/bookings_screen.dart';
+import '../readerapply/reader_apply_screen.dart';
+import '../staff/staff_screen.dart';
+import '../support/support_screen.dart';
+
+/// Màn cần mở khi bấm một thông báo — cùng luật với `notificationLink` của
+/// web. Trả null khi không có đích rõ ràng: bấm vào chỉ đánh dấu đã đọc, tốt
+/// hơn là đẩy người dùng tới một màn chẳng liên quan.
+Widget? manChoThongBao(String? loai) {
+  if (loai == null) return null;
+  if (loai == 'REVIEW_RECEIVED' || loai == 'SUPPORT_MESSAGE') {
+    return const StaffScreen();
+  }
+  if (loai.startsWith('PAYOUT_')) return const StaffScreen();
+  if (loai.startsWith('BOOKING_') || loai.startsWith('PAYMENT_')) {
+    return const BookingsScreen();
+  }
+  if (loai.startsWith('READER_APPLICATION_')) return const ReaderApplyScreen();
+  if (loai == 'SUPPORT_REPLY') return const SupportScreen();
+  return null;
+}
+
+/// Các thao tác trên hộp thông báo.
+///
+/// Đánh dấu đã đọc và ghim là **PATCH**, không phải POST. Bản đầu dùng POST:
+/// máy chủ từ chối, lỗi bị nuốt, nên chấm đỏ không bao giờ tắt và nút "Đọc
+/// hết" chỉ hiện một câu lỗi khó hiểu.
+class NotificationsRepository {
+  NotificationsRepository(this._api);
+  final ApiClient _api;
+
+  Future<void> daDoc(String id) =>
+      _api.patch('${Endpoints.notifications}/$id/read');
+
+  Future<void> docHet() => _api.patch('${Endpoints.notifications}/read-all');
+
+  Future<void> ghim(String id, bool ghim) => _api.patch(
+      '${Endpoints.notifications}/$id/pin',
+      body: {'pinned': ghim});
+
+  /// Xoá mọi thông báo đã đọc, trừ tin đã ghim. Trả số tin đã xoá.
+  Future<int> xoaDaDoc() async {
+    final d = await _api.delete<dynamic>('${Endpoints.notifications}/read');
+    return d is Map ? (d['deleted'] as num?)?.toInt() ?? 0 : 0;
+  }
+
+  /// Xoá một thông báo. Tin ghim bị máy chủ bỏ qua.
+  Future<void> xoa(String id) => _api.dio
+      .delete<dynamic>(Endpoints.notifications, data: {'ids': [id]});
+}
+
+final notificationsRepositoryProvider =
+    Provider((ref) => NotificationsRepository(ref.watch(apiClientProvider)));
 
 class ThongBao {
   const ThongBao({
@@ -15,6 +69,7 @@ class ThongBao {
     required this.noiDung,
     required this.daDoc,
     required this.ghim,
+    this.loai,
     this.luc,
   });
 
@@ -23,6 +78,9 @@ class ThongBao {
   final String noiDung;
   final bool daDoc;
   final bool ghim;
+
+  /// Xem NotificationTypes bên backend. Quyết định màn mở ra khi bấm.
+  final String? loai;
   final DateTime? luc;
 
   factory ThongBao.fromJson(Map<String, dynamic> j) => ThongBao(
@@ -31,6 +89,7 @@ class ThongBao {
         noiDung: (j['message'] ?? '') as String,
         daDoc: j['read'] == true,
         ghim: j['pinned'] == true,
+        loai: j['type'] as String?,
         luc: DateTime.tryParse((j['createdAt'] ?? '').toString()),
       );
 }
@@ -76,6 +135,20 @@ final soChuaDocProvider = FutureProvider<int>((ref) async {
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
+  static Future<void> _chay(
+    BuildContext context,
+    WidgetRef ref,
+    Future<void> Function() viec,
+  ) async {
+    try {
+      await viec();
+    } catch (e) {
+      if (context.mounted) baoLoi(context, e, 'Thao tác không thành công.');
+    }
+    ref.invalidate(thongBaoProvider);
+    ref.invalidate(soChuaDocProvider);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ds = ref.watch(thongBaoProvider);
@@ -85,23 +158,28 @@ class NotificationsScreen extends ConsumerWidget {
         title: const Text('Thông báo'),
         actions: [
           TextButton(
-            onPressed: () async {
-              try {
-                await ref
-                    .read(apiClientProvider)
-                    .post('${Endpoints.notifications}/read-all');
-                ref.invalidate(thongBaoProvider);
-                ref.invalidate(soChuaDocProvider);
-              } on ApiException catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(e.message), backgroundColor: Mau.the),
-                );
-              }
-            },
+            onPressed: () => _chay(
+              context,
+              ref,
+              () => ref.read(notificationsRepositoryProvider).docHet(),
+            ),
             style: TextButton.styleFrom(foregroundColor: Mau.chuMo),
             child: const Text('Đọc hết', style: TextStyle(fontSize: 12.5)),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Thêm',
+            color: Mau.the,
+            onSelected: (_) => _chay(context, ref, () async {
+              final n =
+                  await ref.read(notificationsRepositoryProvider).xoaDaDoc();
+              if (context.mounted) baoTin(context, 'Đã xoá $n thông báo.');
+            }),
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'xoa-da-doc',
+                child: Text('Xoá thông báo đã đọc (trừ tin ghim)'),
+              ),
+            ],
           ),
         ],
       ),
@@ -140,23 +218,64 @@ class _The extends ConsumerWidget {
   const _The({required this.tb});
   final ThongBao tb;
 
+  /// Giữ ngón tay trên một thông báo: ghim / bỏ ghim / xoá.
+  Future<void> _menu(BuildContext context, WidgetRef ref) async {
+    final chon = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Mau.the,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(tb.ghim ? Icons.push_pin_outlined : Icons.push_pin),
+              title: Text(tb.ghim ? 'Bỏ ghim' : 'Ghim lên đầu'),
+              onTap: () => Navigator.of(ctx).pop('ghim'),
+            ),
+            if (!tb.ghim)
+              ListTile(
+                leading: const Icon(Icons.delete_outline,
+                    color: Color(0xFFE5645E)),
+                title: const Text('Xoá thông báo'),
+                onTap: () => Navigator.of(ctx).pop('xoa'),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (chon == null || !context.mounted) return;
+    final repo = ref.read(notificationsRepositoryProvider);
+    await NotificationsScreen._chay(
+      context,
+      ref,
+      () => chon == 'ghim' ? repo.ghim(tb.id, !tb.ghim) : repo.xoa(tb.id),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: tb.daDoc
-            ? null
-            : () async {
-                try {
-                  await ref
-                      .read(apiClientProvider)
-                      .post('${Endpoints.notifications}/${tb.id}/read');
-                  ref.invalidate(thongBaoProvider);
-                  ref.invalidate(soChuaDocProvider);
-                } catch (_) {}
-              },
+        onTap: () async {
+          final repo = ref.read(notificationsRepositoryProvider);
+          if (!tb.daDoc) {
+            try {
+              await repo.daDoc(tb.id);
+            } catch (_) {
+              // Đánh dấu đã đọc hỏng không được chặn việc mở màn đích.
+            }
+            ref.invalidate(thongBaoProvider);
+            ref.invalidate(soChuaDocProvider);
+          }
+          final man = manChoThongBao(tb.loai);
+          if (man != null && context.mounted) {
+            await Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => man));
+          }
+        },
+        onLongPress: () => _menu(context, ref),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(

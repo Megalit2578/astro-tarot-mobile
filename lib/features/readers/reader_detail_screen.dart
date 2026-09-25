@@ -8,6 +8,7 @@ import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
 import '../bookings/bookings_repository.dart';
 import 'reader.dart';
+import 'reader_reviews.dart';
 import 'readers_repository.dart';
 import 'slot.dart';
 
@@ -245,6 +246,12 @@ class _Noi extends ConsumerWidget {
               const _Nhan('Ngày'),
               const SizedBox(height: 10),
               _ChonNgay(ngay: ngay, doiNgay: doiNgay),
+              _GoiYNgayTrong(
+                readerId: reader.id,
+                phut: phutHopLe,
+                ngay: ngay,
+                doiNgay: doiNgay,
+              ),
 
               const SizedBox(height: 22),
               const _Nhan('Khung giờ còn trống'),
@@ -255,6 +262,11 @@ class _Noi extends ConsumerWidget {
                 chon: chon,
                 doiChon: doiChon,
               ),
+
+              const SizedBox(height: 26),
+              _Nhan('Đánh giá (${reader.totalReviews})'),
+              const SizedBox(height: 10),
+              KhoiDanhGia(readerId: reader.id, ten: reader.ten),
             ],
           ),
         ),
@@ -271,6 +283,44 @@ class _Noi extends ConsumerWidget {
                   dat: dat,
                 ),
       ],
+    );
+  }
+}
+
+/// "Ngày trống gần nhất: …" — bấm để nhảy tới ngày đó.
+///
+/// Chỉ hiện khi ngày đang chọn KHÁC ngày ấy; đang ở đúng ngày rồi mà vẫn mời
+/// "chọn ngày này" thì thừa.
+class _GoiYNgayTrong extends ConsumerWidget {
+  const _GoiYNgayTrong({
+    required this.readerId,
+    required this.phut,
+    required this.ngay,
+    required this.doiNgay,
+  });
+
+  final String readerId;
+  final int phut;
+  final DateTime ngay;
+  final void Function(DateTime) doiNgay;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final g = ref
+        .watch(ngayTrongGanNhatProvider((id: readerId, phut: phut)))
+        .asData
+        ?.value;
+    if (g == null) return const SizedBox.shrink();
+    final gn = DateTime(g.year, g.month, g.day);
+    if (gn == ngay) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: () => doiNgay(gn),
+        icon: const Icon(Icons.event_available, size: 16),
+        label: Text('Ngày trống gần nhất: ${Dinh.ngay(gn)}'),
+        style: TextButton.styleFrom(foregroundColor: Mau.vang),
+      ),
     );
   }
 }

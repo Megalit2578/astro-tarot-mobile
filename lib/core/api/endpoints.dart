@@ -40,6 +40,8 @@ class Endpoints {
   static const logout = '/auth/logout';
   static const forgotPassword = '/auth/forgot-password';
   static const resetPassword = '/auth/reset-password';
+  static const verifyEmail = '/auth/verify-email';
+  static const resendVerification = '/auth/resend-verification';
 
   // ---- Tôi ----
   static const me = '/api/v1/me';
@@ -52,6 +54,11 @@ class Endpoints {
   static String reader(String id) => '/api/v1/readers/$id';
   static String readerSlots(String id) => '/api/v1/readers/$id/slots';
   static String readerReviews(String id) => '/api/v1/readers/$id/reviews';
+  static String readerNextAvailable(String id) =>
+      '/api/v1/readers/$id/slots/next-available';
+  static const readerApply = '/api/v1/readers/apply';
+  static const myReaderApplication = '/api/v1/readers/applications/me';
+  static const unavailableDates = '/api/v1/unavailable-dates';
 
   // ---- Lịch hẹn ----
   static const myBookings = '/api/v1/bookings/me';
@@ -81,12 +88,26 @@ class Endpoints {
   // ---- Bản đồ sao: /api/me/…, KHÔNG có /v1 ----
   static const astrologyProfiles = '/api/me/astrology/profiles';
   static const astrologyPrimary = '/api/me/astrology/profiles/primary';
+  static String astrologyProfile(String id) =>
+      '/api/me/astrology/profiles/$id';
 
   // ---- Quản trị ----
   static const adminStats = '/api/v1/admin/stats';
   static const adminUsers = '/api/v1/admin/users';
+  static String adminUser(String id) => '/api/v1/admin/users/$id';
   static String adminUserRole(String id) => '/api/v1/admin/users/$id/role';
   static String adminUserStatus(String id) => '/api/v1/admin/users/$id/status';
+
+  /// Đổi vai trò hàng loạt. Cùng tiền tố với [adminUserRole] nhưng không có
+  /// id — đặt cạnh nhau để khỏi nhầm.
+  static const adminUsersRoleBulk = '/api/v1/admin/users/role';
+  static String adminUserRevokeSessions(String id) =>
+      '/api/v1/admin/users/$id/sessions/revoke';
+  static String adminUserPasswordReset(String id) =>
+      '/api/v1/admin/users/$id/password-reset';
+  static String adminUserResendVerification(String id) =>
+      '/api/v1/admin/users/$id/resend-verification';
+  static const adminActivityLogs = '/api/v1/admin/activity-logs';
   static const adminReaderApplications = '/api/v1/admin/readers/applications';
   static String adminReaderReview(String applicationId) =>
       '/api/v1/admin/readers/$applicationId/review';
@@ -104,6 +125,20 @@ class Endpoints {
   static String adminPayoutReject(String id) =>
       '/api/v1/admin/payouts/$id/reject';
   static String adminPayoutPaid(String id) => '/api/v1/admin/payouts/$id/paid';
+  static const adminReports = '/api/v1/admin/reports';
+  static String adminReportHandle(String id) =>
+      '/api/v1/admin/reports/$id/handle';
+
+  /// Khách gửi báo cáo vi phạm. Cùng MoneyController nhưng KHÔNG có /admin.
+  static const reports = '/api/v1/reports';
+
+  // ShopAdminController cũng map @RequestMapping("/api/v1") rồi nối
+  // "/admin/products" — khác gian hàng công khai ở /api/v1/shop.
+  static const adminProducts = '/api/v1/admin/products';
+  static String adminProduct(String id) => '/api/v1/admin/products/$id';
+  static String adminProductActive(String id) =>
+      '/api/v1/admin/products/$id/active';
+  static const adminAffiliateStats = '/api/v1/admin/affiliate/stats';
 
   // ---- Hỗ trợ ----
   static const support = '/api/v1/support';
@@ -114,7 +149,13 @@ class Endpoints {
   static String shopProduct(String slug) => '/api/v1/shop/products/$slug';
 
   /// Ghi nhận một lượt bấm sang sàn liên kết. Công khai, không cần đăng nhập.
-  static String shopClick(String id) => '/api/v1/shop/products/$id/click';
+  ///
+  /// Nhận **slug**, không phải id: gửi id là 404. Trả `{url}` để mở.
+  static String shopClick(String slug) => '/api/v1/shop/products/$slug/click';
+
+  // ---- Khảo sát ----
+  static const feedback = '/api/v1/feedback';
+  static const feedbackStatus = '/api/v1/feedback/me/status';
 
   // ---- Blog ----
   static const blogs = '/api/v1/blogs';

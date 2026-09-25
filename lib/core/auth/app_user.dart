@@ -88,12 +88,17 @@ class AppUser {
       ]);
 
   /// Có khu quản trị không.
+  ///
+  /// Khớp đúng các mục trong `mucQuanTri` — thiếu một quyền ở đây là Quản lý
+  /// chỉ có REPORT_REVIEW sẽ không bao giờ thấy cửa vào hàng chờ báo cáo.
   bool get laQuanTri => coBatKy(const [
         'USERS_MANAGE',
-        'ORDERS_MANAGE',
-        'PAYMENTS_MANAGE',
-        'CATALOG_MANAGE',
-        'ADMIN_READERS_VIEW',
         'AUDIT_VIEW',
+        'STAFF_VIEW',
+        'ADMIN_READERS_VIEW',
+        'PAYMENTS_MANAGE',
+        'PAYOUT_REVIEW',
+        'REPORT_REVIEW',
+        'CATALOG_MANAGE',
       ]);
 }

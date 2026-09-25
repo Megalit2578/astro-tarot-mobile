@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Sinh bởi tool/coverage_helper.sh và tool/sonar.sh
+test/coverage_helper_test.dart
+/coverage/
+.scannerwork/

@@ -76,7 +76,8 @@ class _TheCho extends ConsumerWidget {
       child: ListTile(
         onTap: () async {
           await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => TicketDetailScreen(ticket: t)),
+            MaterialPageRoute(
+                builder: (_) => TicketDetailScreen(ticket: t, nhanVien: true)),
           );
           ref.invalidate(hangChoHoTroProvider);
         },
@@ -100,7 +101,7 @@ class _TheCho extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 5),
           child: Text(
             [
-              nhanTrangThaiTicket(t.trangThai),
+              nhanTrangThaiTicket(t.trangThai, nhanVien: true),
               chuaNhan ? 'chưa ai nhận' : 'đang xử: ${t.nguoiNhan}',
               if (t.luc != null) Dinh.ngayGio(t.luc),
             ].join(' · '),

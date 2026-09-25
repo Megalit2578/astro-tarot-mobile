@@ -1,96 +1,251 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/danh_sach_phan_trang.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
+import 'product_detail_screen.dart';
 import 'shop_repository.dart';
 
-class ShopScreen extends ConsumerWidget {
+/// Mở sàn liên kết cho một sản phẩm, sau khi ghi nhận lượt bấm.
+///
+/// Dùng chung cho thẻ trong danh sách và màn chi tiết — hai nơi tự viết hai
+/// kiểu thì sớm muộn một nơi quên ghi nhận lượt bấm, tức là mất hoa hồng.
+Future<void> moTrenSan(
+  BuildContext context,
+  WidgetRef ref,
+  SanPham p,
+) async {
+  final url = await ref
+      .read(shopRepositoryProvider)
+      .ghiNhanBam(p.slug, duPhong: p.lienKet);
+  if (url == null || url.isEmpty) return;
+  final ok = await launchUrl(
+    Uri.parse(url),
+    mode: LaunchMode.externalApplication,
+  );
+  if (!ok && context.mounted) baoTin(context, 'Không mở được liên kết.');
+}
+
+/// Câu nói thẳng đây là liên kết tiếp thị.
+///
+/// Người dùng có quyền biết mình sắp rời app sang sàn khác, và biết rằng
+/// chúng ta hưởng hoa hồng.
+const loiCongBoTiepThi =
+    'Đây là những món chúng tôi chọn lọc. Bấm mua sẽ mở sàn thương mại điện '
+    'tử; chúng tôi nhận hoa hồng cho mỗi đơn, còn giá bạn trả không đổi.';
+
+class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ds = ref.watch(sanPhamProvider);
+  ConsumerState<ShopScreen> createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends ConsumerState<ShopScreen> {
+  final _tim = TextEditingController();
+  Timer? _hen;
+  String _tuKhoa = '';
+  String _danhMuc = '';
+
+  @override
+  void dispose() {
+    _hen?.cancel();
+    _tim.dispose();
+    super.dispose();
+  }
+
+  /// Chờ người dùng ngừng gõ một chút rồi mới tìm — mỗi phím một lượt gọi
+  /// là dồn tải cho máy chủ gói free vô ích.
+  void _khiGo(String v) {
+    _hen?.cancel();
+    _hen = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) setState(() => _tuKhoa = v.trim());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dsDanhMuc = ref.watch(danhMucProvider).asData?.value ?? const [];
+    final repo = ref.watch(shopRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gian hàng')),
-      body: RefreshIndicator(
-        color: Mau.vang,
-        backgroundColor: Mau.the,
-        onRefresh: () => ref.refresh(sanPhamProvider.future),
-        child: ds.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: Mau.vang)),
-          error: (e, _) => KhoiLoi(
-            thongDiep: e is ApiException
-                ? e.message
-                : 'Không tải được gian hàng.',
-            thuLai: () => ref.invalidate(sanPhamProvider),
+      body: DanhSachPhanTrang<SanPham>(
+        key: ValueKey('shop-$_danhMuc-$_tuKhoa'),
+        tai: (t) =>
+            repo.sanPham(danhMuc: _danhMuc, tuKhoa: _tuKhoa, trang: t),
+        loiDuPhong: 'Không tải được gian hàng.',
+        dau: [
+          const Text(loiCongBoTiepThi,
+              style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.6)),
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('o-tim-san-pham'),
+            controller: _tim,
+            onChanged: _khiGo,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Tìm bộ bài, đá, phụ kiện...',
+              prefixIcon: Icon(Icons.search, size: 20),
+              isDense: true,
+            ),
           ),
-          data: (list) => list.isEmpty
-              ? const KhoiTrong(
-                  icon: Icons.storefront_outlined,
-                  tieuDe: 'Gian hàng đang trống',
-                  moTa: 'Chưa có sản phẩm nào được đưa lên.',
-                )
-              : ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                  children: [
-                    // Nói thẳng đây là liên kết tiếp thị. Người dùng có quyền
-                    // biết mình sắp rời app sang sàn khác, và biết rằng chúng
-                    // ta hưởng hoa hồng.
-                    const Text(
-                      'Đây là những món chúng tôi chọn lọc. Bấm mua sẽ mở '
-                      'sàn thương mại điện tử; chúng tôi nhận hoa hồng cho '
-                      'mỗi đơn, còn giá bạn trả không đổi.',
-                      style: TextStyle(
-                          fontSize: 11.5, color: Mau.chuMo, height: 1.6),
+          if (dsDanhMuc.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _ChipDanhMuc(
+                    nhan: 'Tất cả',
+                    chon: _danhMuc.isEmpty,
+                    bam: () => setState(() => _danhMuc = ''),
+                  ),
+                  for (final c in dsDanhMuc)
+                    _ChipDanhMuc(
+                      nhan: c.ten,
+                      chon: _danhMuc == c.slug,
+                      bam: () => setState(() => _danhMuc = c.slug),
                     ),
-                    const SizedBox(height: 14),
-                    for (final p in list) _TheSanPham(p: p),
-                  ],
-                ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+        ],
+        trong: KhoiTrong(
+          icon: Icons.storefront_outlined,
+          tieuDe: _tuKhoa.isEmpty && _danhMuc.isEmpty
+              ? 'Gian hàng đang trống'
+              : 'Không có sản phẩm phù hợp',
+          moTa: _tuKhoa.isEmpty && _danhMuc.isEmpty
+              ? 'Chưa có sản phẩm nào được đưa lên.'
+              : 'Thử từ khoá khác hoặc bỏ bộ lọc.',
         ),
+        dong: (_, p) => TheSanPham(p: p),
       ),
     );
   }
 }
 
-class _TheSanPham extends ConsumerStatefulWidget {
-  const _TheSanPham({required this.p});
-  final SanPham p;
+class _ChipDanhMuc extends StatelessWidget {
+  const _ChipDanhMuc({
+    required this.nhan,
+    required this.chon,
+    required this.bam,
+  });
+
+  final String nhan;
+  final bool chon;
+  final VoidCallback bam;
 
   @override
-  ConsumerState<_TheSanPham> createState() => _TheSanPhamState();
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(nhan, style: const TextStyle(fontSize: 12)),
+        selected: chon,
+        onSelected: (_) => bam(),
+        selectedColor: Mau.vang.withValues(alpha: 0.18),
+        side: BorderSide(color: chon ? Mau.vang : Mau.vien),
+        showCheckmark: false,
+      ),
+    );
+  }
 }
 
-class _TheSanPhamState extends ConsumerState<_TheSanPham> {
+/// Ảnh sản phẩm, có ô thay thế khi ảnh hỏng.
+class AnhSanPham extends StatelessWidget {
+  const AnhSanPham({super.key, required this.url, this.co = 74});
+
+  final String? url;
+  final double co;
+
+  @override
+  Widget build(BuildContext context) {
+    final trong = Container(
+      height: co,
+      width: co,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F0F16),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Mau.vien),
+      ),
+      child: const Icon(Icons.image_not_supported_outlined,
+          size: 20, color: Mau.chuMo),
+    );
+    if (url == null) return trong;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.network(
+        url!,
+        height: co,
+        width: co,
+        fit: BoxFit.cover,
+        // Ảnh hỏng thì để ô trống có viền, đừng để biểu tượng vỡ của hệ
+        // thống — nó trông như app lỗi.
+        errorBuilder: (_, _, _) => trong,
+      ),
+    );
+  }
+}
+
+/// Dòng giá, kèm giá gốc gạch ngang khi đang giảm.
+class GiaSanPham extends StatelessWidget {
+  const GiaSanPham({super.key, required this.p, this.co = 15});
+
+  final SanPham p;
+  final double co;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.end,
+      spacing: 8,
+      children: [
+        Text(Dinh.tien(p.gia),
+            style: TextStyle(
+                fontSize: co, color: Mau.vang, fontWeight: FontWeight.w600)),
+        if (p.coGiamGia)
+          Text(
+            Dinh.tien(p.giaGoc),
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: Mau.chuMo,
+              decoration: TextDecoration.lineThrough,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Nút "Mua trên …". Tự khoá khi đang mở để khỏi bấm hai lần ra hai lượt.
+class NutMuaTrenSan extends ConsumerStatefulWidget {
+  const NutMuaTrenSan({super.key, required this.p, this.cao = 44});
+
+  final SanPham p;
+  final double cao;
+
+  @override
+  ConsumerState<NutMuaTrenSan> createState() => _NutMuaTrenSanState();
+}
+
+class _NutMuaTrenSanState extends ConsumerState<NutMuaTrenSan> {
   bool _dangMo = false;
 
   Future<void> _mua() async {
-    final p = widget.p;
-    final url = p.lienKet;
-    if (url == null || url.isEmpty) return;
     setState(() => _dangMo = true);
     try {
-      // Ghi nhận TRƯỚC khi mở, nhưng không chờ kết quả quyết định: xem chú
-      // thích ở ShopRepository.ghiNhanBam.
-      await ref.read(shopRepositoryProvider).ghiNhanBam(p.id);
-      final ok = await launchUrl(
-        Uri.parse(url),
-        mode: LaunchMode.externalApplication,
-      );
-      if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Không mở được liên kết.'),
-              backgroundColor: Mau.the),
-        );
-      }
+      await moTrenSan(context, ref, widget.p);
     } finally {
       if (mounted) setState(() => _dangMo = false);
     }
@@ -99,127 +254,91 @@ class _TheSanPhamState extends ConsumerState<_TheSanPham> {
   @override
   Widget build(BuildContext context) {
     final p = widget.p;
+    if (!p.coLienKet) {
+      return const Text('Món này chưa có liên kết mua.',
+          style: TextStyle(fontSize: 11.5, color: Mau.chuMo));
+    }
+    return FilledButton.icon(
+      onPressed: _dangMo ? null : _mua,
+      icon: const Icon(Icons.open_in_new, size: 16),
+      // Nói TÊN sàn: người dùng cần biết mình sắp mở ứng dụng nào trước khi
+      // rời app.
+      label: Text('Mua trên ${tenSan(p.san)}'),
+      style: FilledButton.styleFrom(minimumSize: Size.fromHeight(widget.cao)),
+    );
+  }
+}
+
+/// Thẻ một sản phẩm trong danh sách. Bấm thẻ mở màn chi tiết.
+class TheSanPham extends StatelessWidget {
+  const TheSanPham({super.key, required this.p});
+  final SanPham p;
+
+  @override
+  Widget build(BuildContext context) {
     final anh = p.anhDayDu;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (anh != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      anh,
-                      height: 74,
-                      width: 74,
-                      fit: BoxFit.cover,
-                      // Ảnh hỏng thì để ô trống có viền, đừng để biểu tượng
-                      // vỡ của hệ thống — nó trông như app lỗi.
-                      errorBuilder: (_, _, _) => Container(
-                        height: 74,
-                        width: 74,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F0F16),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Mau.vien),
-                        ),
-                        child: const Icon(Icons.image_not_supported_outlined,
-                            size: 20, color: Mau.chuMo),
-                      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(slug: p.slug, banDau: p))),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (anh != null) ...[
+                    AnhSanPham(url: anh),
+                    const SizedBox(width: 13),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p.ten,
+                            style: const TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35)),
+                        if (p.danhMuc != null) ...[
+                          const SizedBox(height: 3),
+                          Text(p.danhMuc!,
+                              style: const TextStyle(
+                                  fontSize: 11, color: Mau.chuMo)),
+                        ],
+                        const SizedBox(height: 6),
+                        GiaSanPham(p: p),
+                      ],
                     ),
                   ),
-                if (anh != null) const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(p.ten,
-                          style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w600,
-                              height: 1.35)),
-                      if (p.danhMuc != null) ...[
-                        const SizedBox(height: 3),
-                        Text(p.danhMuc!,
-                            style: const TextStyle(
-                                fontSize: 11, color: Mau.chuMo)),
-                      ],
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Text(Dinh.tien(p.gia),
-                              style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Mau.vang,
-                                  fontWeight: FontWeight.w600)),
-                          if (p.coGiamGia) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              Dinh.tien(p.giaGoc),
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                color: Mau.chuMo,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
+                ],
+              ),
+              if (p.moTa != null && p.moTa!.trim().isNotEmpty) ...[
+                const SizedBox(height: 11),
+                Text(p.moTa!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 12.5, color: Mau.chuMo, height: 1.55)),
+              ],
+              if (p.anhMinhHoa) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'Ảnh mang tính minh hoạ',
+                  style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
                 ),
               ],
-            ),
-            if (p.moTa != null && p.moTa!.trim().isNotEmpty) ...[
-              const SizedBox(height: 11),
-              Text(p.moTa!,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 12.5, color: Mau.chuMo, height: 1.55)),
+              const SizedBox(height: 12),
+              NutMuaTrenSan(p: p),
             ],
-            if (p.anhMinhHoa) ...[
-              const SizedBox(height: 8),
-              const Text(
-                'Ảnh mang tính minh hoạ',
-                style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
-              ),
-            ],
-            const SizedBox(height: 12),
-            if (p.lienKet != null && p.lienKet!.isNotEmpty)
-              FilledButton.icon(
-                onPressed: _dangMo ? null : _mua,
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: Text(
-                  p.san == null || p.san!.isEmpty
-                      ? 'Mua trên sàn liên kết'
-                      // Nói TÊN sàn: người dùng cần biết mình sắp mở ứng dụng
-                      // nào trước khi rời app.
-                      : 'Mua trên ${_tenSan(p.san!)}',
-                ),
-                style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(44)),
-              )
-            else
-              const Text('Món này chưa có liên kết mua.',
-                  style: TextStyle(fontSize: 11.5, color: Mau.chuMo)),
-          ],
+          ),
         ),
       ),
     );
   }
-
-  static String _tenSan(String s) => switch (s.toUpperCase()) {
-        'SHOPEE' => 'Shopee',
-        'LAZADA' => 'Lazada',
-        'TIKI' => 'Tiki',
-        'TIKTOK' => 'TikTok Shop',
-        _ => s,
-      };
 }

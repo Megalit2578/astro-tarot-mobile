@@ -9,11 +9,19 @@ import '../../core/auth/auth_controller.dart';
 /// màn hình chỉ cần câu hỏi + thời điểm. Ép kiểu chặt ở đây thì một trường
 /// đổi tên là cả khối biến mất, mà lỗi lại không nói gì về nguyên nhân.
 class LanTraiBai {
-  const LanTraiBai({required this.id, required this.cauHoi, this.luc});
+  const LanTraiBai({
+    required this.id,
+    required this.cauHoi,
+    this.luc,
+    this.model,
+  });
 
   final String id;
   final String cauHoi;
   final DateTime? luc;
+
+  /// Mô hình AI đã giải lượt này (`aiModelUsed`).
+  final String? model;
 
   factory LanTraiBai.fromJson(Map<String, dynamic> j) {
     // `mainQuestion` là tên thật trong ReadingHistoryItem bên backend. Ba tên
@@ -29,6 +37,7 @@ class LanTraiBai {
       id: (j['id'] ?? '').toString(),
       cauHoi: q is String && q.trim().isNotEmpty ? q.trim() : 'Lần trải bài',
       luc: t is String ? DateTime.tryParse(t) : null,
+      model: j['aiModelUsed'] is String ? j['aiModelUsed'] as String : null,
     );
   }
 }

@@ -44,8 +44,14 @@ jobs:
       - name: Phân tích
         run: flutter analyze --fatal-infos
 
-      - name: Test
-        run: flutter test
+      # Đo trên TOÀN BỘ lib/: coverage_helper import mọi tệp để tệp chưa có
+      # test nào cũng bị tính (không có bước này, số ra đẹp một cách giả tạo).
+      # Dưới 80% thì đỏ — cùng ngưỡng yêu cầu cho SonarQube.
+      - name: Test và coverage
+        run: |
+          tool/coverage_helper.sh
+          flutter test --coverage
+          python3 tool/kiem_coverage.py 80
 
       # Dựng APK thật chứ không chỉ biên dịch Dart. Các plugin native
       # (flutter_webrtc, image_picker, flutter_secure_storage) chỉ lộ lỗi cấu
