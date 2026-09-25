@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../money/earnings_screen.dart';
+import '../readerprofile/reader_profile_view.dart';
 import 'staff_bookings_view.dart';
 import 'staff_support_view.dart';
 
@@ -37,6 +38,8 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
         (nhan: 'Lịch hẹn', man: const StaffBookingsView()),
       if (u.co('SUPPORT_RESPOND') || u.co('SUPPORT_VIEW'))
         (nhan: 'Hỗ trợ', man: const StaffSupportView()),
+      if (u.co('READER_MANAGE_PROFILE'))
+        (nhan: 'Hồ sơ', man: const ReaderProfileView()),
       if (u.co('PAYOUT_REQUEST'))
         (nhan: 'Thu nhập', man: const EarningsScreen()),
     ];
