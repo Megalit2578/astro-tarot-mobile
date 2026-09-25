@@ -6,6 +6,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../placeholder/chua_lam.dart';
 import '../account/account_screen.dart';
+import '../readers/readers_screen.dart';
 
 /// Một mục trên thanh điều hướng.
 class _Tab {
@@ -48,17 +49,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           'GET /api/v1/ai/readings/history',
         ],
       )),
-      const _Tab('Reader', Icons.people_outline, ChuaLam(
-        ten: 'Tìm Reader',
-        moTa: 'Danh sách Reader đã duyệt, lọc theo chuyên môn, xem hồ sơ và '
-            'khung giờ trống rồi đặt lịch.',
-        endpoints: [
-          'GET /api/v1/readers',
-          'GET /api/v1/readers/{id}',
-          'GET /api/v1/readers/{id}/slots',
-          'POST /api/v1/bookings',
-        ],
-      )),
+      const _Tab('Reader', Icons.people_outline, ReadersScreen()),
       const _Tab('Lịch hẹn', Icons.event_outlined, ChuaLam(
         ten: 'Lịch hẹn của tôi',
         moTa: 'Buổi đã đặt, thanh toán, và hộp trò chuyện + gọi khi buổi đã '

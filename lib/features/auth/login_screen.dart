@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../readers/readers_screen.dart';
 import '../../theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -138,7 +139,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             )
                           : const Text('Đăng nhập'),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
+                    // Xem Reader không cần đăng nhập — endpoint /api/v1/readers
+                    // là công khai, và web cũng cho khách duyệt trước. Bắt
+                    // đăng nhập mới được nhìn là dựng tường ngay trước thứ
+                    // khiến người ta muốn đăng ký.
+                    TextButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ReadersScreen(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.people_outline, size: 18),
+                      label: const Text('Xem Reader trước khi đăng nhập'),
+                      style: TextButton.styleFrom(foregroundColor: Mau.vang),
+                    ),
+                    const SizedBox(height: 10),
                     const Text(
                       'Chưa có tài khoản? Hãy đăng ký trên astrotarot.date — '
                       'tài khoản phải xác minh email mới đăng nhập được.',
