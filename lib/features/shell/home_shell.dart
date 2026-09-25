@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/api/endpoints.dart';
 import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../account/account_screen.dart';
 import '../bookings/bookings_screen.dart';
 import '../home/home_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../readers/readers_screen.dart';
 import '../staff/staff_screen.dart';
 
@@ -39,6 +41,30 @@ class HomeShell extends ConsumerStatefulWidget {
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _chon = 0;
+  VoidCallback? _huyNgheSuKien;
+
+  @override
+  void initState() {
+    super.initState();
+    // Nghe kênh sự kiện chung ở KHUNG chứ không ở màn thông báo: chấm đỏ trên
+    // chuông phải cập nhật kể cả khi người dùng đang ở tab khác. Đặt trong
+    // màn thông báo thì nó chỉ chạy đúng lúc màn ấy đang mở — tức là đúng lúc
+    // không cần nữa.
+    _huyNgheSuKien = ref.read(realtimeProvider).nghe(
+      Endpoints.queueEvents,
+      (_) {
+        if (!mounted) return;
+        ref.invalidate(soChuaDocProvider);
+        ref.invalidate(thongBaoProvider);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _huyNgheSuKien?.call();
+    super.dispose();
+  }
 
   List<_Tab> _tabs(AppUser u) {
     return [

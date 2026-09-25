@@ -69,6 +69,12 @@ class Endpoints {
   static String bookingCancel(String id) => '/api/v1/bookings/$id/cancel';
   static String bookingNote(String id) => '/api/v1/bookings/$id/note';
 
+  /// Đánh giá là POST, khác bốn hành động PATCH ở trên.
+  static String bookingReview(String id) => '/api/v1/bookings/$id/review';
+
+  /// Kênh sự kiện chung (thông báo). Khác hai hàng đợi của buổi tư vấn.
+  static const queueEvents = '/user/queue/events';
+
   // ---- Tarot AI: /api/ai-readings, KHÔNG có /v1 ----
   static const aiReadings = '/api/ai-readings';
 

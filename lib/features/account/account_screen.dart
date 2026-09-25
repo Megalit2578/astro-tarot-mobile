@@ -5,8 +5,8 @@ import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
-import '../placeholder/chua_lam.dart';
 import '../profile/profile_screen.dart';
+import '../support/support_screen.dart';
 
 /// Tài khoản, và cũng là cửa vào khu Quản trị.
 ///
@@ -106,17 +106,7 @@ class AccountScreen extends ConsumerWidget {
             icon: Icons.support_agent_outlined,
             nhan: 'Hỗ trợ',
             phu: 'Gửi yêu cầu và xem phản hồi',
-            onTap: () => _mo(
-              context,
-              const ChuaLam(
-                ten: 'Hỗ trợ',
-                moTa: 'Gửi yêu cầu hỗ trợ và theo dõi phản hồi.',
-                endpoints: [
-                  'GET  /api/v1/support/my-tickets',
-                  'POST /api/v1/support/tickets',
-                ],
-              ),
-            ),
+            onTap: () => _mo(context, const SupportScreen()),
           ),
 
           const SizedBox(height: 22),

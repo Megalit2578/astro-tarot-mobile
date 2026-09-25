@@ -9,6 +9,7 @@ import '../../widgets/trang_thai.dart';
 import 'booking.dart';
 import 'bookings_repository.dart';
 import 'chat_screen.dart';
+import 'review_sheet.dart';
 
 class BookingsScreen extends ConsumerWidget {
   const BookingsScreen({super.key});
@@ -210,6 +211,26 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 // Không tự suy từ trạng thái + thanh toán: luật còn có hạn ân
                 // hạn bảy ngày sau khi buổi kết thúc, đoán lại ở đây thì sớm
                 // muộn nút hiện ra mà gửi tin lại bị từ chối.
+                // Đánh giá chỉ có nghĩa khi buổi đã xong và chưa chấm.
+                // Hiện nút cho buổi chưa xong là mời người ta chấm điểm thứ
+                // chưa diễn ra.
+                if (b.trangThai == TrangThaiBuoi.completed && !b.daDanhGia)
+                  FilledButton.icon(
+                    onPressed: () => moDanhGia(context, b),
+                    icon: const Icon(Icons.star_border, size: 16),
+                    label: const Text('Đánh giá'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                  ),
+                if (b.trangThai == TrangThaiBuoi.completed && b.daDanhGia)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 9),
+                    child: Text('Bạn đã đánh giá buổi này',
+                        style:
+                            TextStyle(fontSize: 11.5, color: Mau.chuMo)),
+                  ),
                 if (b.chatMo)
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(

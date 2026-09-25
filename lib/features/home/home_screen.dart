@@ -7,6 +7,7 @@ import '../../theme.dart';
 import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
+import '../notifications/notifications_screen.dart';
 import 'home_repository.dart';
 
 /// Trang chủ.
@@ -30,6 +31,18 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('ASTROTAROT',
             style: TextStyle(letterSpacing: 3, fontSize: 15)),
+        actions: [
+          _ChuongThongBao(
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen()),
+              );
+              // Người dùng có thể đã đọc vài cái; số trên chuông phải theo.
+              ref.invalidate(soChuaDocProvider);
+            },
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: Mau.vang,
@@ -90,6 +103,55 @@ class HomeScreen extends ConsumerWidget {
       b.trangThai != TrangThaiBuoi.cancelled &&
       b.trangThai != TrangThaiBuoi.completed &&
       b.ketThuc.toLocal().isAfter(DateTime.now());
+}
+
+/// Chuông kèm số chưa đọc.
+///
+/// Số lấy từ endpoint riêng chứ không đếm từ danh sách: danh sách chỉ tải 50
+/// cái mới nhất, đếm trong đó sẽ ra con số sai khi người dùng bỏ quên lâu.
+class _ChuongThongBao extends ConsumerWidget {
+  const _ChuongThongBao({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final so = ref.watch(soChuaDocProvider).asData?.value ?? 0;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          onPressed: onTap,
+          tooltip: 'Thông báo',
+          icon: const Icon(Icons.notifications_none, size: 22),
+        ),
+        if (so > 0)
+          Positioned(
+            top: 9,
+            right: 8,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+              constraints: const BoxConstraints(minWidth: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5645E),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                // Quá 99 thì hiện "99+": ô tròn nhỏ không chứa nổi ba chữ số
+                // mà con số chính xác lúc đó cũng chẳng còn ý nghĩa gì.
+                so > 99 ? '99+' : '$so',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 9.5,
+                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _Nhan extends StatelessWidget {

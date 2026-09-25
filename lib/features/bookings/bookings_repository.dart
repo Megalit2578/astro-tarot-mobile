@@ -66,6 +66,16 @@ class BookingsRepository {
   Future<Booking> ghiChu(String id, String noiDung) =>
       _hanhDong(Endpoints.bookingNote(id), body: {'note': noiDung});
 
+  /// Chấm điểm buổi đã hoàn tất. POST, không phải PATCH như bốn cái trên.
+  Future<void> danhGia(String id, int diem, String? nhanXet) => _api.post(
+        Endpoints.bookingReview(id),
+        body: {
+          'rating': diem,
+          if (nhanXet != null && nhanXet.trim().isNotEmpty)
+            'comment': nhanXet.trim(),
+        },
+      );
+
   Future<Booking> _hanhDong(String duong, {Object? body}) async {
     final data = await _api.patch<Map<String, dynamic>>(duong, body: body);
     return Booking.fromJson(data);
