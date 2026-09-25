@@ -6,6 +6,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../placeholder/chua_lam.dart';
 import '../account/account_screen.dart';
+import '../bookings/bookings_screen.dart';
 import '../readers/readers_screen.dart';
 
 /// Một mục trên thanh điều hướng.
@@ -50,18 +51,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         ],
       )),
       const _Tab('Reader', Icons.people_outline, ReadersScreen()),
-      const _Tab('Lịch hẹn', Icons.event_outlined, ChuaLam(
-        ten: 'Lịch hẹn của tôi',
-        moTa: 'Buổi đã đặt, thanh toán, và hộp trò chuyện + gọi khi buổi đã '
-            'xác nhận.',
-        endpoints: [
-          'GET /api/v1/bookings/me',
-          'POST /api/v1/bookings/{id}/payment',
-          'GET /api/v1/bookings/{id}/messages',
-          'STOMP /app/bookings/{id}/chat',
-          'STOMP /app/bookings/{id}/call',
-        ],
-      )),
+      const _Tab('Lịch hẹn', Icons.event_outlined, BookingsScreen()),
       if (u.laNhanSu)
         const _Tab('Bàn làm việc', Icons.work_outline, ChuaLam(
           ten: 'Bàn làm việc',
