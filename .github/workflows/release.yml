@@ -1,0 +1,103 @@
+# Phát hành bản cài được: đẩy một thẻ `v*` là có APK tải về từ trang Releases.
+#
+# Vì sao là GitHub Releases mà không phải một chỗ nào khác: app Flutter không
+# cần máy chủ nào cả. Nó là client thứ hai của đúng API đã chạy trên Render,
+# cùng database Neon, cùng Redis Upstash mà web đang dùng. Thứ cần đưa đi là
+# một file APK, và GitHub Releases cho chỗ chứa không giới hạn, miễn phí, kèm
+# luôn một đường tải công khai.
+#
+# LƯU Ý VỀ KHOÁ KÝ: android/app/build.gradle.kts hiện ký bản release bằng khoá
+# debug (dòng 46, kèm TODO của Flutter). APK ra từ đây cài tay được bình
+# thường, nhưng KHÔNG nộp lên Google Play được — Play từ chối mọi thứ ký bằng
+# khoá debug. Muốn lên Play thì phải tạo keystore riêng, nạp vào Secrets, rồi
+# sửa khối signingConfigs; ghi rõ ở đây để không ai nhầm APK này là bản nộp
+# store được.
+name: Phát hành
+
+on:
+  push:
+    tags: ["v*"]
+  # Bấm tay cũng được, để dựng thử một bản mà chưa muốn đặt thẻ.
+  workflow_dispatch:
+
+# Cần quyền ghi để tạo Release và đính kèm file.
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: Dựng APK release và tạo Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Ghim đúng bản Flutter như ci.yml. Hai workflow lệch bản Flutter thì CI
+      # xanh mà bản phát hành đỏ, và đó là kiểu lỗi phát hiện muộn nhất.
+      - name: Cài Flutter 3.47.2
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.2"
+          channel: stable
+          cache: true
+
+      - name: Cài JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Tải phụ thuộc
+        run: flutter pub get
+
+      # Chạy lại test trước khi phát hành. ci.yml đã chạy trên nhánh, nhưng thẻ
+      # có thể được đặt ở một commit khác với commit CI vừa kiểm.
+      - name: Test
+        run: flutter test
+
+      # --split-per-abi: ba file nhỏ (arm64, armeabi-v7a, x86_64) thay vì một
+      # file to gấp ba. Kèm cả bản universal cho ai không biết máy mình chip gì.
+      #
+      # API_BASE_URL truyền tường minh chứ không dựa vào defaultValue trong
+      # config.dart: bản phát hành phải trỏ production một cách nhìn thấy được
+      # ở đây, không phải một giá trị mặc định ai đó có thể sửa mất.
+      - name: Dựng APK release
+        run: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=https://api.astrotarot.date
+          flutter build apk --release --split-per-abi \
+            --dart-define=API_BASE_URL=https://api.astrotarot.date
+
+      - name: Đổi tên cho dễ nhận
+        run: |
+          cd build/app/outputs/flutter-apk
+          for f in app-release.apk app-arm64-v8a-release.apk \
+                   app-armeabi-v7a-release.apk app-x86_64-release.apk; do
+            [ -f "$f" ] && mv "$f" "astrotarot-${f#app-}"
+          done
+          ls -lh
+
+      - name: Tạo Release và đính kèm APK
+        uses: softprops/action-gh-release@v2
+        with:
+          # Bấm tay thì chưa có thẻ, nên đặt tên theo số lần chạy.
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
+          name: Astro Tarot ${{ github.ref_type == 'tag' && github.ref_name || format('bản dựng {0}', github.run_number) }}
+          draft: false
+          prerelease: ${{ github.ref_type != 'tag' }}
+          body: |
+            Bản cài cho Android. Tải file phù hợp với máy rồi mở để cài:
+
+            - **astrotarot-arm64-v8a-release.apk** — hầu hết điện thoại từ 2017 tới nay. Không rõ thì tải file này.
+            - **astrotarot-armeabi-v7a-release.apk** — máy cũ, 32-bit.
+            - **astrotarot-x86_64-release.apk** — máy ảo trên PC.
+            - **astrotarot-release.apk** — chạy trên mọi máy, nhưng nặng gấp ba.
+
+            Android sẽ hỏi có cho cài từ nguồn ngoài Play hay không; đây là bản
+            phát hành trực tiếp nên phải bật mục đó cho trình duyệt hoặc trình
+            quản lý file.
+
+            App nối tới API tại `https://api.astrotarot.date`. Máy chủ chạy gói
+            free của Render nên ngủ sau một quãng không ai dùng: lần mở đầu tiên
+            có thể chờ khoảng một phút, sau đó nhanh bình thường.
+          files: build/app/outputs/flutter-apk/astrotarot-*.apk

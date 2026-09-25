@@ -93,6 +93,16 @@ void main() {
     }
   });
 
+  test('shopClick dung SLUG, khong phai id', () {
+    // Da kiem tren production: slug -> 200, id -> 404.
+    //
+    // Loi nay im lang mot cach nguy hiem: ghiNhanBam() co tinh nuot loi de
+    // khong chan nguoi dung mua hang, nen truyen nham id se lam mat sach so
+    // lieu tiep thi ma khong ai thay gi ca. So lieu do la doanh thu cua du an.
+    expect(Endpoints.shopClick('thoth-tarot'),
+        '/api/v1/shop/products/thoth-tarot/click');
+  });
+
   test('id duoc chen dung cho trong duong dan co tham so', () {
     const id = 'abc-123';
     expect(Endpoints.reader(id), '/api/v1/readers/$id');
