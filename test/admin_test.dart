@@ -302,7 +302,7 @@ void main() {
       expect(m.mayChu.lanCuoi('PATCH /api/v1/admin/users/t1')!.than['fullName'],
           'Tên Mới');
 
-      await bam(t, find.text('Xoá tài khoản').first);
+      await bam(t, find.text('Xoá tài khoản'));
       await bam(t, find.widgetWithText(FilledButton, 'Xoá tài khoản'));
       expect(m.mayChu.cacLan('DELETE /api/v1/admin/users/t1'), hasLength(1));
     });
@@ -331,7 +331,7 @@ void main() {
       await bam(t, find.text('Mở khoá').last);
       expect(find.text('Không được'), findsOneWidget);
       m.mayChu.loi('DELETE /api/v1/admin/users/t1', 'Không xoá được');
-      await bam(t, find.text('Xoá tài khoản').first);
+      await bam(t, find.text('Xoá tài khoản'));
       await bam(t, find.widgetWithText(FilledButton, 'Xoá tài khoản'));
       expect(find.text('Không xoá được'), findsOneWidget);
     });

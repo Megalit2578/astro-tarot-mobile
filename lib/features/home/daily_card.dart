@@ -361,13 +361,17 @@ class _RutBaiHangNgayState extends State<RutBaiHangNgay> {
       ],
     ),
     const SizedBox(height: 12),
-    Row(
+    // Wrap: cỡ chữ lớn thì hai nút không còn vừa một hàng.
+    Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 6,
       children: [
         TextButton(
           onPressed: () => setState(() => _la = null),
           child: const Text('Rút lại'),
         ),
-        const Spacer(),
         FilledButton(
           onPressed: () =>
               Navigator.of(context)

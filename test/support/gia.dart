@@ -308,6 +308,10 @@ class MoiTruong {
     late ProviderContainer c;
     await tester.pumpWidget(
       ProviderScope(
+        // Khoá mới mỗi lần: dựng lại ProviderScope ở cùng chỗ thì Riverpod
+        // giữ container cũ, và môi trường thứ hai trong cùng một test bị bỏ
+        // qua lặng lẽ.
+        key: UniqueKey(),
         // Tắt tự thử lại: test cần thấy lỗi ngay, không chờ backoff.
         retry: (_, _) => null,
         overrides: [...overrides(thatAuth: thatAuth)],
@@ -349,9 +353,52 @@ Future<void> xong(WidgetTester tester, {int lan = 12}) async {
   }
 }
 
+/// Cuộn danh sách dọc cho tới khi [f] được dựng.
+///
+/// ListView chỉ dựng phần đang nằm trong màn; thứ ở dưới xa chưa tồn tại
+/// trong cây widget nên không tìm thấy được cho tới khi cuộn tới.
+Future<void> cuonToi(WidgetTester tester, Finder f) async {
+  if (_coThay(f)) return;
+  final doc = find.byWidgetPredicate(
+      (w) => w is Scrollable && w.axisDirection == AxisDirection.down);
+  for (final e in doc.evaluate().toList()) {
+    // Thử cuộn xuống trước, rồi cuộn lên — thứ cần tìm có thể ở phía trên
+    // nếu trước đó test đã cuộn danh sách xuống.
+    for (final buoc in const [250.0, -250.0]) {
+      try {
+        await tester.scrollUntilVisible(f, buoc,
+            scrollable: find.byElementPredicate((x) => x == e),
+            maxScrolls: 40);
+        return;
+      } catch (_) {
+        // Không thấy theo chiều này / trong danh sách này — thử tiếp.
+      }
+    }
+  }
+}
+
+/// `finder.first` ném StateError khi rỗng thay vì trả rỗng — gói lại.
+bool _coThay(Finder f) {
+  try {
+    return f.evaluate().isNotEmpty;
+  } on StateError {
+    return false;
+  }
+}
+
 /// Bấm một widget, cuộn tới nó trước nếu cần.
+///
+/// Truyền finder trần, đừng `.first`: finder `.first` ném lỗi khi chưa có gì
+/// (thứ nằm ngoài màn chưa được dựng) nên không cuộn tới được. Ở đây đã tự
+/// lấy phần tử đầu.
 Future<void> bam(WidgetTester tester, Finder f) async {
-  await tester.ensureVisible(f.first);
+  await cuonToi(tester, f);
+  // Đưa đích vào GIỮA màn: nằm sát mép thì cú chạm có thể rơi vào thanh
+  // tiêu đề hay vùng kéo-để-tải-lại thay vì vào nút.
+  final e = f.evaluate().first;
+  if (Scrollable.maybeOf(e) != null) {
+    await Scrollable.ensureVisible(e, alignment: 0.5);
+  }
   await tester.pump();
   await tester.tap(f.first, warnIfMissed: false);
   await xong(tester);
