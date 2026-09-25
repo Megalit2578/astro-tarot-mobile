@@ -74,6 +74,29 @@ class Endpoints {
   static const astrologyProfiles = '/api/me/astrology/profiles';
   static const astrologyPrimary = '/api/me/astrology/profiles/primary';
 
+  // ---- Quản trị ----
+  static const adminStats = '/api/v1/admin/stats';
+  static const adminUsers = '/api/v1/admin/users';
+  static String adminUserRole(String id) => '/api/v1/admin/users/$id/role';
+  static String adminUserStatus(String id) => '/api/v1/admin/users/$id/status';
+  static const adminReaderApplications = '/api/v1/admin/readers/applications';
+  static String adminReaderReview(String applicationId) =>
+      '/api/v1/admin/readers/$applicationId/review';
+
+  // MoneyController map @RequestMapping("/api/v1") rồi mới nối "/admin/...",
+  // nên đường đầy đủ vẫn là /api/v1/admin/... như nhóm trên.
+  static const adminPayments = '/api/v1/admin/payments';
+  static String adminPaymentConfirm(String id) =>
+      '/api/v1/admin/payments/$id/confirm';
+  static String adminPaymentReject(String id) =>
+      '/api/v1/admin/payments/$id/reject';
+  static const adminPayouts = '/api/v1/admin/payouts';
+  static String adminPayoutApprove(String id) =>
+      '/api/v1/admin/payouts/$id/approve';
+  static String adminPayoutReject(String id) =>
+      '/api/v1/admin/payouts/$id/reject';
+  static String adminPayoutPaid(String id) => '/api/v1/admin/payouts/$id/paid';
+
   // ---- Hỗ trợ ----
   static const support = '/api/v1/support';
 

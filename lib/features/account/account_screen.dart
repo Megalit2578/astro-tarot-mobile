@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
+import '../admin/admin_hub.dart';
 import '../placeholder/chua_lam.dart';
 
 /// Tài khoản, và cũng là cửa vào khu Quản trị.
@@ -90,23 +91,7 @@ class AccountScreen extends ConsumerWidget {
               icon: Icons.shield_outlined,
               nhan: 'Khu quản trị',
               phu: 'Tài khoản, đơn hàng, thanh toán, duyệt Reader',
-              onTap: () => _mo(
-                context,
-                const ChuaLam(
-                  ten: 'Khu quản trị',
-                  moTa: 'Quản lý tài khoản, duyệt đơn Reader, đối soát thanh '
-                      'toán và yêu cầu rút tiền, quản lý gian hàng.\n\n'
-                      'Đặt trong đây chứ không lên thanh tab: đây là việc ngồi '
-                      'máy tính, hiếm khi làm trên điện thoại giữa đường.',
-                  endpoints: [
-                    'GET  /api/v1/admin/users',
-                    'GET  /api/v1/admin/payments',
-                    'PATCH /api/v1/admin/payments/{id}/confirm',
-                    'GET  /api/v1/admin/reader-applications',
-                    'GET  /api/v1/money/payouts',
-                  ],
-                ),
-              ),
+              onTap: () => _mo(context, const AdminHub()),
             ),
 
           _Muc(
@@ -122,7 +107,7 @@ class AccountScreen extends ConsumerWidget {
                   'GET   /api/v1/me',
                   'PATCH /api/v1/me',
                   'POST  /api/v1/avatar',
-                  'GET   /api/v1/astrology/profiles/primary',
+                  'GET   /api/me/astrology/profiles/primary',
                 ],
               ),
             ),
