@@ -92,8 +92,10 @@ class AccountScreen extends ConsumerWidget {
           if (u.laQuanTri)
             _Muc(
               icon: Icons.shield_outlined,
-              nhan: 'Khu quản trị',
-              phu: 'Tài khoản, đơn hàng, thanh toán, duyệt Reader',
+              nhan: u.co('USERS_MANAGE') ? 'Khu quản trị' : 'Khu quản lý',
+              phu: u.co('USERS_MANAGE')
+                  ? 'Tổng quan, tài khoản, tiền, nhật ký, sản phẩm'
+                  : 'Nhân sự, hồ sơ Reader, báo cáo, gian hàng',
               onTap: () => _mo(context, const AdminHub()),
             ),
 
