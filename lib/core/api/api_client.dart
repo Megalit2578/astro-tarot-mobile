@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 
 import '../config.dart';
+import 'endpoints.dart';
 import 'token_store.dart';
 
 /// Lỗi đã dịch sang câu người dùng đọc được.
@@ -68,7 +69,11 @@ class ApiClient {
         final path = response.requestOptions.path;
 
         final dangHetHan = code == 401 || code == 403;
-        final laDuongAuth = path.contains('/auth/refresh') || path.contains('/auth/login');
+        // Không thử làm mới cho chính hai đường này: /auth/refresh hỏng thì
+        // gọi lại nó là vòng lặp, còn /auth/login trả 401 nghĩa là sai mật
+        // khẩu chứ không phải token hết hạn.
+        final laDuongAuth =
+            path == Endpoints.refresh || path == Endpoints.login;
         final daThuLai = response.requestOptions.extra['daThuLai'] == true;
 
         if (!dangHetHan || laDuongAuth || daThuLai || !tokenStore.coPhien) {
@@ -121,7 +126,7 @@ class ApiClient {
         receiveTimeout: const Duration(seconds: 70),
       ));
       final r = await raw.post(
-        '/api/v1/auth/refresh',
+        Endpoints.refresh,
         // camelCase. Bản web từng gửi `refresh_token` và backend trả thẳng
         // 400 "Refresh token is required".
         data: {'refreshToken': refresh},

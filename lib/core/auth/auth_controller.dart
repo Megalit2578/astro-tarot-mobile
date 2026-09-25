@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
+import '../api/endpoints.dart';
 import '../api/token_store.dart';
 import '../realtime/realtime_client.dart';
 import 'app_user.dart';
@@ -92,18 +93,17 @@ class AuthController extends Notifier<AuthState> {
       return;
     }
     try {
-      final me = await _api.get<Map<String, dynamic>>('/api/v1/me');
+      final me = await _api.get<Map<String, dynamic>>(Endpoints.me);
       _vaoPhien(AppUser.fromJson(me));
     } catch (_) {
       // Mạng hỏng lúc mở app KHÔNG được làm mất phiên. ApiClient chỉ xoá
       // token khi refresh bị từ chối thẳng; tới đây mà vẫn còn token nghĩa là
       // chưa kết luận được gì — cứ coi như chưa đăng nhập cho lượt này, lần
       // mở sau sẽ thử lại.
-      state = state.copy(
-        trangThai: _store.coPhien
-            ? TrangThaiPhien.chuaDangNhap
-            : TrangThaiPhien.chuaDangNhap,
-      );
+      // Token vẫn được GIỮ nguyên trong Keystore. ApiClient chỉ xoá nó khi
+      // máy chủ từ chối thẳng refresh token; tới đây thì chưa kết luận được
+      // gì, nên chỉ hiện màn đăng nhập cho lượt này và thử lại ở lần mở sau.
+      state = state.copy(trangThai: TrangThaiPhien.chuaDangNhap);
     }
   }
 
@@ -111,7 +111,7 @@ class AuthController extends Notifier<AuthState> {
     state = state.copy(dangXuLy: true, xoaLoi: true);
     try {
       final data = await _api.post<Map<String, dynamic>>(
-        '/api/v1/auth/login',
+        Endpoints.login,
         body: {'email': email.trim(), 'password': matKhau},
       );
       await _store.luu(
@@ -134,7 +134,7 @@ class AuthController extends Notifier<AuthState> {
     // người dùng bấm đăng xuất là họ muốn rời máy này ngay, thường vì đang
     // đưa máy cho người khác.
     try {
-      await _api.post('/api/v1/auth/logout');
+      await _api.post(Endpoints.logout);
     } catch (_) {}
     await _donPhien();
   }
