@@ -151,7 +151,7 @@ class _TaiKhoanViewState extends ConsumerState<TaiKhoanView> {
     if (ok == true) await _dk.taiLai();
   }
 
-  Widget _loc<T>({
+  Widget _loc({
     required String nhan,
     required String giaTri,
     required Map<String, String> luaChon,

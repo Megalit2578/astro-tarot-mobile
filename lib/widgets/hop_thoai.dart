@@ -66,42 +66,86 @@ Future<String?> hoiNoiDung(
   bool batBuoc = false,
   int dongToiDa = 4,
   TextInputType kieuNhap = TextInputType.multiline,
-}) async {
-  final o = TextEditingController(text: giaTriDau);
-  try {
-    return await showDialog<String>(
+}) =>
+    showDialog<String>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Mau.the,
-          title: Text(tieuDe, style: const TextStyle(fontSize: 16)),
-          content: TextField(
-            controller: o,
-            autofocus: true,
-            keyboardType: kieuNhap,
-            minLines: dongToiDa > 1 ? 2 : 1,
-            maxLines: dongToiDa,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(hintText: goiY),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Thoát'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-              onPressed: batBuoc && o.text.trim().isEmpty
-                  ? null
-                  : () => Navigator.of(ctx).pop(o.text.trim()),
-              child: Text(gui),
-            ),
-          ],
-        ),
+      builder: (_) => _HopNhap(
+        tieuDe: tieuDe,
+        goiY: goiY,
+        giaTriDau: giaTriDau,
+        gui: gui,
+        batBuoc: batBuoc,
+        dongToiDa: dongToiDa,
+        kieuNhap: kieuNhap,
       ),
     );
-  } finally {
-    o.dispose();
+
+/// Hộp thoại nhập chữ tự giữ controller của mình.
+///
+/// Bản đầu tạo controller bên ngoài rồi huỷ ngay khi `showDialog` trả kết
+/// quả — nhưng lúc ấy hiệu ứng đóng hộp thoại vẫn đang vẽ ô nhập, và Flutter
+/// báo "TextEditingController was used after being disposed". Để hộp thoại tự
+/// huỷ trong `dispose()` thì controller sống đúng bằng ô nhập.
+class _HopNhap extends StatefulWidget {
+  const _HopNhap({
+    required this.tieuDe,
+    required this.goiY,
+    required this.giaTriDau,
+    required this.gui,
+    required this.batBuoc,
+    required this.dongToiDa,
+    required this.kieuNhap,
+  });
+
+  final String tieuDe;
+  final String goiY;
+  final String giaTriDau;
+  final String gui;
+  final bool batBuoc;
+  final int dongToiDa;
+  final TextInputType kieuNhap;
+
+  @override
+  State<_HopNhap> createState() => _HopNhapState();
+}
+
+class _HopNhapState extends State<_HopNhap> {
+  late final _o = TextEditingController(text: widget.giaTriDau);
+
+  @override
+  void dispose() {
+    _o.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Mau.the,
+      title: Text(widget.tieuDe, style: const TextStyle(fontSize: 16)),
+      content: TextField(
+        controller: _o,
+        autofocus: true,
+        keyboardType: widget.kieuNhap,
+        minLines: widget.dongToiDa > 1 ? 2 : 1,
+        maxLines: widget.dongToiDa,
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(hintText: widget.goiY),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Thoát'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+          onPressed: widget.batBuoc && _o.text.trim().isEmpty
+              ? null
+              : () => Navigator.of(context).pop(_o.text.trim()),
+          child: Text(widget.gui),
+        ),
+      ],
+    );
   }
 }
 

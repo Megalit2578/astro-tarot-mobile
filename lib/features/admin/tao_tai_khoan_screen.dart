@@ -119,6 +119,7 @@ class _TaoTaiKhoanScreenState extends ConsumerState<TaoTaiKhoanScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _vaiTro,
               dropdownColor: Mau.the,
               decoration: const InputDecoration(labelText: 'Vai trò'),

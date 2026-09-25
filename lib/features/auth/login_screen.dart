@@ -196,8 +196,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextButton.styleFrom(foregroundColor: Mau.vang),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    // Wrap chứ không phải Row: người dùng đặt cỡ chữ lớn
+                    // trong máy thì hai nút không còn vừa một hàng, và Row
+                    // sẽ tràn ra ngoài màn.
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         TextButton(
                           onPressed: () => Navigator.of(context).push(

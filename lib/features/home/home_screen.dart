@@ -29,8 +29,12 @@ class HomeScreen extends ConsumerWidget {
     final readings = ref.watch(lichSuTraiBaiProvider);
     final banDoSao = ref.watch(banDoSaoProvider);
 
-    final sapToi = bookings.asData?.value.where(_sapToi).toList() ?? const [];
-    sapToi.sort((a, b) => a.batDau.compareTo(b.batDau));
+    // Danh sách MỚI, sửa được: bản đầu lùi về `const []` khi lịch hẹn chưa
+    // tải xong rồi gọi sort() trên nó — ném "Cannot modify an unmodifiable
+    // list", và nếu API lịch hẹn lỗi thì cả trang chủ thành ô xám mãi.
+    final sapToi = <Booking>[
+      ...?bookings.asData?.value.where(_sapToi),
+    ]..sort((a, b) => a.batDau.compareTo(b.batDau));
 
     return Scaffold(
       appBar: AppBar(

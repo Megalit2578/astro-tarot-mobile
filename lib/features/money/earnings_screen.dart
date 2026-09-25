@@ -221,7 +221,7 @@ class _TheGiaoDich extends StatelessWidget {
   Widget build(BuildContext context) {
     // Tiền vào màu xanh, tiền ra màu đỏ. Dấu cộng/trừ thôi thì trên màn nhỏ
     // rất dễ đọc lướt qua.
-    final ra = g.soTien < 0;
+    final huong = huongTien(g.loai);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -249,12 +249,13 @@ class _TheGiaoDich extends StatelessWidget {
             ),
           ),
           Text(
-            '${ra ? '' : '+'}${Dinh.tien(g.soTien)}',
+            '${huong > 0 ? '+' : (huong < 0 ? '−' : '')}${Dinh.tien(g.soTien.abs())}',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color:
-                  ra ? const Color(0xFFE5645E) : const Color(0xFF6BBF7B),
+              color: huong < 0
+                  ? const Color(0xFFE5645E)
+                  : (huong > 0 ? const Color(0xFF6BBF7B) : Mau.chuMo),
             ),
           ),
         ],
@@ -292,6 +293,12 @@ class _TheRut extends StatelessWidget {
                     style:
                         const TextStyle(fontSize: 11, color: Mau.chuMo),
                   ),
+                  if (y.lyDoTuChoi != null) ...[
+                    const SizedBox(height: 3),
+                    Text('Lý do: ${y.lyDoTuChoi}',
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFFE5645E))),
+                  ],
                 ],
               ),
             ),

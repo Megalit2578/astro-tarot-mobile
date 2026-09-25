@@ -354,6 +354,7 @@ class _SanPhamFormScreenState extends ConsumerState<SanPhamFormScreen> {
             Row(children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue:
                       sanLienKet.contains(_san) ? _san : sanLienKet.first,
                   dropdownColor: Mau.the,
@@ -386,6 +387,7 @@ class _SanPhamFormScreenState extends ConsumerState<SanPhamFormScreen> {
             ]),
             const SizedBox(height: 12),
             DropdownButtonFormField<String?>(
+              isExpanded: true,
               initialValue: dsDanhMuc.any((c) => c.id == _danhMucId)
                   ? _danhMucId
                   : null,

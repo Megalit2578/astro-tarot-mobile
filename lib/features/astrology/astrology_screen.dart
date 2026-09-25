@@ -352,6 +352,7 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _kieu,
               dropdownColor: Mau.the,
               decoration: const InputDecoration(labelText: 'Hồ sơ của ai'),

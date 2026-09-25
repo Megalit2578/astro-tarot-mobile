@@ -43,7 +43,11 @@ class ApiException implements Exception {
 ///    mất mạng là tạm thời; vứt refresh token vì một khoảng gián đoạn là bắt
 ///    người dùng đăng nhập lại dù phiên còn sống tới bảy ngày.
 class ApiClient {
-  ApiClient({required this.tokenStore, this.khiPhienHong}) {
+  ApiClient({
+    required this.tokenStore,
+    this.khiPhienHong,
+    @visibleForTesting this.adapter,
+  }) {
     dio = Dio(BaseOptions(
       baseUrl: AppConfig.apiBaseUrl,
       connectTimeout: const Duration(seconds: 20),
@@ -55,6 +59,7 @@ class ApiClient {
       // Tự xử mã lỗi trong interceptor, đừng để Dio ném sớm.
       validateStatus: (_) => true,
     ));
+    if (adapter != null) dio.httpClientAdapter = adapter!;
 
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -102,6 +107,10 @@ class ApiClient {
   late final Dio dio;
   final TokenStore tokenStore;
 
+  /// Chỉ dùng trong test: thay tầng HTTP của CẢ HAI Dio (Dio chính và Dio
+  /// trần dùng để làm mới token) bằng một máy chủ giả.
+  final HttpClientAdapter? adapter;
+
   /// Gọi khi refresh token không còn dùng được — tầng trên đưa người dùng về
   /// màn đăng nhập.
   final void Function()? khiPhienHong;
@@ -126,6 +135,7 @@ class ApiClient {
         connectTimeout: const Duration(seconds: 20),
         receiveTimeout: const Duration(seconds: 70),
       ));
+      if (adapter != null) raw.httpClientAdapter = adapter!;
       final r = await raw.post(
         Endpoints.refresh,
         // camelCase. Bản web từng gửi `refresh_token` và backend trả thẳng

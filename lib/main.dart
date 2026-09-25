@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/api/api_client.dart';
 import 'core/auth/auth_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/shell/home_shell.dart';
 import 'theme.dart';
 
 void main() {
-  runApp(const ProviderScope(child: AstroTarotApp()));
+  runApp(const ProviderScope(retry: thuLaiKhiNao, child: AstroTarotApp()));
+}
+
+/// Khi nào một provider hỏng thì tự thử lại.
+///
+/// Riverpod 3 mặc định thử lại MỌI lỗi, kéo dài vài chục giây. Với lỗi 4xx
+/// (không có quyền, không tìm thấy, dữ liệu sai) thì thử lại vô ích — người
+/// dùng chỉ thấy vòng quay lâu hơn rồi mới đọc được câu lỗi. Chỉ thử lại lỗi
+/// mạng và 5xx (máy chủ gói free đang thức dậy), tối đa hai lần.
+Duration? thuLaiKhiNao(int lan, Object loi) {
+  if (lan >= 2) return null;
+  if (loi is ApiException) {
+    final ma = loi.statusCode;
+    if (ma != null && ma < 500) return null;
+  }
+  return Duration(seconds: 1 << lan);
 }
 
 class AstroTarotApp extends StatelessWidget {
