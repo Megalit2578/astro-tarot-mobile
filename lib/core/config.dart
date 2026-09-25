@@ -30,6 +30,26 @@ class AppConfig {
     return u.replace(scheme: scheme, path: '/ws').toString();
   }
 
+  /// Gốc của trang web, KHÁC gốc API.
+  ///
+  /// Ảnh sản phẩm trong gian hàng được backend trả về dưới dạng đường dẫn
+  /// tương đối như `/products/thoth-tarot.jpg`. Trên web chúng tự khớp vì
+  /// trang và ảnh cùng một tên miền; trong app thì không có "trang" nào để
+  /// khớp, nên phải tự ghép. Ghép nhầm vào gốc API thì ảnh trả 401 — đúng,
+  /// bốn-không-một chứ không phải 404, vì đường lạ ở API đòi đăng nhập.
+  static const String webBaseUrl = String.fromEnvironment(
+    'WEB_BASE_URL',
+    defaultValue: 'https://astrotarot.date',
+  );
+
+  /// Ghép đường dẫn ảnh tương đối thành URL đầy đủ.
+  static String? anh(String? duong) {
+    if (duong == null || duong.trim().isEmpty) return null;
+    final d = duong.trim();
+    if (d.startsWith('http://') || d.startsWith('https://')) return d;
+    return '$webBaseUrl${d.startsWith('/') ? '' : '/'}$d';
+  }
+
   /// Bật log mạng. Chỉ khi chạy debug — bản phát hành in ra là rò token.
   static const bool logHttp = bool.fromEnvironment('LOG_HTTP', defaultValue: false);
 }

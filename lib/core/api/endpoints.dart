@@ -108,6 +108,18 @@ class Endpoints {
   // ---- Hỗ trợ ----
   static const support = '/api/v1/support';
 
+  // ---- Gian hàng (liên kết tiếp thị, không bán trong app) ----
+  static const shopProducts = '/api/v1/shop/products';
+  static const shopCategories = '/api/v1/shop/categories';
+  static String shopProduct(String slug) => '/api/v1/shop/products/$slug';
+
+  /// Ghi nhận một lượt bấm sang sàn liên kết. Công khai, không cần đăng nhập.
+  static String shopClick(String id) => '/api/v1/shop/products/$id/click';
+
+  // ---- Blog ----
+  static const blogs = '/api/v1/blogs';
+  static String blog(String slug) => '/api/v1/blogs/$slug';
+
   // ---- WebRTC ----
   static const iceConfig = '/api/v1/rtc/ice';
 

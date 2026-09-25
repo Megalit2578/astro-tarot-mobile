@@ -6,6 +6,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
 import '../profile/profile_screen.dart';
+import '../shop/shop_screen.dart';
 import '../support/support_screen.dart';
 
 /// Tài khoản, và cũng là cửa vào khu Quản trị.
@@ -100,6 +101,13 @@ class AccountScreen extends ConsumerWidget {
             nhan: 'Hồ sơ cá nhân',
             phu: 'Tên, ảnh đại diện, ngày giờ nơi sinh',
             onTap: () => _mo(context, const ProfileScreen()),
+          ),
+
+          _Muc(
+            icon: Icons.storefront_outlined,
+            nhan: 'Gian hàng',
+            phu: 'Bài Tarot, sách, vật phẩm chúng tôi chọn lọc',
+            onTap: () => _mo(context, const ShopScreen()),
           ),
 
           _Muc(
