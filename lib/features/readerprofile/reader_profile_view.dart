@@ -390,7 +390,9 @@ class _KhungRanh extends ConsumerWidget {
                     ChoiceChip(
                       selected: thu == i,
                       onSelected: (_) => setSheet(() => thu = i),
-                      label: Text(tenThu[i].replaceFirst('Thứ ', 'T')),
+                      // Nhãn ngắn viết sẵn. Bản đầu cắt "Thứ " khỏi tên đầy đủ
+                      // rồi thêm "T" — ra "THai", "TBa", "TSáu".
+                      label: Text(_thuNgan[i]),
                       labelStyle: TextStyle(
                           fontSize: 12,
                           color: thu == i ? Mau.vang : Mau.chuMo),
@@ -469,6 +471,9 @@ class _KhungRanh extends ConsumerWidget {
   }
 }
 
+/// Nhãn ngắn của thứ, chỉ số khớp [tenThu] (1 = Thứ Hai … 7 = Chủ nhật).
+const _thuNgan = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
 class _NutGio extends StatelessWidget {
   const _NutGio({
     required this.nhan,
@@ -537,7 +542,6 @@ class _DongKhung extends ConsumerWidget {
                     .read(readerProfileRepositoryProvider)
                     .xoaKhung(k.id);
                 ref.invalidate(khungRanhProvider);
-        ref.invalidate(ngayNghiProvider);
               } on ApiException catch (e) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(

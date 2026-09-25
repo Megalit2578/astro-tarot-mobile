@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
@@ -64,18 +65,15 @@ class _TheViecState extends ConsumerState<_TheViec> {
   Future<void> _chay(Future<Booking> Function() viec, String xong) async {
     if (_dangChay) return;
     setState(() => _dangChay = true);
+    // baoTin/baoLoi ẩn thông báo cũ trước khi hiện cái mới: bấm liền vài
+    // thao tác thì câu lỗi hiện ngay, không phải chờ các thông báo trước
+    // lần lượt hết giờ.
     try {
       await viec();
       ref.invalidate(readerBookingsProvider);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(xong), backgroundColor: Mau.the),
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Mau.the),
-      );
+      if (mounted) baoTin(context, xong);
+    } catch (e) {
+      if (mounted) baoLoi(context, e, 'Thao tác không thành công.');
     } finally {
       if (mounted) setState(() => _dangChay = false);
     }
@@ -110,47 +108,23 @@ class _TheViecState extends ConsumerState<_TheViec> {
     );
   }
 
+  /// Hỏi một đoạn chữ qua hộp thoại chung. Bản riêng trước đây huỷ
+  /// TextEditingController ngay khi hộp thoại trả kết quả, trong lúc hiệu
+  /// ứng đóng vẫn còn vẽ ô nhập.
   Future<String?> _hoiChu({
     required String tieuDe,
     required String goiY,
     required bool batBuoc,
     String banDau = '',
-  }) {
-    final o = TextEditingController(text: banDau);
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Mau.the,
-        title: Text(tieuDe, style: const TextStyle(fontSize: 16)),
-        content: TextField(
-          controller: o,
-          autofocus: true,
-          maxLines: 4,
-          minLines: 2,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(hintText: goiY),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Thoát'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final v = o.text.trim();
-              if (batBuoc && v.isEmpty) return;
-              Navigator.of(ctx).pop(v);
-            },
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 42),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-            ),
-            child: const Text('Xong'),
-          ),
-        ],
-      ),
-    ).whenComplete(o.dispose);
-  }
+  }) =>
+      hoiNoiDung(
+        context,
+        tieuDe: tieuDe,
+        goiY: goiY,
+        giaTriDau: banDau,
+        gui: 'Xong',
+        batBuoc: batBuoc,
+      );
 
   @override
   Widget build(BuildContext context) {
