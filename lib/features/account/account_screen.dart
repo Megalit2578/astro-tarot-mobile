@@ -5,6 +5,7 @@ import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
+import '../blog/blog_screen.dart';
 import '../profile/profile_screen.dart';
 import '../shop/shop_screen.dart';
 import '../support/support_screen.dart';
@@ -101,6 +102,13 @@ class AccountScreen extends ConsumerWidget {
             nhan: 'Hồ sơ cá nhân',
             phu: 'Tên, ảnh đại diện, ngày giờ nơi sinh',
             onTap: () => _mo(context, const ProfileScreen()),
+          ),
+
+          _Muc(
+            icon: Icons.article_outlined,
+            nhan: 'Bài viết',
+            phu: 'Kiến thức Tarot và chiêm tinh',
+            onTap: () => _mo(context, const BlogScreen()),
           ),
 
           _Muc(
