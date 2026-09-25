@@ -28,6 +28,7 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
   bool _dangTrai = false;
   String? _loi;
   KetQuaTraiBai? _ketQua;
+  final _khoaKetQua = GlobalKey();
 
   /// Ba kiểu trải phổ biến. Tên gửi lên máy chủ, mô tả để người dùng chọn
   /// đúng cái mình cần thay vì đoán theo số lá.
@@ -64,6 +65,16 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
           );
       if (!mounted) return;
       setState(() => _ketQua = kq);
+      // Form chiếm gần hết màn điện thoại; không cuộn thì kết quả nằm dưới
+      // mép và người dùng tưởng chưa có gì.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final c = _khoaKetQua.currentContext;
+        if (c != null && c.mounted) {
+          Scrollable.ensureVisible(c,
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeOut);
+        }
+      });
       // Trang chủ có khối "lần trải bài gần đây" — giờ nó đã cũ.
       ref.invalidate(lichSuTraiBaiProvider);
     } on ApiException catch (e) {
@@ -228,7 +239,7 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
 
           if (_ketQua != null) ...[
             const SizedBox(height: 28),
-            _KetQua(kq: _ketQua!),
+            _KetQua(key: _khoaKetQua, kq: _ketQua!),
             if (_ketQua!.id.isNotEmpty) ...[
               const SizedBox(height: 24),
               HoiTiep(
@@ -242,7 +253,7 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
 }
 
 class _KetQua extends StatelessWidget {
-  const _KetQua({required this.kq});
+  const _KetQua({super.key, required this.kq});
   final KetQuaTraiBai kq;
 
   @override
@@ -262,15 +273,38 @@ class _KetQua extends StatelessWidget {
 
         if (kq.cacLa.isNotEmpty) ...[
           const SizedBox(height: 16),
-          SizedBox(
-            height: 132,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: kq.cacLa.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (_, i) => _TheLa(la: kq.cacLa[i]),
+          // Tới ba lá thì chia đều bề ngang — vừa khít màn điện thoại, khỏi
+          // phải vuốt. Năm lá mới cuộn ngang.
+          if (kq.cacLa.length <= 3)
+            SizedBox(
+              height: 124,
+              child: Row(
+                children: [
+                  for (var i = 0; i < kq.cacLa.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    Expanded(
+                      child: _TheLa(
+                          la: kq.cacLa[i],
+                          viTri: tenViTri(i, kq.cacLa.length)),
+                    ),
+                  ],
+                ],
+              ),
+            )
+          else
+            SizedBox(
+              height: 124,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: kq.cacLa.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (_, i) => SizedBox(
+                  width: 100,
+                  child: _TheLa(
+                      la: kq.cacLa[i], viTri: tenViTri(i, kq.cacLa.length)),
+                ),
+              ),
             ),
-          ),
         ],
 
         const SizedBox(height: 18),
@@ -303,47 +337,64 @@ class _KetQua extends StatelessWidget {
   }
 }
 
+/// Tên vị trí lá bài theo kiểu trải, đúng như mô tả ở ô chọn kiểu.
+/// Máy chủ đánh số vị trí từ 0, người đọc thì không.
+String tenViTri(int i, int soLa) => switch ((soLa, i)) {
+      (1, _) => 'Thông điệp',
+      (3, 0) => 'Quá khứ',
+      (3, 1) => 'Hiện tại',
+      (3, 2) => 'Tương lai',
+      (5, 0) => 'Hiện tại',
+      (5, 1) => 'Nguyên nhân',
+      (5, 2) => 'Trở ngại',
+      (5, 3) => 'Lời khuyên',
+      (5, 4) => 'Kết quả',
+      _ => 'Lá ${i + 1}',
+    };
+
 class _TheLa extends StatelessWidget {
-  const _TheLa({required this.la});
+  const _TheLa({required this.la, required this.viTri});
   final LaBai la;
+  final String viTri;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 96,
       padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
-        color: Mau.the,
+        color: la.nguoc ? Mau.vang.withValues(alpha: 0.06) : Mau.the,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Mau.vien),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text('${la.viTri}',
-                  style: const TextStyle(fontSize: 10, color: Mau.chuMo)),
-              const Spacer(),
-              if (la.nguoc)
-                const Icon(Icons.swap_vert, size: 13, color: Mau.vang),
-            ],
-          ),
+          Text(viTri.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 9.5, letterSpacing: 0.8, color: Mau.vang)),
           const SizedBox(height: 6),
           Expanded(
             child: Text(
               la.ten,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12.5, height: 1.35),
+              style: const TextStyle(
+                  fontSize: 12.5, height: 1.35, fontWeight: FontWeight.w600),
             ),
           ),
-          if (la.nguoc)
-            const Text('ngược',
-                style: TextStyle(fontSize: 10, color: Mau.vang))
-          else if (la.bo != null)
-            Text(la.bo!,
-                style: const TextStyle(fontSize: 10, color: Mau.chuMo)),
+          Row(
+            children: [
+              Icon(la.nguoc ? Icons.south : Icons.north,
+                  size: 11, color: la.nguoc ? Mau.vang : Mau.chuMo),
+              const SizedBox(width: 3),
+              Text(la.nguoc ? 'ngược' : 'xuôi',
+                  style: TextStyle(
+                      fontSize: 10.5,
+                      color: la.nguoc ? Mau.vang : Mau.chuMo)),
+            ],
+          ),
         ],
       ),
     );

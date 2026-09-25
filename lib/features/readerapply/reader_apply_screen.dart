@@ -250,7 +250,11 @@ class _FormDonState extends ConsumerState<_FormDon> {
           maxLines: 10,
           maxLength: 2000,
           onChanged: (_) => setState(() {}),
+          // Có nhãn nổi: chỉ dùng chữ gợi ý thì gõ vào là mất, và một ô đã
+          // điền sẵn "Tarot" hay "0" không còn cho biết nó là ô gì.
           decoration: const InputDecoration(
+            labelText: 'Giới thiệu bản thân',
+            alignLabelWithHint: true,
             hintText: 'Giới thiệu bản thân: bạn đọc bài theo hướng nào, đã '
                 'đồng hành với ai, vì sao muốn nhận khách ở đây…',
           ),
@@ -259,14 +263,18 @@ class _FormDonState extends ConsumerState<_FormDon> {
         TextField(
           controller: _chuyenMon,
           decoration: const InputDecoration(
-            hintText: 'Thế mạnh, cách nhau bằng dấu phẩy (Tarot, Chiêm tinh…)',
+            labelText: 'Thế mạnh (cách nhau bằng dấu phẩy)',
+            hintText: 'Tarot, Chiêm tinh…',
           ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _soNam,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(hintText: 'Số năm kinh nghiệm'),
+          decoration: const InputDecoration(
+            labelText: 'Số năm kinh nghiệm',
+            hintText: 'Ví dụ: 3',
+          ),
         ),
         if (_loi != null) ...[
           const SizedBox(height: 12),

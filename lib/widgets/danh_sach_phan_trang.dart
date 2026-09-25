@@ -22,6 +22,7 @@ class DanhSachPhanTrang<T> extends StatefulWidget {
     this.loiDuPhong = 'Không tải được danh sách.',
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 24),
     this.dieuKhien,
+    this.cot = 1,
   });
 
   /// Tải một trang, tính từ 0.
@@ -38,6 +39,9 @@ class DanhSachPhanTrang<T> extends StatefulWidget {
 
   /// Cho phép bên ngoài bắt tải lại (sau khi sửa một dòng chẳng hạn).
   final DieuKhienDanhSach? dieuKhien;
+
+  /// Số cột. Lớn hơn 1 thì xếp thành lưới, các thẻ cùng hàng cao bằng nhau.
+  final int cot;
 
   @override
   State<DanhSachPhanTrang<T>> createState() => _DanhSachPhanTrangState<T>();
@@ -134,7 +138,9 @@ class _DanhSachPhanTrangState<T> extends State<DanhSachPhanTrang<T>> {
       );
     } else {
       final soDau = widget.dau.length;
-      final tong = soDau + du.muc.length + (du.conNua ? 1 : 0);
+      final cot = widget.cot < 1 ? 1 : widget.cot;
+      final soHang = (du.muc.length + cot - 1) ~/ cot;
+      final tong = soDau + soHang + (du.conNua ? 1 : 0);
       than = ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: widget.padding,
@@ -142,8 +148,11 @@ class _DanhSachPhanTrangState<T> extends State<DanhSachPhanTrang<T>> {
         itemBuilder: (ctx, i) {
           if (i < soDau) return widget.dau[i];
           final j = i - soDau;
-          if (j < du.muc.length) return widget.dong(ctx, du.muc[j]);
-          return NutTaiThem(dangTai: _dangTaiThem, bam: _taiThem);
+          if (j >= soHang) {
+            return NutTaiThem(dangTai: _dangTaiThem, bam: _taiThem);
+          }
+          if (cot == 1) return widget.dong(ctx, du.muc[j]);
+          return _hangLuoi(ctx, du.muc, j * cot, cot);
         },
       );
     }
@@ -153,6 +162,28 @@ class _DanhSachPhanTrangState<T> extends State<DanhSachPhanTrang<T>> {
       backgroundColor: Mau.the,
       onRefresh: _taiLai,
       child: than,
+    );
+  }
+
+  /// Một hàng của lưới. Ô thiếu ở hàng cuối để trống cho thẳng cột.
+  Widget _hangLuoi(BuildContext ctx, List<T> muc, int dau, int cot) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var k = 0; k < cot; k++) ...[
+              if (k > 0) const SizedBox(width: 10),
+              Expanded(
+                child: dau + k < muc.length
+                    ? widget.dong(ctx, muc[dau + k])
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

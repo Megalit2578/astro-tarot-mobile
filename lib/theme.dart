@@ -60,16 +60,31 @@ ThemeData buildTheme() {
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     ),
+    // Thanh tab dưới cao 64 thay vì 80 mặc định: màn điện thoại đã chật,
+    // nhãn 11pt dưới biểu tượng vẫn đủ chỗ chạm.
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Mau.the,
+      height: 64,
       indicatorColor: Mau.vang.withValues(alpha: 0.18),
-      labelTextStyle: WidgetStatePropertyAll(
-        TextStyle(fontSize: 11, color: Mau.chuMo),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (s) => TextStyle(
+          fontSize: 11,
+          color: s.contains(WidgetState.selected) ? Mau.vang : Mau.chuMo,
+        ),
       ),
+    ),
+    // Nút nổi mặc định của Material 3 lấy màu tím; ở đây theo tông vàng.
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: Mau.vang,
+      foregroundColor: Color(0xFF1A1206),
+      extendedTextStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
     ),
     cardTheme: CardThemeData(
       color: Mau.the,
       elevation: 0,
+      // Bỏ lề 4 mặc định: thẻ phải thẳng mép với khối khác cùng trang, lề
+      // giữa các thẻ do danh sách tự đặt.
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: Mau.vien),
