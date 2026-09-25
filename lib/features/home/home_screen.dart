@@ -11,6 +11,7 @@ import '../notifications/notifications_screen.dart';
 import '../astrology/astrology_screen.dart';
 import '../tarot/tarot_history_screen.dart';
 import '../tarot/tarot_screen.dart';
+import '../readerapply/reader_apply_screen.dart';
 import 'daily_card.dart';
 import 'home_repository.dart';
 
@@ -55,6 +56,7 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(myBookingsProvider);
           ref.invalidate(lichSuTraiBaiProvider);
           ref.invalidate(banDoSaoProvider);
+          ref.invalidate(donCuaToiProvider);
           await ref.read(myBookingsProvider.future);
         },
         child: ListView(
@@ -70,6 +72,11 @@ class HomeScreen extends ConsumerWidget {
               'Hôm nay bạn muốn hỏi điều gì?',
               style: TextStyle(color: Mau.chuMo, fontSize: 13),
             ),
+
+            if (u != null &&
+                u.co('READER_APPLY') &&
+                !u.co('READER_MANAGE_PROFILE'))
+              const _TrangThaiDonReader(),
 
             const SizedBox(height: 18),
             // Tarot AI là một trong hai trụ cột của sản phẩm, nhưng KHÔNG đưa
@@ -146,6 +153,40 @@ class HomeScreen extends ConsumerWidget {
       b.trangThai != TrangThaiBuoi.cancelled &&
       b.trangThai != TrangThaiBuoi.completed &&
       b.ketThuc.toLocal().isAfter(DateTime.now());
+}
+
+/// Trạng thái đơn xin làm Reader — chỉ hiện khi có đơn đang chờ hoặc bị từ
+/// chối. Chưa nộp thì im lặng: trang chủ không phải chỗ mời chào.
+class _TrangThaiDonReader extends ConsumerWidget {
+  const _TrangThaiDonReader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final d = ref.watch(donCuaToiProvider).asData?.value;
+    if (d == null || d.trangThai == 'APPROVED') return const SizedBox.shrink();
+    final cho = d.trangThai == 'PENDING';
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Card(
+        child: ListTile(
+          leading: Icon(cho ? Icons.schedule : Icons.info_outline,
+              color: cho ? Mau.vang : const Color(0xFFE5645E)),
+          title: Text(
+              cho ? 'Đơn làm Reader đang chờ duyệt' : 'Đơn làm Reader chưa được duyệt',
+              style: const TextStyle(fontSize: 13.5)),
+          subtitle: Text(
+            cho
+                ? 'Bạn sẽ nhận thông báo khi có kết quả.'
+                : 'Xem lý do và gửi lại.',
+            style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: Mau.chuMo),
+          onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ReaderApplyScreen())),
+        ),
+      ),
+    );
+  }
 }
 
 /// Chuông kèm số chưa đọc.

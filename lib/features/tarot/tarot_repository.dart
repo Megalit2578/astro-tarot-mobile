@@ -96,14 +96,18 @@ class TarotRepository {
     return KetQuaTraiBai.fromJson(d);
   }
 
-  Future<void> hoiThem(String readingId, String cauHoi) => _api.post(
-        '${Endpoints.aiReadings}/$readingId/chat',
-        body: {
-          'message': cauHoi.trim(),
-          'readingId': readingId,
-          'stream': false,
-        },
-      );
+  /// Hỏi tiếp về một lượt đã trải. Trả lời AI (`reply`).
+  Future<String> hoiThem(String readingId, String cauHoi) async {
+    final d = await _api.post<dynamic>(
+      '${Endpoints.aiReadings}/$readingId/chat',
+      body: {
+        'message': cauHoi.trim(),
+        'readingId': readingId,
+        'stream': false,
+      },
+    );
+    return d is Map ? (d['reply'] ?? '').toString() : '';
+  }
 
   /// Lịch sử trải bài của chính mình, mới nhất trước. Máy chủ lấy danh tính
   /// từ token — không nhận userId từ ngoài.

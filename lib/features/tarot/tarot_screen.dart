@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../astrology/astrology_screen.dart';
 import '../home/home_repository.dart';
+import 'hoi_tiep.dart';
 import 'tarot_repository.dart';
 
 /// Trải bài Tarot bằng AI.
@@ -84,6 +86,28 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             'không" cho lời giải rõ hơn hẳn "tương lai tôi ra sao".',
             style: TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
           ),
+          // Web bắt khai ngày giờ nơi sinh trước khi trải. Ở đây không chặn —
+          // trải bài vẫn chạy được — nhưng nhắc rõ, vì không có bản đồ sao
+          // thì lời giải chung chung hơn hẳn.
+          if (ref.watch(banDoSaoProvider).asData != null &&
+              ref.watch(banDoSaoProvider).asData!.value == null) ...[
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.auto_awesome, color: Mau.vang),
+                title: const Text('Khai ngày giờ nơi sinh trước',
+                    style: TextStyle(fontSize: 13.5)),
+                subtitle: const Text(
+                  'Có bản đồ sao thì lời giải bám vào chính bạn thay vì trả '
+                  'lời chung chung.',
+                  style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
+                ),
+                trailing: const Icon(Icons.chevron_right, color: Mau.chuMo),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const AstrologyScreen())),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           TextField(
             controller: _cauHoi,
@@ -205,6 +229,11 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
           if (_ketQua != null) ...[
             const SizedBox(height: 28),
             _KetQua(kq: _ketQua!),
+            if (_ketQua!.id.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              HoiTiep(
+                  key: ValueKey(_ketQua!.id), readingId: _ketQua!.id),
+            ],
           ],
         ],
       ),
