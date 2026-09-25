@@ -8,6 +8,7 @@ import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
 import '../notifications/notifications_screen.dart';
+import '../tarot/tarot_screen.dart';
 import 'home_repository.dart';
 
 /// Trang chủ.
@@ -66,6 +67,13 @@ class HomeScreen extends ConsumerWidget {
               'Hôm nay bạn muốn hỏi điều gì?',
               style: TextStyle(color: Mau.chuMo, fontSize: 13),
             ),
+
+            const SizedBox(height: 18),
+            // Tarot AI là một trong hai trụ cột của sản phẩm, nhưng KHÔNG đưa
+            // lên thanh tab: thêm vào là sáu mục, và trên máy 360dp thì mỗi
+            // mục còn khoảng sáu mươi pixel, nhãn bị cắt. Đặt ở đây hợp hơn —
+            // trang chủ vừa hỏi xong "hôm nay bạn muốn hỏi điều gì".
+            _TheTarot(),
 
             if (sapToi.isNotEmpty) ...[
               const SizedBox(height: 26),
@@ -150,6 +158,54 @@ class _ChuongThongBao extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _TheTarot extends StatelessWidget {
+  const _TheTarot();
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const TarotScreen())),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Mau.vang.withValues(alpha: 0.16),
+              Mau.vang.withValues(alpha: 0.04),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Mau.vang.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome, color: Mau.vang, size: 26),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Trải bài Tarot ngay',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)),
+                  SizedBox(height: 3),
+                  Text('Đặt một câu hỏi, AI rút bài và giải nghĩa',
+                      style: TextStyle(fontSize: 12, color: Mau.chuMo)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Mau.vang, size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

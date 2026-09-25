@@ -16,7 +16,14 @@ class LanTraiBai {
   final DateTime? luc;
 
   factory LanTraiBai.fromJson(Map<String, dynamic> j) {
-    final q = (j['question'] ?? j['prompt'] ?? j['title'] ?? '') as Object?;
+    // `mainQuestion` là tên thật trong ReadingHistoryItem bên backend. Ba tên
+    // còn lại giữ làm đường lùi. Trước đây thiếu mainQuestion nên khối này
+    // luôn hiện chữ "Lần trải bài" thay vì câu hỏi người dùng đã đặt.
+    final q = (j['mainQuestion'] ??
+        j['question'] ??
+        j['prompt'] ??
+        j['title'] ??
+        '') as Object?;
     final t = (j['createdAt'] ?? j['created_at']) as Object?;
     return LanTraiBai(
       id: (j['id'] ?? '').toString(),
