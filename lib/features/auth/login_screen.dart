@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../readers/readers_screen.dart';
+import 'forgot_password_screen.dart';
+import 'register_screen.dart';
 import '../../theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -100,8 +102,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           tooltip: _hien ? 'Ẩn mật khẩu' : 'Hiện mật khẩu',
                         ),
                       ),
-                      validator: (v) => (v == null || v.length < 6)
-                          ? 'Mật khẩu tối thiểu 6 ký tự'
+                      // KHÔNG kiểm độ dài ở màn đăng nhập. Luật 8 ký tự chỉ
+                      // áp cho mật khẩu MỚI; tài khoản tạo từ trước có thể
+                      // ngắn hơn, và chặn ở đây là khoá họ ra khỏi chính tài
+                      // khoản của mình. Để máy chủ phán quyết.
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? 'Hãy nhập mật khẩu'
                           : null,
                     ),
                     if (auth.loi != null) ...[
@@ -154,12 +160,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       label: const Text('Xem Reader trước khi đăng nhập'),
                       style: TextButton.styleFrom(foregroundColor: Mau.vang),
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Chưa có tài khoản? Hãy đăng ký trên astrotarot.date — '
-                      'tài khoản phải xác minh email mới đăng nhập được.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Mau.chuMo, fontSize: 12, height: 1.5),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          ),
+                          style:
+                              TextButton.styleFrom(foregroundColor: Mau.chu),
+                          child: const Text('Tạo tài khoản'),
+                        ),
+                        const Text('·',
+                            style: TextStyle(color: Mau.chuMo)),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ForgotPasswordScreen(),
+                            ),
+                          ),
+                          style:
+                              TextButton.styleFrom(foregroundColor: Mau.chuMo),
+                          child: const Text('Quên mật khẩu'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

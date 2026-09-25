@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config.dart';
 import 'endpoints.dart';
@@ -180,6 +181,13 @@ class ApiClient {
     try {
       r = await chay();
     } on DioException catch (e) {
+      // Người dùng chỉ cần câu dễ hiểu, nhưng người sửa lỗi cần biết chính
+      // xác Dio ném gì. Không có dòng này thì mọi sự cố mạng đều trông giống
+      // nhau trên màn hình, và chỉ còn cách đoán.
+      if (kDebugMode) {
+        debugPrint('[api] ${e.type} ${e.requestOptions.method} '
+            '${e.requestOptions.uri} -> ${e.message}');
+      }
       throw ApiException(_loiMang(e));
     }
 
@@ -221,16 +229,36 @@ class ApiClient {
     return null;
   }
 
+  /// Dịch lỗi mạng sang câu người dùng đọc được.
+  ///
+  /// **Tách `connectionTimeout` khỏi `receiveTimeout`.** Ban đầu tôi gộp cả
+  /// hai vào một câu "máy chủ phản hồi chậm", và nó đã dẫn tôi đi sai hướng:
+  /// máy ảo hỏng DNS nên không mở nổi kết nối, mà màn hình lại nói máy chủ
+  /// chậm — tôi đi kiểm tra backend một lúc trước khi nhận ra.
+  ///
+  /// Hai chuyện khác hẳn nhau:
+  /// - Không **mở được** kết nối → lỗi ở mạng phía người dùng, hoặc DNS.
+  /// - Mở được nhưng **trả lời chậm** → máy chủ đang bận, hoặc gói free đang
+  ///   thức dậy.
+  ///
+  /// Nói sai loại là đẩy người đọc đi tìm ở nhầm chỗ.
   String _loiMang(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
-      case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
-        // Nói thẳng nguyên nhân hay gặp nhất thay vì "hết thời gian chờ".
-        return 'Máy chủ phản hồi chậm. Gói miễn phí ngủ sau khi rảnh nên lần '
-            'mở đầu tiên có thể mất gần một phút — thử lại giúp nhé.';
+        return 'Không mở được kết nối tới máy chủ. Thường là do mạng chập '
+            'chờn — kiểm tra wifi hoặc dữ liệu di động rồi thử lại.';
+      case DioExceptionType.receiveTimeout:
+        return 'Máy chủ nhận được yêu cầu nhưng trả lời quá chậm. Gói miễn '
+            'phí ngủ sau khi rảnh nên lần mở đầu tiên có thể mất gần một '
+            'phút — thử lại giúp nhé.';
       case DioExceptionType.connectionError:
         return 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
+      case DioExceptionType.badCertificate:
+        return 'Chứng chỉ bảo mật của máy chủ không hợp lệ. Nếu bạn đang dùng '
+            'wifi công cộng, hãy đổi mạng khác.';
+      case DioExceptionType.cancel:
+        return 'Yêu cầu đã bị huỷ.';
       default:
         return 'Không gọi được máy chủ.';
     }

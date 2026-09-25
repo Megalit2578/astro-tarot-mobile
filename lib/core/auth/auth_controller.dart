@@ -129,6 +129,40 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  /// Đăng ký. **Không** trả token — tài khoản phải xác minh email đã.
+  ///
+  /// Trả về câu cần nói với người dùng, hoặc ném [ApiException].
+  Future<String> dangKy({
+    required String email,
+    required String matKhau,
+    required String hoTen,
+  }) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      Endpoints.register,
+      body: {
+        'email': email.trim(),
+        'password': matKhau,
+        // camelCase. Backend nhận `fullName`; gửi `full_name` là bị bỏ qua
+        // rồi báo "Họ tên là bắt buộc" dù người dùng đã điền.
+        'fullName': hoTen.trim(),
+      },
+    );
+    final daGui = data['verificationEmailSent'] == true;
+    return daGui
+        ? 'Đã gửi thư xác minh tới ${email.trim()}. Mở thư và bấm liên kết '
+            'trong đó rồi quay lại đăng nhập.'
+        : 'Đã tạo tài khoản. Hãy xác minh email rồi đăng nhập.';
+  }
+
+  /// Gửi thư đặt lại mật khẩu.
+  ///
+  /// Luôn báo thành công dù email có tồn tại hay không — đó là hành vi của
+  /// backend, và cũng là điều đúng: trả lời khác nhau cho email có và không
+  /// có là biến đây thành công cụ dò xem ai đã đăng ký.
+  Future<void> quenMatKhau(String email) async {
+    await _api.post(Endpoints.forgotPassword, body: {'email': email.trim()});
+  }
+
   Future<void> dangXuat() async {
     // Báo máy chủ thu hồi phiên, nhưng KHÔNG để lỗi mạng chặn việc đăng xuất:
     // người dùng bấm đăng xuất là họ muốn rời máy này ngay, thường vì đang
