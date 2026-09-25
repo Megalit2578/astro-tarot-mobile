@@ -167,11 +167,40 @@ class AuthController extends Notifier<AuthState> {
     // Báo máy chủ thu hồi phiên, nhưng KHÔNG để lỗi mạng chặn việc đăng xuất:
     // người dùng bấm đăng xuất là họ muốn rời máy này ngay, thường vì đang
     // đưa máy cho người khác.
-    try {
-      await _api.post(Endpoints.logout);
-    } catch (_) {}
+    //
+    // Phải gửi kèm refresh token: backend thu hồi đúng token ấy, và
+    // `LogoutRequest` bắt buộc trường này. Bản đầu gửi thân rỗng — máy chủ
+    // trả 400, lỗi bị nuốt ở đây, nên phiên trên máy chủ vẫn sống thêm bảy
+    // ngày dù người dùng tưởng đã đăng xuất.
+    final refresh = _store.refresh;
+    if (refresh != null && refresh.isNotEmpty) {
+      try {
+        await _api.post(Endpoints.logout, body: {'refreshToken': refresh});
+      } catch (_) {}
+    }
     await _donPhien();
   }
+
+  /// Gửi lại thư xác minh cho tài khoản chưa kích hoạt.
+  Future<void> guiLaiXacMinh(String email) => _api.post(
+        Endpoints.resendVerification,
+        body: {'email': email.trim()},
+      );
+
+  /// Xác minh email bằng mã trong liên kết. Trả về email vừa được kích hoạt.
+  Future<String> xacMinhEmail(String token) async {
+    final d = await _api.post<dynamic>(
+      Endpoints.verifyEmail,
+      body: {'token': token},
+    );
+    return d is Map ? (d['email'] ?? '').toString() : '';
+  }
+
+  /// Đặt mật khẩu mới bằng mã trong thư "quên mật khẩu".
+  Future<void> datLaiMatKhau(String token, String matKhauMoi) => _api.post(
+        Endpoints.resetPassword,
+        body: {'token': token, 'newPassword': matKhauMoi},
+      );
 
   /// Nạp lại thông tin người đang đăng nhập.
   ///

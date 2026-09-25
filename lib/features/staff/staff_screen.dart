@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
+import '../../widgets/dai_chon.dart';
 import '../money/earnings_screen.dart';
 import '../readerprofile/reader_profile_view.dart';
 import 'staff_bookings_view.dart';
@@ -70,42 +71,11 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
         bottom: muc.length < 2
             ? null
             : PreferredSize(
-                preferredSize: const Size.fromHeight(50),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                  child: Row(
-                    children: [
-                      for (var i = 0; i < muc.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        Expanded(
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(999),
-                            onTap: () => setState(() => _chon = i),
-                            child: Container(
-                              height: 36,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: chon == i
-                                    ? Mau.vang.withValues(alpha: 0.16)
-                                    : Mau.the,
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                    color: chon == i ? Mau.vang : Mau.vien),
-                              ),
-                              child: Text(
-                                muc[i].nhan,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  color:
-                                      chon == i ? Mau.vang : Mau.chuMo,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                preferredSize: const Size.fromHeight(46),
+                child: DaiChon(
+                  nhan: [for (final m in muc) m.nhan],
+                  chon: chon,
+                  khiChon: (i) => setState(() => _chon = i),
                 ),
               ),
       ),

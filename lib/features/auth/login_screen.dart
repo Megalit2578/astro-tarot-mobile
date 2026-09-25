@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../widgets/hop_thoai.dart';
 import '../readers/readers_screen.dart';
+import 'email_link_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 import '../../theme.dart';
@@ -19,6 +21,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _matKhau = TextEditingController();
   final _form = GlobalKey<FormState>();
   bool _hien = false;
+  bool _dangGuiLai = false;
+
+  /// Backend trả nguyên văn câu có cụm này khi tài khoản chưa xác minh email.
+  /// Web nhận diện đúng cách này; giữ một cách cho hai nơi khỏi lệch.
+  static bool _chuaXacMinh(String? loi) =>
+      loi != null && loi.contains('chưa được xác minh');
+
+  Future<void> _guiLaiXacMinh() async {
+    final email = _email.text.trim();
+    if (!email.contains('@')) return;
+    setState(() => _dangGuiLai = true);
+    try {
+      await ref.read(authControllerProvider.notifier).guiLaiXacMinh(email);
+      if (!mounted) return;
+      baoTin(context, 'Đã gửi lại thư xác minh tới $email.');
+    } catch (e) {
+      if (!mounted) return;
+      baoLoi(context, e, 'Không gửi lại được thư xác minh.');
+    } finally {
+      if (mounted) setState(() => _dangGuiLai = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -133,6 +157,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ],
                         ),
                       ),
+                      // Chưa xác minh thì chỉ báo lỗi là ngõ cụt: thư cũ có
+                      // thể đã hết hạn (24 giờ) hoặc rơi vào thư rác.
+                      if (_chuaXacMinh(auth.loi))
+                        TextButton.icon(
+                          onPressed: _dangGuiLai ? null : _guiLaiXacMinh,
+                          icon: const Icon(Icons.mark_email_read_outlined,
+                              size: 18),
+                          label: const Text('Gửi lại thư xác minh'),
+                          style:
+                              TextButton.styleFrom(foregroundColor: Mau.vang),
+                        ),
                     ],
                     const SizedBox(height: 22),
                     FilledButton(
@@ -187,6 +222,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: const Text('Quên mật khẩu'),
                         ),
                       ],
+                    ),
+                    // Liên kết trong thư xác minh / đặt lại mật khẩu trỏ về
+                    // trang web. Chưa có liên kết sâu vào app, nên cho dán
+                    // liên kết ấy vào đây — khỏi bắt người dùng sang máy tính.
+                    TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const EmailLinkScreen(),
+                        ),
+                      ),
+                      style: TextButton.styleFrom(foregroundColor: Mau.chuMo),
+                      child: const Text('Tôi có liên kết trong email',
+                          style: TextStyle(fontSize: 12.5)),
                     ),
                   ],
                 ),
