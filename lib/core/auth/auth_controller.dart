@@ -173,6 +173,21 @@ class AuthController extends Notifier<AuthState> {
     await _donPhien();
   }
 
+  /// Nạp lại thông tin người đang đăng nhập.
+  ///
+  /// Gọi sau khi sửa hồ sơ: tên và ảnh đại diện xuất hiện ở nhiều màn khác
+  /// (thanh tài khoản, bong bóng chat), và nếu không nạp lại thì chúng vẫn là
+  /// bản cũ cho tới lần mở app kế tiếp — người dùng tưởng lưu không ăn.
+  ///
+  /// Hỏng thì im lặng bỏ qua: đây là việc làm đẹp thêm, không được phép làm
+  /// hỏng thao tác lưu vừa thành công.
+  Future<void> lamMoiToi() async {
+    try {
+      final me = await _api.get<Map<String, dynamic>>(Endpoints.me);
+      state = state.copy(user: AppUser.fromJson(me));
+    } catch (_) {}
+  }
+
   /// ApiClient gọi vào đây khi refresh token bị từ chối.
   void phienHetHan() {
     _donPhien();

@@ -44,6 +44,8 @@ class Endpoints {
   // ---- Tôi ----
   static const me = '/api/v1/me';
   static const notifications = '/api/v1/me/notifications';
+  static const meAvatar = '/api/v1/me/avatar';
+  static const meChangePassword = '/api/v1/me/change-password';
 
   // ---- Reader ----
   static const readers = '/api/v1/readers';

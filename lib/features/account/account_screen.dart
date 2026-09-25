@@ -6,6 +6,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
 import '../placeholder/chua_lam.dart';
+import '../profile/profile_screen.dart';
 
 /// Tài khoản, và cũng là cửa vào khu Quản trị.
 ///
@@ -98,19 +99,7 @@ class AccountScreen extends ConsumerWidget {
             icon: Icons.person_outline,
             nhan: 'Hồ sơ cá nhân',
             phu: 'Tên, ảnh đại diện, ngày giờ nơi sinh',
-            onTap: () => _mo(
-              context,
-              const ChuaLam(
-                ten: 'Hồ sơ cá nhân',
-                moTa: 'Sửa thông tin và bản đồ sao — ngày, giờ, nơi sinh.',
-                endpoints: [
-                  'GET   /api/v1/me',
-                  'PATCH /api/v1/me',
-                  'POST  /api/v1/avatar',
-                  'GET   /api/me/astrology/profiles/primary',
-                ],
-              ),
-            ),
+            onTap: () => _mo(context, const ProfileScreen()),
           ),
 
           _Muc(
