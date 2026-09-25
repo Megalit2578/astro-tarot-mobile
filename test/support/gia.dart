@@ -8,7 +8,6 @@
 // PATCH), sai tên trường (`reason` thay `rejectionReason`), sai đường dẫn.
 
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:astrotarot_mobile/core/api/api_client.dart';
 import 'package:astrotarot_mobile/core/api/token_store.dart';
