@@ -3,10 +3,8 @@
 App Flutter cho nền tảng AstroTarot, dùng chung backend với web:
 `https://api.astrotarot.date`.
 
-Đây là **khung dự án**, chưa phải sản phẩm hoàn chỉnh. Phần đã chạy thật:
-đăng nhập, giữ phiên qua Keystore, tự làm mới token, kênh realtime STOMP, và
-thanh điều hướng tự đổi theo quyền. Mọi màn hình nghiệp vụ còn là chỗ trống có
-ghi rõ sẽ gọi endpoint nào.
+Đã dựng xong bề mặt chính cho cả ba vai trò. Không còn chỗ trống nào ở các
+tab chính.
 
 ## Vì sao đặt ở `C:\src\`
 
@@ -97,24 +95,31 @@ lại, 4G chuyển trạm, khoá màn hình). Màn hình chỉ `subscribe` một
 sau lần đứt đầu tiên trong khi vẫn hiện "đang kết nối". Xem
 `RealtimeClient.nghe`.
 
-## Còn phải làm
+## Đã dựng
 
-Phạm vi đã chọn là **toàn bộ vai trò, kể cả quản trị**. Backend có 138
-endpoint trên 27 controller; không màn hình nào dưới đây cần viết thêm API.
+| Màn | Trạng thái |
+|---|---|
+| Đăng nhập, giữ phiên, tự làm mới token | đã chạy thật trên máy ảo |
+| Tìm Reader (tìm kiếm, kéo làm mới) | đã chạy thật với dữ liệu production |
+| Hồ sơ Reader + chọn giờ + đặt lịch | đã chạy thật; phần đặt lịch chưa thử vì cần đăng nhập |
+| Lịch hẹn của tôi + thanh toán | chưa thử, cần đăng nhập |
+| Hộp trò chuyện realtime | chưa thử, cần đăng nhập |
+| Cuộc gọi WebRTC (thoại + video) | chưa thử, cần HAI tài khoản cùng lúc |
+| Bàn làm việc Reader | chưa thử, cần tài khoản có quyền nhân sự |
+| Khu quản trị (3 hàng chờ) | chưa thử, cần tài khoản quản trị |
+| Trang chủ | chưa thử, cần đăng nhập |
 
-| Nhóm | Màn hình | Ưu tiên |
-|---|---|---|
-| Khách | Trang chủ, tìm Reader, hồ sơ Reader, đặt lịch, thanh toán | 1 |
-| Khách | Lịch hẹn, trò chuyện, gọi WebRTC | 2 |
-| Khách | Tarot AI, lịch sử trải bài, bản đồ sao | 3 |
-| Khách | Gian hàng, giỏ, đơn hàng | 4 |
-| Nhân sự | Hàng chờ hỗ trợ, lịch hẹn nhận được, thu nhập, hồ sơ Reader | 2 |
-| Quản trị | Tài khoản, duyệt đơn Reader, đối soát thanh toán, rút tiền | 5 |
+Khách **chưa đăng nhập** vẫn xem được danh sách và hồ sơ Reader — giống web.
+
+## Chưa dựng
+
+Hồ sơ cá nhân, hỗ trợ, Tarot AI, gian hàng, và phần còn lại của khu quản trị
+(tài khoản, đơn hàng, nhật ký). Tất cả đều đã có endpoint sẵn; xem chú thích
+trong `lib/features/placeholder/`.
 
 Gọi WebRTC dùng `flutter_webrtc`, tín hiệu đi qua đúng hai đích STOMP mà web
-đang dùng: `/app/bookings/{id}/chat` và `/app/bookings/{id}/call`. Lưu ý dự án
-đang chạy **chỉ STUN, không TURN** — hai máy cùng sau NAT đối xứng (rất phổ
-biến với 4G ở Việt Nam) sẽ không nối được cuộc gọi.
+đang dùng. Lưu ý dự án chạy **chỉ STUN, không TURN** — hai máy cùng sau NAT
+đối xứng (rất phổ biến với 4G ở Việt Nam) sẽ không nối được cuộc gọi.
 
 ## Kiểm tra
 
