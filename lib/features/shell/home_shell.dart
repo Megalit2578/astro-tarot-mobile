@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
-import '../placeholder/chua_lam.dart';
 import '../account/account_screen.dart';
 import '../bookings/bookings_screen.dart';
+import '../home/home_screen.dart';
 import '../readers/readers_screen.dart';
+import '../staff/staff_screen.dart';
 
 /// Một mục trên thanh điều hướng.
 class _Tab {
@@ -41,28 +42,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   List<_Tab> _tabs(AppUser u) {
     return [
-      const _Tab('Trang chủ', Icons.home_outlined, ChuaLam(
-        ten: 'Trang chủ',
-        moTa: 'Lá bài hôm nay, lịch hẹn sắp tới, lần trải bài gần đây.',
-        endpoints: [
-          'GET /api/v1/astrology/daily-card',
-          'GET /api/v1/bookings/me',
-          'GET /api/v1/ai/readings/history',
-        ],
-      )),
+      const _Tab('Trang chủ', Icons.home_outlined, HomeScreen()),
       const _Tab('Reader', Icons.people_outline, ReadersScreen()),
       const _Tab('Lịch hẹn', Icons.event_outlined, BookingsScreen()),
       if (u.laNhanSu)
-        const _Tab('Bàn làm việc', Icons.work_outline, ChuaLam(
-          ten: 'Bàn làm việc',
-          moTa: 'Hàng chờ hỗ trợ, lịch hẹn nhận được, thu nhập, hồ sơ Reader.',
-          endpoints: [
-            'GET /api/v1/support/tickets',
-            'GET /api/v1/bookings/reader',
-            'PATCH /api/v1/bookings/{id}/confirm',
-            'GET /api/v1/money/earnings',
-          ],
-        )),
+        const _Tab('Bàn làm việc', Icons.work_outline, StaffScreen()),
       const _Tab('Tài khoản', Icons.person_outline, AccountScreen()),
     ];
   }

@@ -1,28 +1,39 @@
 /// Đường dẫn API, gom về một chỗ.
 ///
-/// ## Cái bẫy: KHÔNG phải endpoint nào cũng có tiền tố `/api/v1`
+/// ## Backend có NĂM quy ước tiền tố, không phải một
 ///
-/// Nhóm xác thực nằm ở `/auth/...` trần — `AuthController` bên backend map
-/// `@RequestMapping("/auth")`. Mọi thứ còn lại mới ở `/api/v1/...`.
+/// Đây là phần duy nhất trong tệp này thật sự cần đọc kỹ. Khảo sát toàn bộ 27
+/// controller ngày 2026-09-25:
 ///
-/// Vì sao phải ghi lại: đoán nhầm thành `/api/v1/auth/login` thì đường đó
-/// không tồn tại, rơi vào `.anyRequest().authenticated()` của SecurityConfig,
-/// và trả về **401 "Phiên đăng nhập đã hết hạn hoặc chưa đăng nhập."** chứ
-/// không phải 404. Câu đó nghe như lỗi phiên nên rất dễ đi điều tra nhầm sang
-/// backend, trong khi sự thật chỉ là gõ sai đường. Đã mất thời gian vì đúng
-/// chuyện này một lần rồi.
+/// | Tiền tố | Ai dùng |
+/// |---|---|
+/// | `/auth` | `AuthController` — đăng nhập, đăng ký, làm mới token |
+/// | `/user/email` | `UserEmailController` |
+/// | `/api/…` (không có v1) | `AIReadingController` + `AIChatController` (`/api/ai-readings`), `ChatController` (`/api/chat`), `AstrologyController` (`/api/me/astrology/profiles`), `OAuthExchangeController` (`/api/auth/oauth`) |
+/// | `/api/v1/…` | phần lớn còn lại |
+/// | `/api/v1/bookings/{id}` | `BookingChatController` — biến đường dẫn nằm ngay trong `@RequestMapping` |
 ///
-/// Cách tự kiểm khi nghi ngờ một đường dẫn:
+/// ## Vì sao đoán sai tiền tố lại tốn thời gian
+///
+/// Đường không tồn tại **không** trả 404. Nó rơi vào
+/// `.anyRequest().authenticated()` của `SecurityConfig` và trả **401 "Phiên
+/// đăng nhập đã hết hạn hoặc chưa đăng nhập."** Câu đó nghe hệt lỗi phiên,
+/// nên người đọc đi điều tra nhầm sang xác thực. Đã mất thời gian vì đúng
+/// chuyện này một lần khi dựng app.
+///
+/// Cách tự kiểm một đường dẫn trong ba mươi giây:
 /// ```
 /// curl -i -X POST https://api.astrotarot.date/auth/login \
 ///   -H 'Content-Type: application/json' -d '{"email":"x@y.z","password":"sai"}'
 /// ```
-/// Đúng đường thì ra `400 {"message":"Email hoặc mật khẩu không đúng"}`.
-/// Sai đường thì ra `401 {"error":{"code":"UNAUTHENTICATED", ...}}`.
+/// Đúng đường → `400 {"message":"Email hoặc mật khẩu không đúng"}`.
+/// Sai đường → `401 {"error":{"code":"UNAUTHENTICATED", …}}`.
+///
+/// **Đừng suy ra tiền tố. Tra bảng trên, hoặc curl thử.**
 class Endpoints {
   const Endpoints._();
 
-  // ---- Xác thực: KHÔNG có /api/v1 ----
+  // ---- Xác thực: tiền tố /auth, KHÔNG có /api/v1 ----
   static const login = '/auth/login';
   static const register = '/auth/register';
   static const refresh = '/auth/refresh';
@@ -30,13 +41,17 @@ class Endpoints {
   static const forgotPassword = '/auth/forgot-password';
   static const resetPassword = '/auth/reset-password';
 
-  // ---- Phần còn lại: có /api/v1 ----
+  // ---- Tôi ----
   static const me = '/api/v1/me';
+  static const notifications = '/api/v1/me/notifications';
+
+  // ---- Reader ----
   static const readers = '/api/v1/readers';
   static String reader(String id) => '/api/v1/readers/$id';
   static String readerSlots(String id) => '/api/v1/readers/$id/slots';
   static String readerReviews(String id) => '/api/v1/readers/$id/reviews';
 
+  // ---- Lịch hẹn ----
   static const myBookings = '/api/v1/bookings/me';
   static const readerBookings = '/api/v1/bookings/reader';
   static const bookings = '/api/v1/bookings';
@@ -46,6 +61,23 @@ class Endpoints {
   static String bookingMessagesRead(String id) =>
       '/api/v1/bookings/$id/messages/read';
 
+  // Bốn hành động dưới đây đều là PATCH, không phải POST.
+  static String bookingConfirm(String id) => '/api/v1/bookings/$id/confirm';
+  static String bookingComplete(String id) => '/api/v1/bookings/$id/complete';
+  static String bookingCancel(String id) => '/api/v1/bookings/$id/cancel';
+  static String bookingNote(String id) => '/api/v1/bookings/$id/note';
+
+  // ---- Tarot AI: /api/ai-readings, KHÔNG có /v1 ----
+  static const aiReadings = '/api/ai-readings';
+
+  // ---- Bản đồ sao: /api/me/…, KHÔNG có /v1 ----
+  static const astrologyProfiles = '/api/me/astrology/profiles';
+  static const astrologyPrimary = '/api/me/astrology/profiles/primary';
+
+  // ---- Hỗ trợ ----
+  static const support = '/api/v1/support';
+
+  // ---- WebRTC ----
   static const iceConfig = '/api/v1/rtc/ice';
 
   // ---- Đích STOMP (không đi qua Dio) ----

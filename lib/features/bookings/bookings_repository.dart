@@ -49,6 +49,28 @@ class BookingsRepository {
         .toList();
   }
 
+  // ---- Hành động phía Reader ----
+  //
+  // Cả bốn đều là PATCH. Gửi POST thì backend trả 405, và câu báo lỗi không
+  // nói gì về phương thức nên rất dễ tưởng là lỗi quyền.
+
+  Future<Booking> nhanLich(String id) =>
+      _hanhDong(Endpoints.bookingConfirm(id));
+
+  Future<Booking> hoanTat(String id) =>
+      _hanhDong(Endpoints.bookingComplete(id));
+
+  Future<Booking> huy(String id, String? lyDo) =>
+      _hanhDong(Endpoints.bookingCancel(id), body: {'reason': lyDo});
+
+  Future<Booking> ghiChu(String id, String noiDung) =>
+      _hanhDong(Endpoints.bookingNote(id), body: {'note': noiDung});
+
+  Future<Booking> _hanhDong(String duong, {Object? body}) async {
+    final data = await _api.patch<Map<String, dynamic>>(duong, body: body);
+    return Booking.fromJson(data);
+  }
+
   /// Tạo giao dịch thanh toán, trả về liên kết để mở trình duyệt.
   Future<String?> taoThanhToan(String bookingId) async {
     final data = await _api.post<Map<String, dynamic>>(

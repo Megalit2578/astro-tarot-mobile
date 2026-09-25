@@ -1,0 +1,295 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/auth/auth_controller.dart';
+import '../../core/format.dart';
+import '../../theme.dart';
+import '../bookings/booking.dart';
+import '../bookings/bookings_repository.dart';
+import '../bookings/chat_screen.dart';
+import 'home_repository.dart';
+
+/// Trang chủ.
+///
+/// Nguyên tắc: **mỗi khối tự ẩn khi không có dữ liệu.** Tài khoản mới mở app
+/// ra mà thấy bốn ô rỗng thì tưởng app hỏng. Thà ngắn mà thật.
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final u = ref.watch(authControllerProvider).user;
+    final bookings = ref.watch(myBookingsProvider);
+    final readings = ref.watch(lichSuTraiBaiProvider);
+    final banDoSao = ref.watch(banDoSaoProvider);
+
+    final sapToi = bookings.asData?.value.where(_sapToi).toList() ?? const [];
+    sapToi.sort((a, b) => a.batDau.compareTo(b.batDau));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ASTROTAROT',
+            style: TextStyle(letterSpacing: 3, fontSize: 15)),
+      ),
+      body: RefreshIndicator(
+        color: Mau.vang,
+        backgroundColor: Mau.the,
+        onRefresh: () async {
+          ref.invalidate(myBookingsProvider);
+          ref.invalidate(lichSuTraiBaiProvider);
+          ref.invalidate(banDoSaoProvider);
+          await ref.read(myBookingsProvider.future);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          children: [
+            Text(
+              'Chào ${u?.fullName.isNotEmpty == true ? u!.fullName : 'bạn'},',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Hôm nay bạn muốn hỏi điều gì?',
+              style: TextStyle(color: Mau.chuMo, fontSize: 13),
+            ),
+
+            if (sapToi.isNotEmpty) ...[
+              const SizedBox(height: 26),
+              const _Nhan('Buổi sắp tới'),
+              const SizedBox(height: 10),
+              for (final b in sapToi.take(2)) _TheSapToi(booking: b),
+            ],
+
+            ...switch (readings.asData?.value) {
+              final ds? when ds.isNotEmpty => [
+                  const SizedBox(height: 24),
+                  const _Nhan('Lần trải bài gần đây'),
+                  const SizedBox(height: 10),
+                  for (final r in ds) _TheTraiBai(lan: r),
+                ],
+              _ => const <Widget>[],
+            },
+
+            const SizedBox(height: 24),
+            const _Nhan('Bản đồ sao của bạn'),
+            const SizedBox(height: 10),
+            _TheBanDoSao(duLieu: banDoSao.asData?.value),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Buổi "sắp tới": chưa huỷ, chưa xong, và chưa quá giờ kết thúc.
+  ///
+  /// Xét theo giờ KẾT THÚC chứ không phải giờ bắt đầu: buổi đang diễn ra dở
+  /// vẫn là buổi cần nhìn thấy nhất, mà lọc theo giờ bắt đầu thì nó biến mất
+  /// ngay lúc bắt đầu.
+  static bool _sapToi(Booking b) =>
+      b.trangThai != TrangThaiBuoi.cancelled &&
+      b.trangThai != TrangThaiBuoi.completed &&
+      b.ketThuc.toLocal().isAfter(DateTime.now());
+}
+
+class _Nhan extends StatelessWidget {
+  const _Nhan(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: const TextStyle(
+            fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4),
+      );
+}
+
+class _TheSapToi extends StatelessWidget {
+  const _TheSapToi({required this.booking});
+  final Booking booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final b = booking;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    b.readerName.isEmpty ? 'Reader' : b.readerName,
+                    style: const TextStyle(
+                        fontSize: 14.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Text(
+                  nhanTrangThai(b.trangThai),
+                  style: const TextStyle(fontSize: 11, color: Mau.chuMo),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút · ${Dinh.tien(b.tongTien)}',
+              style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
+            ),
+            if (b.chuaTra) ...[
+              const SizedBox(height: 6),
+              const Text('Chưa thanh toán — vào tab Lịch hẹn để trả',
+                  style:
+                      TextStyle(fontSize: 11.5, color: Color(0xFFE0B341))),
+            ],
+            if (b.chatMo) ...[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
+                ),
+                icon: const Icon(Icons.chat_bubble_outline, size: 15),
+                label: const Text('Nhắn tin'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 38),
+                  foregroundColor: Mau.vang,
+                  side: const BorderSide(color: Mau.vien),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TheTraiBai extends StatelessWidget {
+  const _TheTraiBai({required this.lan});
+  final LanTraiBai lan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(Icons.style_outlined, size: 18, color: Mau.vang),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lan.cauHoi,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, height: 1.4),
+                  ),
+                  if (lan.luc != null) ...[
+                    const SizedBox(height: 3),
+                    Text(Dinh.ngay(lan.luc),
+                        style: const TextStyle(
+                            fontSize: 11, color: Mau.chuMo)),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TheBanDoSao extends StatelessWidget {
+  const _TheBanDoSao({required this.duLieu});
+  final Map<String, dynamic>? duLieu;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = duLieu;
+    if (d == null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Bạn chưa khai ngày giờ nơi sinh',
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Khai rồi thì lời giải Tarot và tử vi bám vào bản đồ sao của '
+                'chính bạn, thay vì trả lời chung chung.',
+                style:
+                    TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Khai trên astrotarot.date — màn hình này chưa dựng.',
+                style: TextStyle(fontSize: 11.5, color: Mau.vang),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final ngaySinh = d['birthDate'] ?? d['birth_date'];
+    final gioSinh = d['birthTime'] ?? d['birth_time'];
+    final noiSinh = d['birthPlace'] ?? d['birth_place'] ?? d['placeName'];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (ngaySinh != null)
+              _Dong(nhan: 'Ngày sinh', giaTri: ngaySinh.toString()),
+            if (gioSinh != null)
+              _Dong(nhan: 'Giờ sinh', giaTri: gioSinh.toString()),
+            if (noiSinh != null)
+              _Dong(nhan: 'Nơi sinh', giaTri: noiSinh.toString()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Dong extends StatelessWidget {
+  const _Dong({required this.nhan, required this.giaTri});
+  final String nhan;
+  final String giaTri;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 86,
+            child: Text(nhan,
+                style: const TextStyle(fontSize: 12, color: Mau.chuMo)),
+          ),
+          Expanded(
+            child: Text(giaTri, style: const TextStyle(fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+  }
+}
