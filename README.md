@@ -64,16 +64,25 @@ lib/
     api/
       token_store.dart     token nằm trong Keystore/Keychain, không phải prefs
       api_client.dart      Dio + tự làm mới token + bóc bao thư
+      endpoints.dart       mọi đường dẫn — backend có NĂM kiểu tiền tố
+      trang.dart           trang Spring `Page<T>` + hàm đọc JSON lỏng
     auth/
       app_user.dart        người dùng + quyền
       auth_controller.dart Riverpod, một chỗ duy nhất quyết định "đã đăng nhập"
     realtime/
       realtime_client.dart STOMP + sổ đăng ký sống sót qua đứt nối
-  features/
-    auth/                  màn đăng nhập (chạy thật)
-    shell/                 thanh tab theo quyền
-    account/               hồ sơ + cửa vào khu quản trị (chạy thật)
-    placeholder/           chỗ trống có ghi endpoint sẽ dùng
+  widgets/                 dùng chung: danh sách phân trang, dải chọn ngang,
+                           hộp thoại, biểu đồ thanh, khối lỗi / rỗng
+  features/                mỗi khu một thư mục: *_repository.dart gọi API,
+                           *_screen.dart / *_view.dart là giao diện
+    admin/                 khu Quản lý / Quản trị (9 mục theo quyền)
+    auth/  shell/  home/  readers/  bookings/  money/  staff/  support/
+    tarot/  astrology/  shop/  blog/  profile/  account/  notifications/
+    readerprofile/  readerapply/  feedback/
+test/
+  support/gia.dart         máy chủ giả ở tầng HTTP, phiên giả, realtime giả
+  support/webrtc_gia.dart  giả lập kênh native của flutter_webrtc
+tool/                      coverage, SonarQube
 ```
 
 ### Ba quyết định đáng nêu
@@ -97,35 +106,49 @@ sau lần đứt đầu tiên trong khi vẫn hiện "đang kết nối". Xem
 
 ## Đã dựng
 
-Ngang với web ở mọi luồng chính.
+Ngang với web ở mọi luồng — kể cả khu Quản lý / Quản trị.
 
-| Khu | Màn | Đã chạy thử? |
-|---|---|---|
-| Xác thực | Đăng nhập, đăng ký, quên mật khẩu, đổi mật khẩu | ✅ đăng nhập và đăng ký chạy thật trên máy ảo |
-| Khách | Trang chủ, Tarot AI, tìm Reader, hồ sơ Reader, đặt lịch | ✅ tìm Reader và chọn giờ chạy thật với dữ liệu production |
-| Khách | Lịch hẹn, thanh toán, đánh giá sau buổi | chưa, cần đăng nhập |
-| Khách | Trò chuyện realtime, gọi thoại/video WebRTC | chưa, cuộc gọi cần HAI tài khoản cùng lúc |
-| Khách | Hồ sơ cá nhân, ảnh đại diện, thông báo, hỗ trợ | chưa, cần đăng nhập |
-| Khách | Gian hàng (liên kết tiếp thị), bài viết | chưa, cần đăng nhập |
-| Reader | Lịch hẹn nhận được, hàng chờ hỗ trợ, thu nhập, hồ sơ Reader | chưa, cần tài khoản nhân sự |
-| Quản trị | Đối soát thanh toán, duyệt rút tiền, duyệt đơn Reader | chưa, cần tài khoản quản trị |
+| Khu | Màn |
+|---|---|
+| Xác thực | Đăng nhập, đăng ký, quên mật khẩu, gửi lại thư xác minh, **dán liên kết trong email** để xác minh / đặt lại mật khẩu ngay trong app |
+| Khách | Trang chủ (buổi sắp tới, rút thử một lá, lần trải bài gần đây, bản đồ sao, trạng thái đơn Reader), Tarot AI + hỏi tiếp, lịch sử trải bài, bản đồ sao (thêm / sửa / xoá, tra nơi sinh ra toạ độ) |
+| Khách | Tìm Reader, hồ sơ Reader (đánh giá, ngày trống gần nhất), đặt lịch, thanh toán (PayOS **và** chuyển khoản tay), đánh giá, báo cáo vi phạm, trò chuyện realtime, gọi thoại / video |
+| Khách | Hồ sơ cá nhân, ảnh đại diện, đổi mật khẩu, thông báo (ghim, xoá tin đã đọc, bấm mở đúng màn), hỗ trợ, gian hàng (tìm, lọc danh mục, chi tiết), bài viết, góp ý (NPS), đăng ký làm Reader |
+| Nhân viên / Reader | Lịch hẹn nhận được (nhận, hoàn tất, huỷ, ghi chú), hàng chờ hỗ trợ (đổi trạng thái phiếu), hồ sơ Reader (giá, thế mạnh, khung giờ rảnh, **ngày nghỉ**), thu nhập (sổ ký quỹ, rút tiền) |
+| Quản lý / Quản trị | Tổng quan, tài khoản (tìm, lọc, chi tiết, tạo, đổi vai trò kể cả hàng loạt, khoá, thu hồi phiên, gửi đặt lại mật khẩu / xác minh, xoá), hồ sơ Reader, thanh toán, rút tiền, báo cáo vi phạm, nhật ký, bảng phân quyền, sản phẩm liên kết |
 
 Khách **chưa đăng nhập** xem được danh sách và hồ sơ Reader — giống web.
+
+Web tách `/manager` và `/admin`; app gộp một "Khu quản trị", mục tự hiện
+theo đúng quyền trong `@PreAuthorize` của backend. Bảng phân quyền đọc thẳng
+từ máy chủ (chi tiết một tài khoản mỗi vai trò), không chép tay.
+
+## Lỗi đã sửa khi đối chiếu với backend
+
+Phần lớn là lỗi **âm thầm** — bị nuốt hoặc trông như đã chạy:
+
+- Đăng xuất không gửi `refreshToken` → 400, phiên trên máy chủ sống thêm 7 ngày.
+- Lượt bấm tiếp thị gửi id thay vì slug → 404, mất số liệu hoa hồng.
+- Từ chối đơn Reader gửi `reason` thay vì `rejectionReason` → người nộp không thấy lý do.
+- Thanh toán khi PayOS tắt: không có link nên app báo lỗi — khách không trả được tiền.
+- Đánh dấu đã đọc / đọc hết thông báo gọi POST, backend map PATCH.
+- Công tắc "Đang nhận lịch" gửi trường backend không có — bấm như đã lưu.
+- Sổ ký quỹ đoán hướng tiền theo dấu (luôn dương) → tiền phạt hiện "+" xanh.
+- Lịch sử rút tiền đọc sai tên trường → không có số tài khoản, ngày yêu cầu.
+- Trang chủ sập (ô xám) khi lịch hẹn chưa tải xong hoặc lỗi.
+- Hộp thoại nhập lý do huỷ controller trong lúc còn đang vẽ.
 
 ## Cố ý KHÔNG dựng
 
 **Giỏ hàng và đơn hàng.** Backend có sẵn, nhưng web không dùng: gian hàng là
-liên kết tiếp thị sang Shopee, doanh thu đến từ hoa hồng. Dựng giỏ là dựng
-một luồng không ai đi rồi phải bảo trì mãi.
+liên kết tiếp thị sang sàn, doanh thu đến từ hoa hồng.
 
-**Bản đồ sao (tạo mới).** Cần kinh độ và vĩ độ, tức là cần bộ chọn địa điểm
-có geocoding. Màn hình hiện chỉ đọc và mời sang web để khai.
+**Liên kết sâu (App Links).** Thư xác minh / đặt lại mật khẩu trỏ về web; app
+cho dán liên kết đó vào. Mở thẳng app từ thư cần xác minh tên miền — việc riêng.
 
-**Nộp đơn làm Reader.** Vẫn làm trên web.
-
-**Quản trị: tài khoản, đơn hàng, nhật ký.** Ba hàng chờ gắn với thời điểm thì
-có (thanh toán, rút tiền, duyệt Reader) — phần còn lại nói thẳng trong giao
-diện là nên làm trên web.
+**Mã QR chuyển khoản trong màn quản trị rút tiền.** Web vẽ VietQR để người
+duyệt quét bằng điện thoại; trên chính điện thoại thì không quét được màn của
+mình, nên app cho chép số tài khoản bằng một chạm.
 
 Gọi WebRTC dùng `flutter_webrtc`, tín hiệu đi qua đúng hai đích STOMP mà web
 đang dùng. Dự án chạy **chỉ STUN, không TURN** — hai máy cùng sau NAT đối
@@ -134,7 +157,40 @@ xứng (rất phổ biến với 4G ở Việt Nam) sẽ không nối được c
 ## Kiểm tra
 
 ```bash
-flutter analyze
-flutter test
+flutter analyze --fatal-infos
+tool/coverage_helper.sh && flutter test --coverage && python3 tool/kiem_coverage.py 80
 flutter build apk --debug
 ```
+
+Test chặn ở tầng HTTP của Dio (`test/support/gia.dart`): đi qua đúng
+`ApiClient`, interceptor, bóc bao thư thật, nên bắt được sai phương thức, sai
+tên trường, sai đường dẫn. `flutter_webrtc`, `url_launcher`, `image_picker`
+và clipboard đều có bản giả, nên chạy được cả luồng gọi video lẫn đổi ảnh.
+
+`coverage_helper.sh` sinh một test import mọi tệp trong `lib/` — không có nó,
+`flutter test --coverage` chỉ đo tệp được test chạm tới và số ra đẹp giả.
+CI đỏ khi coverage dưới 80%.
+
+## SonarQube
+
+SonarQube Community **không có sẵn Dart**. Dùng plugin cộng đồng
+[sonar-flutter](https://github.com/insideapp-oss/sonar-flutter) 0.5.2 (đã
+chạy thử trên SonarQube 26.9):
+
+```bash
+# 1. SonarQube + plugin (thư mục data để tmpfs nếu ổ gần đầy: Elasticsearch
+#    từ chối tạo chỉ mục khi ổ vượt 90%)
+docker run -d --name sonar -p 9000:9000 sonarqube:community
+docker cp sonar-flutter-plugin-0.5.2.jar sonar:/opt/sonarqube/extensions/plugins/
+docker restart sonar
+
+# 2. Quét
+SONAR_HOST_URL=http://localhost:9000 SONAR_TOKEN=... tool/sonar.sh
+```
+
+Plugin 0.5.2 đổ `NoClassDefFoundError` khi tự ghi lỗi phân tích trên
+SonarQube 10+, nên `sonar-project.properties` tắt phần đó và `tool/sonar.sh`
+nạp kết quả `flutter analyze` qua định dạng issue chung của Sonar.
+
+Lần quét gần nhất: coverage **95,6%**, 0 bug, 0 lỗ hổng, 0 code smell,
+0% trùng lặp, quality gate **OK**.
