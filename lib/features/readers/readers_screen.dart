@@ -165,12 +165,18 @@ class _TheReader extends StatelessWidget {
                                   color: Mau.vang, fontSize: 12),
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              reader.totalReviews > 0
-                                  ? '(${reader.totalReviews} đánh giá)'
-                                  : 'đánh giá',
-                              style: const TextStyle(
-                                  color: Mau.chuMo, fontSize: 12),
+                            // Flexible: với cỡ chữ lớn của máy, dòng này
+                            // tràn khỏi thẻ nếu không được phép co lại.
+                            Flexible(
+                              child: Text(
+                                reader.totalReviews > 0
+                                    ? '(${reader.totalReviews} đánh giá)'
+                                    : 'đánh giá',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    color: Mau.chuMo, fontSize: 12),
+                              ),
                             ),
                           ],
                         ),
