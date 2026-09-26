@@ -1,5 +1,6 @@
 import 'package:astrotarot_mobile/features/home/daily_card.dart';
 import 'package:astrotarot_mobile/features/readerprofile/reader_profile_view.dart';
+import 'package:astrotarot_mobile/features/readers/reader_detail_screen.dart';
 import 'package:astrotarot_mobile/features/shop/san_pham_lien_quan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -195,6 +196,39 @@ void main() {
       // phút là một lỗi gõ, và nó phải đập vào mắt ngay lúc gõ.
       expect(find.text('600.000 đ'), findsOneWidget);
       expect(find.text('60.000 đ'), findsNothing);
+    });
+  });
+
+  group('Hồ sơ Reader công khai', () {
+    testWidgets('Reader chưa đặt giá nào thì nói rõ, không để ba mục rỗng',
+        (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra(
+          'GET /api/v1/readers/r1',
+          mauReader(id: 'r1', gia15: null, gia30: null, gia60: null));
+      m.mayChu.tra('GET /api/v1/readers/r1/reviews', trang([]));
+      await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
+
+      // findBookable ở backend đã ẩn họ khỏi danh sách công khai, nhưng vẫn
+      // tới được đây bằng đường dẫn trực tiếp — một liên kết chia sẻ từ trước,
+      // hoặc chính Reader đang xem lại hồ sơ của mình.
+      expect(find.textContaining('chưa đặt giá cho mốc nào'), findsOneWidget);
+      // Ba mục liền nhau rỗng trơn trông như tải hỏng.
+      expect(find.text('Ngày'), findsNothing);
+      expect(find.text('Khung giờ còn trống'), findsNothing);
+    });
+
+    testWidgets('có giá thì hiện đủ mốc và phần chọn ngày', (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra('GET /api/v1/readers/r1', mauReader(id: 'r1'));
+      m.mayChu.tra('GET /api/v1/readers/r1/reviews', trang([]));
+      m.mayChu.tra('GET /api/v1/readers/r1/slots', []);
+      m.mayChu.tra('GET /api/v1/readers/r1/slots/next-available', null);
+      await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
+
+      expect(find.textContaining('chưa đặt giá cho mốc nào'), findsNothing);
+      expect(find.text('Ngày'), findsOneWidget);
+      expect(find.text('Khung giờ còn trống'), findsOneWidget);
     });
   });
 }
