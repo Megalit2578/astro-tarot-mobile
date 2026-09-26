@@ -115,7 +115,9 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
     final lyDo = await hoiNoiDung(
       context,
       tieuDe: 'Huỷ lịch hẹn?',
-      goiY: 'Lý do huỷ — Reader sẽ đọc được (không bắt buộc)',
+      goiY:
+          'Lý do huỷ. Chưa đặt cọc thì không mất tiền. Đã cọc: huỷ từ 12 '
+          'tiếng trước giờ hẹn thì hoàn cọc.',
       gui: 'Xác nhận huỷ',
     );
     // null = bấm Thoát, giữ lịch. Chuỗi rỗng = huỷ mà không ghi lý do.
