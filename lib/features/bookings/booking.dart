@@ -6,29 +6,31 @@ enum TrangThaiBuoi { pending, confirmed, completed, cancelled, khac }
 /// Không dùng `name.toUpperCase()`: `khac` sẽ thành "KHAC", một giá trị backend
 /// không biết, và nó trả 400 cho một thao tác đáng lẽ là "xem tất cả".
 String? tenTrangThai(TrangThaiBuoi? t) => switch (t) {
-      TrangThaiBuoi.pending => 'PENDING',
-      TrangThaiBuoi.confirmed => 'CONFIRMED',
-      TrangThaiBuoi.completed => 'COMPLETED',
-      TrangThaiBuoi.cancelled => 'CANCELLED',
-      TrangThaiBuoi.khac || null => null,
-    };
+  TrangThaiBuoi.pending => 'PENDING',
+  TrangThaiBuoi.confirmed => 'CONFIRMED',
+  TrangThaiBuoi.completed => 'COMPLETED',
+  TrangThaiBuoi.cancelled => 'CANCELLED',
+  TrangThaiBuoi.khac || null => null,
+};
 
 TrangThaiBuoi trangThaiTu(String? s) => switch (s) {
-      'PENDING' => TrangThaiBuoi.pending,
-      'CONFIRMED' => TrangThaiBuoi.confirmed,
-      'COMPLETED' => TrangThaiBuoi.completed,
-      'CANCELLED' => TrangThaiBuoi.cancelled,
-      _ => TrangThaiBuoi.khac,
-    };
+  'PENDING' => TrangThaiBuoi.pending,
+  'CONFIRMED' => TrangThaiBuoi.confirmed,
+  'COMPLETED' => TrangThaiBuoi.completed,
+  'CANCELLED' => TrangThaiBuoi.cancelled,
+  _ => TrangThaiBuoi.khac,
+};
 
-enum TrangThaiTra { unpaid, paid, refunded, khac }
+enum TrangThaiTra { unpaid, depositPaid, paid, refunded, failed, khac }
 
 TrangThaiTra trangThaiTraTu(String? s) => switch (s) {
-      'UNPAID' => TrangThaiTra.unpaid,
-      'PAID' => TrangThaiTra.paid,
-      'REFUNDED' => TrangThaiTra.refunded,
-      _ => TrangThaiTra.khac,
-    };
+  'UNPAID' => TrangThaiTra.unpaid,
+  'DEPOSIT_PAID' => TrangThaiTra.depositPaid,
+  'PAID' => TrangThaiTra.paid,
+  'REFUNDED' => TrangThaiTra.refunded,
+  'FAILED' => TrangThaiTra.failed,
+  _ => TrangThaiTra.khac,
+};
 
 class Booking {
   const Booking({
@@ -50,6 +52,9 @@ class Booking {
     this.customerAvatar,
     this.lyDoHuy,
     this.ghiChuReader,
+    this.tienCoc,
+    this.tienConLai,
+    this.hanTraNot,
   });
 
   final String id;
@@ -70,6 +75,11 @@ class Booking {
   final String? lyDoHuy;
   final String? ghiChuReader;
 
+  /// Cọc 50% và phần còn lại. Hạn trả nốt là 12 tiếng trước giờ hẹn.
+  final int? tienCoc;
+  final int? tienConLai;
+  final DateTime? hanTraNot;
+
   /// Hộp trao đổi có đang mở không.
   ///
   /// **Máy chủ tính, giao diện chỉ đọc.** Đừng tự suy từ trạng thái + thanh
@@ -79,37 +89,46 @@ class Booking {
   final bool chatMo;
 
   factory Booking.fromJson(Map<String, dynamic> j) => Booking(
-        id: j['id'] as String,
-        readerProfileId: (j['readerProfileId'] ?? '') as String,
-        readerUserId: (j['readerUserId'] ?? '') as String,
-        readerName: (j['readerName'] ?? '') as String,
-        readerAvatar: j['readerAvatar'] as String?,
-        customerId: (j['customerId'] ?? '') as String,
-        customerName: (j['customerName'] ?? '') as String,
-        customerAvatar: j['customerAvatar'] as String?,
-        batDau: DateTime.parse(j['startTime'] as String),
-        ketThuc: DateTime.parse(j['endTime'] as String),
-        phut: (j['durationMinutes'] as num?)?.toInt() ?? 0,
-        tongTien: (j['totalAmount'] as num?)?.toInt() ?? 0,
-        trangThai: trangThaiTu(j['status'] as String?),
-        trangThaiTra: trangThaiTraTu(j['paymentStatus'] as String?),
-        daDanhGia: j['reviewed'] as bool? ?? false,
-        // Bản backend cũ chưa có trường này. Mặc định false: giấu nhầm nút
-        // còn hơn bày ra rồi bấm vào nhận lỗi.
-        chatMo: j['chatOpen'] as bool? ?? false,
-        lyDoHuy: j['cancelReason'] as String?,
-        ghiChuReader: j['readerNote'] as String?,
-      );
+    id: j['id'] as String,
+    readerProfileId: (j['readerProfileId'] ?? '') as String,
+    readerUserId: (j['readerUserId'] ?? '') as String,
+    readerName: (j['readerName'] ?? '') as String,
+    readerAvatar: j['readerAvatar'] as String?,
+    customerId: (j['customerId'] ?? '') as String,
+    customerName: (j['customerName'] ?? '') as String,
+    customerAvatar: j['customerAvatar'] as String?,
+    batDau: DateTime.parse(j['startTime'] as String),
+    ketThuc: DateTime.parse(j['endTime'] as String),
+    phut: (j['durationMinutes'] as num?)?.toInt() ?? 0,
+    tongTien: (j['totalAmount'] as num?)?.toInt() ?? 0,
+    trangThai: trangThaiTu(j['status'] as String?),
+    trangThaiTra: trangThaiTraTu(j['paymentStatus'] as String?),
+    daDanhGia: j['reviewed'] as bool? ?? false,
+    // Bản backend cũ chưa có trường này. Mặc định false: giấu nhầm nút
+    // còn hơn bày ra rồi bấm vào nhận lỗi.
+    chatMo: j['chatOpen'] as bool? ?? false,
+    lyDoHuy: j['cancelReason'] as String?,
+    ghiChuReader: j['readerNote'] as String?,
+    tienCoc: (j['depositAmount'] as num?)?.toInt(),
+    tienConLai: (j['remainingAmount'] as num?)?.toInt(),
+    hanTraNot: j['paymentDeadline'] == null
+        ? null
+        : DateTime.tryParse(j['paymentDeadline'] as String),
+  );
 
   bool get chuaTra => trangThaiTra == TrangThaiTra.unpaid;
+  bool get daCoc => trangThaiTra == TrangThaiTra.depositPaid;
+
+  /// Còn phải trả: chưa trả gì, hoặc đã cọc nhưng chưa trả nốt.
+  bool get conPhaiTra => chuaTra || daCoc;
   bool get dangCho => trangThai == TrangThaiBuoi.pending;
 }
 
 /// Nhãn tiếng Việt cho trạng thái, dùng chung cả phía khách lẫn phía Reader.
 String nhanTrangThai(TrangThaiBuoi t) => switch (t) {
-      TrangThaiBuoi.pending => 'Chờ Reader nhận',
-      TrangThaiBuoi.confirmed => 'Đã nhận lịch',
-      TrangThaiBuoi.completed => 'Đã hoàn tất',
-      TrangThaiBuoi.cancelled => 'Đã huỷ',
-      TrangThaiBuoi.khac => '—',
-    };
+  TrangThaiBuoi.pending => 'Chờ Reader nhận',
+  TrangThaiBuoi.confirmed => 'Đã nhận lịch',
+  TrangThaiBuoi.completed => 'Đã hoàn tất',
+  TrangThaiBuoi.cancelled => 'Đã huỷ',
+  TrangThaiBuoi.khac => '—',
+};

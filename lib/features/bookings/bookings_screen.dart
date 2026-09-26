@@ -192,6 +192,11 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     'chưa thanh toán',
                     style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
                   )
+                else if (b.daCoc)
+                  const Text(
+                    'đã đặt cọc',
+                    style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
+                  )
                 else
                   const Text(
                     'đã thanh toán',
@@ -199,6 +204,15 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                   ),
               ],
             ),
+            if (b.daCoc) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Còn ${Dinh.tien(b.tienConLai ?? 0)}'
+                '${b.hanTraNot == null ? '' : ' · hạn ${Dinh.ngayGio(b.hanTraNot)}'}'
+                ' — quá hạn thì mất cọc',
+                style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
+              ),
+            ],
             if (b.lyDoHuy != null && b.lyDoHuy!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
@@ -237,7 +251,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                if (b.chuaTra && b.trangThai != TrangThaiBuoi.cancelled)
+                if (b.conPhaiTra && b.trangThai != TrangThaiBuoi.cancelled)
                   FilledButton(
                     onPressed: _dangTra ? null : _thanhToan,
                     style: FilledButton.styleFrom(
@@ -250,7 +264,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                             width: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Thanh toán'),
+                        : Text(b.daCoc ? 'Thanh toán nốt' : 'Thanh toán'),
                   ),
                 // Nút trò chuyện chỉ hiện khi MÁY CHỦ nói hội thoại đang mở.
                 // Không tự suy từ trạng thái + thanh toán: luật còn có hạn ân

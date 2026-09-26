@@ -8,6 +8,7 @@ import 'package:astrotarot_mobile/features/readers/reader_reviews.dart';
 import 'package:astrotarot_mobile/features/readers/readers_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import 'support/gia.dart';
 import 'support/mau.dart';
@@ -225,6 +226,36 @@ void main() {
       expect(find.text('Chuyển khoản'), findsNothing);
     });
 
+    testWidgets('đã đặt cọc thì thấy hạn trả nốt và mã QR', (t) async {
+      final m = MoiTruong(user: nguoiDung());
+      final han = homNay.add(const Duration(hours: 20));
+      m.mayChu.tra(
+        'GET /api/v1/bookings/me',
+        trang([
+          mauBooking(traTien: 'DEPOSIT_PAID')
+            ..['remainingAmount'] = 90000
+            ..['paymentDeadline'] = iso(han),
+        ]),
+      );
+      m.mayChu.tra('POST /api/v1/bookings/b1/payment', {
+        'amount': 90000,
+        'paymentMethod': 'BANK_TRANSFER',
+        'paymentPhase': 'REMAINING',
+        'referenceCode': 'AT9',
+        'transferContent': 'AT9',
+        'bankName': 'Vietcombank',
+        'bankAccountNumber': '0123456789',
+        'bankAccountHolder': 'CONG TY',
+        'qrCode': '000201010212',
+      });
+      await m.dung(t, const BookingsScreen());
+      expect(find.textContaining('đã đặt cọc'), findsOneWidget);
+      expect(find.textContaining('quá hạn thì mất cọc'), findsOneWidget);
+      await bam(t, find.text('Thanh toán nốt'));
+      expect(find.textContaining('trước hạn 12 tiếng'), findsOneWidget);
+      expect(find.byType(QrImageView), findsOneWidget);
+    });
+
     testWidgets('thanh toán PayOS mở trình duyệt', (t) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/bookings/me', trang([mauBooking()]));
@@ -429,6 +460,7 @@ void main() {
       expect(nhanTrangThai(TrangThaiBuoi.khac), '—');
       expect(trangThaiTu('LẠ'), TrangThaiBuoi.khac);
       expect(trangThaiTraTu('REFUNDED'), TrangThaiTra.refunded);
+      expect(trangThaiTraTu('DEPOSIT_PAID'), TrangThaiTra.depositPaid);
       expect(trangThaiTraTu(null), TrangThaiTra.khac);
     });
   });
