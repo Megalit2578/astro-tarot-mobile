@@ -2,13 +2,16 @@ import 'dart:io';
 
 import 'package:astrotarot_mobile/features/account/account_screen.dart';
 import 'package:astrotarot_mobile/features/blog/blog_screen.dart';
+import 'package:astrotarot_mobile/features/bookings/bookings_screen.dart';
 import 'package:astrotarot_mobile/features/feedback/feedback_screen.dart';
 import 'package:astrotarot_mobile/features/home/daily_card.dart';
 import 'package:astrotarot_mobile/features/home/home_screen.dart';
 import 'package:astrotarot_mobile/features/notifications/notifications_screen.dart';
 import 'package:astrotarot_mobile/features/profile/change_password_screen.dart';
 import 'package:astrotarot_mobile/features/profile/profile_screen.dart';
+import 'package:astrotarot_mobile/features/readerapply/reader_apply_screen.dart';
 import 'package:astrotarot_mobile/features/shell/home_shell.dart';
+import 'package:astrotarot_mobile/features/staff/staff_screen.dart';
 import 'package:astrotarot_mobile/features/support/support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -303,15 +306,72 @@ void main() {
       expect(find.text('Hỏng'), findsOneWidget);
     });
 
-    test('đích của từng loại thông báo', () {
-      expect(manChoThongBao(null), isNull);
-      expect(manChoThongBao('LẠ'), isNull);
-      for (final l in [
-        'REVIEW_RECEIVED', 'SUPPORT_MESSAGE', 'PAYOUT_PAID', 'BOOKING_X',
-        'PAYMENT_OK', 'READER_APPLICATION_APPROVED', 'SUPPORT_REPLY',
-      ]) {
-        expect(manChoThongBao(l), isNotNull, reason: l);
-      }
+    /// Một tin, chỉ khai loại và metadata — phần còn lại không ảnh hưởng đích.
+    ThongBao tin(String? loai, {String? meta}) => ThongBao.fromJson({
+          'id': 'n1',
+          'title': 'T',
+          'message': '',
+          'read': false,
+          'pinned': false,
+          'type': loai,
+          'metadata': ?meta,
+        });
+
+    /// Đích của một tin, kèm tab nếu đó là Bàn làm việc.
+    ///
+    /// Trước đây phép kiểm ở đây chỉ đòi `isNotNull`. Nó xanh kể cả khi tin
+    /// mở NHẦM màn — mà mở nhầm màn chính là lỗi người dùng báo.
+    (Type, String?) dich(ThongBao t) {
+      final w = manChoThongBao(t);
+      return (w.runtimeType, w is StaffScreen ? w.tabDau : null);
+    }
+
+    test('tin phía Reader mở Bàn làm việc, không mở màn phía khách', () {
+      // Đây chính là lỗi được báo: Reader nhận "Có lịch hẹn mới", bấm vào, và
+      // thấy một danh sách trống — trống đúng, vì chính họ không đặt gì cả.
+      expect(dich(tin('BOOKING_CREATED', meta: '{"side":"reader"}')),
+          (StaffScreen, 'bookings'));
+      expect(dich(tin('BOOKING_CONFIRMED', meta: '{"side":"customer"}')),
+          (BookingsScreen, null));
+    });
+
+    test('CÙNG một loại đi hai nơi khác nhau tuỳ phía', () {
+      // BOOKING_CANCELLED gửi cho BÊN KIA: khách huỷ thì Reader nhận, Reader
+      // huỷ thì khách nhận. Suy từ loại là không thể.
+      expect(dich(tin('BOOKING_CANCELLED', meta: '{"side":"reader"}')),
+          (StaffScreen, 'bookings'));
+      expect(dich(tin('BOOKING_CANCELLED', meta: '{"side":"customer"}')),
+          (BookingsScreen, null));
+    });
+
+    test('tin cũ chưa có khoá side thì suy theo loại', () {
+      // Tin đã nằm sẵn trong hộp trước khi backend ghi "side" không tự sửa
+      // được. Chỗ nào suy chắc chắn thì vẫn phải đi đúng.
+      expect(dich(tin('BOOKING_CREATED')), (StaffScreen, 'bookings'));
+      expect(dich(tin('REVIEW_RECEIVED')), (StaffScreen, 'bookings'));
+      expect(dich(tin('BOOKING_CONFIRMED')), (BookingsScreen, null));
+      // Lệnh rút là tiền của Reader — nó không có mặt ở màn lịch hẹn phía
+      // khách dưới bất kỳ hình thức nào.
+      expect(dich(tin('PAYOUT_PAID')), (StaffScreen, 'earnings'));
+      expect(dich(tin('SUPPORT_MESSAGE')), (StaffScreen, 'support'));
+      expect(dich(tin('SUPPORT_REPLY')), (SupportScreen, null));
+      expect(dich(tin('READER_APPLICATION_APPROVED')),
+          (ReaderApplyScreen, null));
+    });
+
+    test('metadata hỏng thì rơi về suy theo loại, không ném lỗi', () {
+      // Một chuỗi hỏng ở MỘT dòng không được phép làm sập cả hộp thông báo.
+      expect(dich(tin('BOOKING_CREATED', meta: '{')),
+          (StaffScreen, 'bookings'));
+      expect(dich(tin('BOOKING_CONFIRMED', meta: '"x"')),
+          (BookingsScreen, null));
+      expect(dich(tin('BOOKING_CONFIRMED', meta: '{"side":"admin"}')),
+          (BookingsScreen, null));
+    });
+
+    test('không có loại thì không đi đâu cả', () {
+      expect(manChoThongBao(tin(null)), isNull);
+      expect(manChoThongBao(tin('LẠ')), isNull);
     });
   });
 

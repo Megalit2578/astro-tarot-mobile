@@ -134,6 +134,43 @@ void main() {
       expect(find.text('Nhắn gì đó…'), findsOneWidget);
     });
 
+    testWidgets('mở thẳng tới một tab bằng khoá, không phải bằng chỉ số',
+        (t) async {
+      // Thông báo phải mở được ĐÚNG tab. Chỉ số không dùng được: danh sách tab
+      // dựng theo quyền, nên cùng một con số trỏ vào tab khác nhau tuỳ tài
+      // khoản.
+      final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
+      khaiBanLamViec(m.mayChu);
+      await m.dung(t, const StaffScreen(tabDau: 'earnings'));
+      expect(find.text('Rút được ngay'), findsOneWidget);
+
+      // Reader không làm hỗ trợ: 'earnings' ở đây là mục thứ BA, không phải
+      // thứ tư như tài khoản trên.
+      final m2 = MoiTruong(
+          user: nguoiDung(quyen: {
+        'USER_BASIC',
+        'READER_MANAGE_PROFILE',
+        'PAYOUT_REQUEST',
+      }));
+      khaiBanLamViec(m2.mayChu);
+      await m2.dung(t, const StaffScreen(tabDau: 'earnings'));
+      expect(find.text('Rút được ngay'), findsOneWidget);
+    });
+
+    testWidgets('khoá trỏ tới tab bị ẩn vì thiếu quyền thì rơi về tab đầu',
+        (t) async {
+      // Một thông báo cũ còn nằm trong hộp sau khi quyền bị gỡ. Rơi về tab đầu
+      // còn hơn để màn trắng, hoặc tệ hơn là đổ vì chỉ số -1.
+      final m = MoiTruong(user: nguoiDung(quyen: {
+        'USER_BASIC',
+        'READER_MANAGE_PROFILE',
+      }));
+      khaiBanLamViec(m.mayChu);
+      await m.dung(t, const StaffScreen(tabDau: 'earnings'));
+      expect(find.text('Rút được ngay'), findsNothing);
+      expect(find.text('Khách chưa thanh toán'), findsOneWidget);
+    });
+
     testWidgets('không có quyền nào; chỉ một mục thì không có dải chọn',
         (t) async {
       final m = MoiTruong(user: nguoiDung(quyen: {'USER_BASIC'}));

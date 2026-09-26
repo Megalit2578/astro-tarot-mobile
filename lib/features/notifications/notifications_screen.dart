@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,18 +20,58 @@ import '../support/support_screen.dart';
 /// Màn cần mở khi bấm một thông báo — cùng luật với `notificationLink` của
 /// web. Trả null khi không có đích rõ ràng: bấm vào chỉ đánh dấu đã đọc, tốt
 /// hơn là đẩy người dùng tới một màn chẳng liên quan.
-Widget? manChoThongBao(String? loai) {
+///
+/// Một buổi xem có hai người và HAI danh sách khác nhau: màn Lịch hẹn của
+/// khách, và tab Lịch hẹn ở Bàn làm việc của Reader. Loại thông báo KHÔNG đủ
+/// để chọn giữa hai cái đó — BOOKING_CANCELLED gửi cho bên kia (khách huỷ thì
+/// Reader nhận, Reader huỷ thì khách nhận), còn PAYMENT_CONFIRMED gửi cho cả
+/// hai — nên phía lấy từ metadata do người gửi ghi ra.
+///
+/// Trước khi có khoá ấy, mọi BOOKING_* đều mở màn phía khách. Reader nhận
+/// "Có lịch hẹn mới" — loại thông báo CHỈ Reader mới nhận được — rồi bấm vào
+/// và thấy một danh sách trống. Trống một cách hoàn toàn đúng đắn, vì chính
+/// họ không đặt gì cả; nhưng đọc lên thì giống hệt "lịch hẹn không tới nơi".
+Widget? manChoThongBao(ThongBao tb) {
+  final loai = tb.loai;
   if (loai == null) return null;
-  if (loai == 'REVIEW_RECEIVED' || loai == 'SUPPORT_MESSAGE') {
-    return const StaffScreen();
+
+  if (tb.phia == 'reader') return const StaffScreen(tabDau: 'bookings');
+  if (tb.phia == 'customer') return const BookingsScreen();
+
+  // Tin CŨ, chưa có khoá "side". Suy theo loại, và chấp nhận đoán sai ở hai
+  // loại đi được cả hai chiều — chỗ nào chắc chắn thì vẫn phải đi đúng.
+  if (loai == 'BOOKING_CREATED' || loai == 'REVIEW_RECEIVED') {
+    return const StaffScreen(tabDau: 'bookings');
   }
-  if (loai.startsWith('PAYOUT_')) return const StaffScreen();
+  if (loai == 'SUPPORT_MESSAGE') return const StaffScreen(tabDau: 'support');
+  // Lệnh rút tiền chỉ Reader mới có, và nó nằm ở tab Thu nhập — màn lịch hẹn
+  // phía khách không liên quan gì tới tiền của Reader.
+  if (loai.startsWith('PAYOUT_')) {
+    return const StaffScreen(tabDau: 'earnings');
+  }
   if (loai.startsWith('BOOKING_') || loai.startsWith('PAYMENT_')) {
     return const BookingsScreen();
   }
   if (loai.startsWith('READER_APPLICATION_')) return const ReaderApplyScreen();
   if (loai == 'SUPPORT_REPLY') return const SupportScreen();
   return null;
+}
+
+/// Đọc khoá `side` trong metadata thô của backend.
+///
+/// Metadata là một chuỗi JSON nằm trong một cột chuỗi. Một chuỗi hỏng ở MỘT
+/// dòng không được phép làm sập cả hộp thông báo, nên hỏng thì trả null và để
+/// [manChoThongBao] suy theo loại.
+String? _phiaCua(Object? metadata) {
+  if (metadata is! String || metadata.isEmpty) return null;
+  try {
+    final d = jsonDecode(metadata);
+    if (d is! Map) return null;
+    final s = d['side'];
+    return s == 'reader' || s == 'customer' ? s as String : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 /// Các thao tác trên hộp thông báo.
@@ -73,6 +115,7 @@ class ThongBao {
     required this.ghim,
     this.loai,
     this.luc,
+    this.phia,
   });
 
   final String id;
@@ -85,6 +128,12 @@ class ThongBao {
   final String? loai;
   final DateTime? luc;
 
+  /// Phía của buổi xem mà tin này nói tới: 'reader' hoặc 'customer'.
+  ///
+  /// Null với tin cũ tạo ra trước khi backend ghi khoá này, và với metadata
+  /// không đọc được. Xem [manChoThongBao].
+  final String? phia;
+
   factory ThongBao.fromJson(Map<String, dynamic> j) => ThongBao(
         id: (j['id'] ?? '').toString(),
         tieuDe: (j['title'] ?? '') as String,
@@ -93,6 +142,7 @@ class ThongBao {
         ghim: j['pinned'] == true,
         loai: j['type'] as String?,
         luc: DateTime.tryParse((j['createdAt'] ?? '').toString()),
+        phia: _phiaCua(j['metadata']),
       );
 }
 
@@ -293,7 +343,7 @@ class _The extends ConsumerWidget {
             await taiLai();
             ref.invalidate(soChuaDocProvider);
           }
-          final man = manChoThongBao(tb.loai);
+          final man = manChoThongBao(tb);
           if (man != null && context.mounted) {
             await Navigator.of(context)
                 .push(MaterialPageRoute(builder: (_) => man));
