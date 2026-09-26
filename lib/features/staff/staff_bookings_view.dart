@@ -228,11 +228,16 @@ class _TheViecState extends ConsumerState<_TheViec> {
                 ),
               ],
             ),
-            if (b.chuaTra) ...[
+            if (b.conPhaiTra) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Khách chưa thanh toán',
-                style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
+              Text(
+                b.daCoc
+                    ? 'Khách đã đặt cọc, còn trả nốt'
+                    : 'Khách chưa thanh toán',
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: Color(0xFFE0B341),
+                ),
               ),
             ],
             const SizedBox(height: 12),

@@ -34,20 +34,20 @@ class HomeScreen extends ConsumerWidget {
     // Danh sách MỚI, sửa được: bản đầu lùi về `const []` khi lịch hẹn chưa
     // tải xong rồi gọi sort() trên nó — ném "Cannot modify an unmodifiable
     // list", và nếu API lịch hẹn lỗi thì cả trang chủ thành ô xám mãi.
-    final sapToi = <Booking>[
-      ...?bookings.asData?.value.where(_sapToi),
-    ]..sort((a, b) => a.batDau.compareTo(b.batDau));
+    final sapToi = <Booking>[...?bookings.asData?.value.where(_sapToi)]
+      ..sort((a, b) => a.batDau.compareTo(b.batDau));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ASTROTAROT',
-            style: TextStyle(letterSpacing: 3, fontSize: 15)),
+        title: const Text(
+          'ASTROTAROT',
+          style: TextStyle(letterSpacing: 3, fontSize: 15),
+        ),
         actions: [
           _ChuongThongBao(
             onTap: () async {
               await Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const NotificationsScreen()),
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
               );
               // Người dùng có thể đã đọc vài cái; số trên chuông phải theo.
               ref.invalidate(soChuaDocProvider);
@@ -131,25 +131,27 @@ class HomeScreen extends ConsumerWidget {
 
             ...switch (readings.asData?.value) {
               final ds? when ds.isNotEmpty => [
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      const Expanded(child: _Nhan('Lần trải bài gần đây')),
-                      TextButton(
-                        onPressed: () => _mo(context, const TarotHistoryScreen()),
-                        style: TextButton.styleFrom(foregroundColor: Mau.vang),
-                        child: const Text('Xem tất cả',
-                            style: TextStyle(fontSize: 12.5)),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Expanded(child: _Nhan('Lần trải bài gần đây')),
+                    TextButton(
+                      onPressed: () => _mo(context, const TarotHistoryScreen()),
+                      style: TextButton.styleFrom(foregroundColor: Mau.vang),
+                      child: const Text(
+                        'Xem tất cả',
+                        style: TextStyle(fontSize: 12.5),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  for (final r in ds)
-                    _TheTraiBai(
-                      lan: r,
-                      onTap: () => _mo(context, const TarotHistoryScreen()),
                     ),
-                ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                for (final r in ds)
+                  _TheTraiBai(
+                    lan: r,
+                    onTap: () => _mo(context, const TarotHistoryScreen()),
+                  ),
+              ],
               _ => const <Widget>[],
             },
 
@@ -160,7 +162,10 @@ class HomeScreen extends ConsumerWidget {
                 TextButton(
                   onPressed: () => _mo(context, const AstrologyScreen()),
                   style: TextButton.styleFrom(foregroundColor: Mau.vang),
-                  child: const Text('Quản lý', style: TextStyle(fontSize: 12.5)),
+                  child: const Text(
+                    'Quản lý',
+                    style: TextStyle(fontSize: 12.5),
+                  ),
                 ),
               ],
             ),
@@ -203,11 +208,16 @@ class _TrangThaiDonReader extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 16),
       child: Card(
         child: ListTile(
-          leading: Icon(cho ? Icons.schedule : Icons.info_outline,
-              color: cho ? Mau.vang : const Color(0xFFE5645E)),
+          leading: Icon(
+            cho ? Icons.schedule : Icons.info_outline,
+            color: cho ? Mau.vang : const Color(0xFFE5645E),
+          ),
           title: Text(
-              cho ? 'Đơn làm Reader đang chờ duyệt' : 'Đơn làm Reader chưa được duyệt',
-              style: const TextStyle(fontSize: 13.5)),
+            cho
+                ? 'Đơn làm Reader đang chờ duyệt'
+                : 'Đơn làm Reader chưa được duyệt',
+            style: const TextStyle(fontSize: 13.5),
+          ),
           subtitle: Text(
             cho
                 ? 'Bạn sẽ nhận thông báo khi có kết quả.'
@@ -218,8 +228,9 @@ class _TrangThaiDonReader extends ConsumerWidget {
             style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
           ),
           trailing: const Icon(Icons.chevron_right, color: Mau.chuMo),
-          onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ReaderApplyScreen())),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ReaderApplyScreen())),
         ),
       ),
     );
@@ -250,8 +261,10 @@ class _ChuongThongBao extends ConsumerWidget {
             top: 9,
             right: 8,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 4.5,
+                vertical: 1.5,
+              ),
               constraints: const BoxConstraints(minWidth: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFFE5645E),
@@ -263,10 +276,11 @@ class _ChuongThongBao extends ConsumerWidget {
                 so > 99 ? '99+' : '$so',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 9.5,
-                    height: 1.2,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white),
+                  fontSize: 9.5,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -282,8 +296,9 @@ class _TheTarot extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const TarotScreen())),
+      onTap: () =>
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const TarotScreen())),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -306,12 +321,15 @@ class _TheTarot extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Trải bài Tarot ngay',
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Trải bài Tarot ngay',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
                   SizedBox(height: 3),
-                  Text('Đặt một câu hỏi, AI rút bài và giải nghĩa',
-                      style: TextStyle(fontSize: 12, color: Mau.chuMo)),
+                  Text(
+                    'Đặt một câu hỏi, AI rút bài và giải nghĩa',
+                    style: TextStyle(fontSize: 12, color: Mau.chuMo),
+                  ),
                 ],
               ),
             ),
@@ -392,10 +410,9 @@ class _Nhan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-            fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4),
-      );
+    text,
+    style: const TextStyle(fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4),
+  );
 }
 
 class _TheSapToi extends StatelessWidget {
@@ -418,7 +435,9 @@ class _TheSapToi extends StatelessWidget {
                   child: Text(
                     b.readerName.isEmpty ? 'Reader' : b.readerName,
                     style: const TextStyle(
-                        fontSize: 14.5, fontWeight: FontWeight.w600),
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Text(
@@ -432,11 +451,17 @@ class _TheSapToi extends StatelessWidget {
               '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút · ${Dinh.tien(b.tongTien)}',
               style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
             ),
-            if (b.chuaTra) ...[
+            if (b.conPhaiTra) ...[
               const SizedBox(height: 6),
-              const Text('Chưa thanh toán — vào tab Lịch hẹn để trả',
-                  style:
-                      TextStyle(fontSize: 11.5, color: Color(0xFFE0B341))),
+              Text(
+                b.daCoc
+                    ? 'Đã đặt cọc — vào tab Lịch hẹn để trả nốt trước buổi 12 tiếng'
+                    : 'Chưa thanh toán — vào tab Lịch hẹn để trả',
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: Color(0xFFE0B341),
+                ),
+              ),
             ],
             if (b.chatMo) ...[
               const SizedBox(height: 10),
@@ -476,32 +501,33 @@ class _TheTraiBai extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            const Icon(Icons.style_outlined, size: 18, color: Mau.vang),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lan.cauHoi,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, height: 1.4),
-                  ),
-                  if (lan.luc != null) ...[
-                    const SizedBox(height: 3),
-                    Text(Dinh.ngay(lan.luc),
-                        style: const TextStyle(
-                            fontSize: 11, color: Mau.chuMo)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              const Icon(Icons.style_outlined, size: 18, color: Mau.vang),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lan.cauHoi,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, height: 1.4),
+                    ),
+                    if (lan.luc != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        Dinh.ngay(lan.luc),
+                        style: const TextStyle(fontSize: 11, color: Mau.chuMo),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );
@@ -531,8 +557,7 @@ class _TheBanDoSao extends StatelessWidget {
               const Text(
                 'Khai rồi thì lời giải Tarot và tử vi bám vào bản đồ sao của '
                 'chính bạn, thay vì trả lời chung chung.',
-                style:
-                    TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
+                style: TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
@@ -586,12 +611,12 @@ class _Dong extends StatelessWidget {
         children: [
           SizedBox(
             width: 86,
-            child: Text(nhan,
-                style: const TextStyle(fontSize: 12, color: Mau.chuMo)),
+            child: Text(
+              nhan,
+              style: const TextStyle(fontSize: 12, color: Mau.chuMo),
+            ),
           ),
-          Expanded(
-            child: Text(giaTri, style: const TextStyle(fontSize: 13)),
-          ),
+          Expanded(child: Text(giaTri, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );

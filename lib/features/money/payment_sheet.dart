@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/trang.dart';
@@ -18,6 +19,8 @@ class HuongDanThanhToan {
     required this.chuTaiKhoan,
     this.phuongThuc,
     this.linkThanhToan,
+    this.giaiDoan,
+    this.maQr,
   });
 
   final int soTien;
@@ -32,6 +35,12 @@ class HuongDanThanhToan {
 
   /// Link PayOS, chỉ có khi cổng PayOS đang bật.
   final String? linkThanhToan;
+
+  /// DEPOSIT, REMAINING hoặc FULL.
+  final String? giaiDoan;
+
+  /// Chuỗi VietQR đã điền sẵn số tiền và nội dung.
+  final String? maQr;
 
   bool get laPayOs =>
       (linkThanhToan != null && linkThanhToan!.isNotEmpty) ||
@@ -49,9 +58,26 @@ class HuongDanThanhToan {
         nganHang: (j['bankName'] ?? '') as String,
         soTaiKhoan: (j['bankAccountNumber'] ?? '') as String,
         chuTaiKhoan: (j['bankAccountHolder'] ?? '') as String,
-        linkThanhToan:
-            chuoi(j['checkoutUrl'] ?? j['paymentUrl'] ?? j['url']),
+        linkThanhToan: chuoi(j['checkoutUrl'] ?? j['paymentUrl'] ?? j['url']),
+        giaiDoan: chuoi(j['paymentPhase']),
+        maQr: chuoi(j['qrCode']),
       );
+
+  String get loiGiai {
+    return switch (giaiDoan) {
+      'DEPOSIT' =>
+        'Đây là khoản đặt cọc 50%. Trả nốt phần còn lại trước buổi xem '
+            '12 tiếng — quá hạn thì mất cọc.',
+      'REMAINING' => 'Đây là phần còn lại. Chuyển đủ trước hạn 12 tiếng, quá hạn thì mất cọc.',
+      'FULL' => 'Lịch hẹn dưới 12 tiếng. Bạn cần thanh toán toàn bộ ngay.',
+      _ =>
+        laPayOs
+            ? 'Mở PayOS để quét VietQR hoặc chuyển khoản. Hệ thống xác '
+                  'nhận tự động sau khi nhận tiền.'
+            : 'Chuyển đúng số tiền và đúng nội dung bên dưới. Chúng tôi '
+                  'đối soát rồi xác nhận, thường trong vài giờ làm việc.',
+    };
+  }
 }
 
 /// Bảng hướng dẫn thanh toán: PayOS (mở link) hoặc chuyển khoản tay.
@@ -60,8 +86,7 @@ class HuongDanThanhToan {
 /// thông tin chuyển khoản mà không có link — app báo "không có liên kết
 /// thanh toán" và khách **không trả tiền được**. Giờ hiện đủ số tài khoản và
 /// nội dung chuyển khoản như web, kèm nút chép cho từng dòng.
-Future<void> moHuongDanThanhToan(
-    BuildContext context, HuongDanThanhToan h) {
+Future<void> moHuongDanThanhToan(BuildContext context, HuongDanThanhToan h) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -88,7 +113,10 @@ class _BangThanhToan extends StatelessWidget {
       return;
     }
     Navigator.of(context).pop();
-    baoTin(context, 'Thanh toán xong thì quay lại đây và kéo xuống để làm mới.');
+    baoTin(
+      context,
+      'Thanh toán xong thì quay lại đây và kéo xuống để làm mới.',
+    );
   }
 
   @override
@@ -100,22 +128,48 @@ class _BangThanhToan extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(children: [
-              const Icon(Icons.account_balance_outlined, color: Mau.vang),
-              const SizedBox(width: 8),
-              Text(h.laPayOs ? 'Thanh toán PayOS' : 'Chuyển khoản',
-                  style: const TextStyle(fontSize: 18)),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.account_balance_outlined, color: Mau.vang),
+                const SizedBox(width: 8),
+                Text(
+                  h.laPayOs ? 'Thanh toán PayOS' : 'Chuyển khoản',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
             const SizedBox(height: 6),
             Text(
-              h.laPayOs
-                  ? 'Mở PayOS để quét VietQR hoặc chuyển khoản. Hệ thống xác '
-                      'nhận tự động sau khi nhận tiền.'
-                  : 'Chuyển đúng số tiền và đúng nội dung bên dưới. Chúng tôi '
-                      'đối soát rồi xác nhận, thường trong vài giờ làm việc.',
+              h.loiGiai,
               style: const TextStyle(
-                  fontSize: 12.5, color: Mau.chuMo, height: 1.5),
+                fontSize: 12.5,
+                color: Mau.chuMo,
+                height: 1.5,
+              ),
             ),
+            if (!h.laPayOs && h.maQr != null && h.maQr!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: QrImageView(
+                    data: h.maQr!,
+                    size: 168,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Quét bằng ứng dụng ngân hàng — số tiền và nội dung đã điền sẵn.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: Mau.chuMo),
+              ),
+            ],
             if (h.chuaCauHinh) ...[
               const SizedBox(height: 12),
               const Text(
@@ -128,23 +182,26 @@ class _BangThanhToan extends StatelessWidget {
             _Truong(nhan: 'Số tiền', giaTri: Dinh.tien(h.soTien), lon: true),
             if (h.laPayOs)
               _Truong(
-                  nhan: 'Mã đơn PayOS',
-                  giaTri: h.maThamChieu,
-                  mono: true,
-                  chep: true)
+                nhan: 'Mã đơn PayOS',
+                giaTri: h.maThamChieu,
+                mono: true,
+                chep: true,
+              )
             else ...[
               _Truong(
-                  nhan: 'Nội dung chuyển khoản',
-                  giaTri: h.noiDung,
-                  mono: true,
-                  lon: true,
-                  chep: true),
+                nhan: 'Nội dung chuyển khoản',
+                giaTri: h.noiDung,
+                mono: true,
+                lon: true,
+                chep: true,
+              ),
               _Truong(nhan: 'Ngân hàng', giaTri: h.nganHang),
               _Truong(
-                  nhan: 'Số tài khoản',
-                  giaTri: h.soTaiKhoan,
-                  mono: true,
-                  chep: true),
+                nhan: 'Số tài khoản',
+                giaTri: h.soTaiKhoan,
+                mono: true,
+                chep: true,
+              ),
               _Truong(nhan: 'Chủ tài khoản', giaTri: h.chuTaiKhoan),
             ],
             const SizedBox(height: 18),
@@ -157,7 +214,8 @@ class _BangThanhToan extends StatelessWidget {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text(
-                    'Đóng — trạng thái cập nhật ở trang Lịch hẹn'),
+                  'Đóng — trạng thái cập nhật ở trang Lịch hẹn',
+                ),
               ),
             ] else
               FilledButton(
@@ -170,8 +228,7 @@ class _BangThanhToan extends StatelessWidget {
                 child: Text(
                   'Ghi thiếu hoặc sai nội dung thì khoản tiền không khớp được '
                   'với lịch hẹn của bạn và sẽ phải xử lý tay.',
-                  style:
-                      TextStyle(fontSize: 11, color: Mau.chuMo, height: 1.5),
+                  style: TextStyle(fontSize: 11, color: Mau.chuMo, height: 1.5),
                 ),
               ),
           ],
@@ -212,14 +269,19 @@ class _Truong extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(nhan,
-                    style: const TextStyle(fontSize: 11, color: Mau.chuMo)),
+                Text(
+                  nhan,
+                  style: const TextStyle(fontSize: 11, color: Mau.chuMo),
+                ),
                 const SizedBox(height: 3),
-                SelectableText(giaTri,
-                    style: TextStyle(
-                        fontSize: lon ? 17 : 14,
-                        color: lon ? Mau.vang : Mau.chu,
-                        fontFamily: mono ? 'monospace' : null)),
+                SelectableText(
+                  giaTri,
+                  style: TextStyle(
+                    fontSize: lon ? 17 : 14,
+                    color: lon ? Mau.vang : Mau.chu,
+                    fontFamily: mono ? 'monospace' : null,
+                  ),
+                ),
               ],
             ),
           ),
