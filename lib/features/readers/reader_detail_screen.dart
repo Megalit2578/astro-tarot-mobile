@@ -518,6 +518,7 @@ class _LichDat extends ConsumerWidget {
               thang: ngay,
               chon: ngay,
               loai: loai,
+              khoaQuaKhu: true,
               coTruoc: _thangDat(truoc),
               coSau: _thangDat(sau),
               doiNgay: doiNgay,
@@ -543,6 +544,12 @@ class _LichDat extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             const _Nhan('Khung giờ'),
+            const SizedBox(height: 4),
+            const Text(
+              'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. '
+              'Khung gạch ngang đã có người.',
+              style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.4),
+            ),
             const SizedBox(height: 10),
             if ((hom?.o ?? const <Slot>[])
                 .where((s) => s.trang != TrangO.past)

@@ -126,7 +126,7 @@ class _TheViecState extends ConsumerState<_TheViec> {
   Future<void> _huy() async {
     final lyDo = await _hoiChu(
       tieuDe: 'Huỷ buổi hẹn',
-      goiY: 'Lý do huỷ (khách sẽ đọc được)',
+      goiY: 'Lý do huỷ. Bạn huỷ thì khách được hoàn toàn bộ số đã trả.',
       batBuoc: false,
     );
     // null = người dùng bấm Thoát. Chuỗi rỗng = họ xác nhận nhưng không ghi

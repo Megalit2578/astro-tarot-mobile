@@ -15,6 +15,7 @@ class LuoiThang extends StatelessWidget {
     this.soBuoi = const {},
     this.coTruoc = true,
     this.coSau = true,
+    this.khoaQuaKhu = false,
   });
 
   /// Ngày bất kỳ trong tháng đang xem.
@@ -26,6 +27,9 @@ class LuoiThang extends StatelessWidget {
   final Map<String, int> soBuoi;
   final bool coTruoc;
   final bool coSau;
+
+  /// Lịch đặt: ngày đã qua không bấm được. Lịch riêng vẫn xem buổi cũ.
+  final bool khoaQuaKhu;
 
   static const _thu = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
@@ -98,7 +102,11 @@ class LuoiThang extends StatelessWidget {
                 chon: chon,
                 loai: loai[khoa(DateTime(thang.year, thang.month, d))],
                 so: soBuoi[khoa(DateTime(thang.year, thang.month, d))] ?? 0,
-                onTap: () => doiNgay(DateTime(thang.year, thang.month, d)),
+                onTap:
+                    khoaQuaKhu &&
+                        DateTime(thang.year, thang.month, d).isBefore(homNgay)
+                    ? null
+                    : () => doiNgay(DateTime(thang.year, thang.month, d)),
               ),
           ],
         ),
@@ -139,7 +147,7 @@ class _ONgay extends StatelessWidget {
   final DateTime? chon;
   final LoaiNgay? loai;
   final int so;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -181,8 +189,8 @@ class _ONgay extends StatelessWidget {
                 fontWeight: dangChon || laHomNay ? FontWeight.w600 : null,
                 color: dangChon
                     ? Mau.vang
-                    : loai == LoaiNgay.past
-                    ? Mau.chuMo
+                    : onTap == null || loai == LoaiNgay.past
+                    ? Mau.chuMo.withValues(alpha: onTap == null ? 0.45 : 1)
                     : Mau.chu,
               ),
             ),
