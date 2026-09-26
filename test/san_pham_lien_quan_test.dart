@@ -17,9 +17,10 @@ void main() {
   group('Sản phẩm liên quan', () {
     testWidgets('lọc theo ĐÚNG danh mục được yêu cầu', (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/shop/products', trang([
-        mauSanPham(ten: 'Bộ Rider-Waite'),
-      ]));
+      m.mayChu.tra(
+        'GET /api/v1/shop/products',
+        trang([mauSanPham(ten: 'Bộ Rider-Waite')]),
+      );
       await m.dung(
         t,
         const SanPhamLienQuan(
@@ -30,20 +31,20 @@ void main() {
 
       // Gợi ý sai danh mục là quảng cáo chen ngang: người vừa rút lá bài
       // không muốn thấy một cái khăn trải bàn.
-      expect(m.mayChu.lanCuoi('GET /api/v1/shop/products')!.query['category'],
-          'bai-tarot');
+      expect(
+        m.mayChu.lanCuoi('GET /api/v1/shop/products')!.query['category'],
+        'bai-tarot',
+      );
       expect(find.text('Muốn tự rút bài ở nhà?'), findsOneWidget);
       expect(find.text('Bộ Rider-Waite'), findsOneWidget);
     });
 
-    testWidgets('KHÔNG có sản phẩm nào thì ẩn hẳn, không chừa chỗ trống',
-        (t) async {
+    testWidgets('KHÔNG có sản phẩm nào thì ẩn hẳn, không chừa chỗ trống', (
+      t,
+    ) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/shop/products', trang([]));
-      await m.dung(
-        t,
-        const SanPhamLienQuan(tieuDe: 'Gợi ý cho bạn'),
-      );
+      await m.dung(t, const SanPhamLienQuan(tieuDe: 'Gợi ý cho bạn'));
 
       // Một tiêu đề đứng trên khoảng trống trông như lỗi tải, và nó đẩy phần
       // nội dung thật xuống dưới mép màn hình.
@@ -53,10 +54,7 @@ void main() {
     testWidgets('máy chủ lỗi thì cũng ẩn hẳn, không hiện khối lỗi', (t) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.loi('GET /api/v1/shop/products', 'Gian hàng đang bảo trì');
-      await m.dung(
-        t,
-        const SanPhamLienQuan(tieuDe: 'Gợi ý cho bạn'),
-      );
+      await m.dung(t, const SanPhamLienQuan(tieuDe: 'Gợi ý cho bạn'));
 
       // Đây là khối PHỤ. Hiện "Gian hàng đang bảo trì" ngay dưới lá bài vừa
       // rút là biến một lỗi không liên quan thành thứ đập vào mắt người dùng.
@@ -66,15 +64,15 @@ void main() {
 
     testWidgets('cắt đúng số lượng, thừa thì bỏ', (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/shop/products', trang([
-        mauSanPham(id: 'p1', ten: 'Bộ một', slug: 'bo-mot'),
-        mauSanPham(id: 'p2', ten: 'Bộ hai', slug: 'bo-hai'),
-        mauSanPham(id: 'p3', ten: 'Bộ ba', slug: 'bo-ba'),
-      ]));
-      await m.dung(
-        t,
-        const SanPhamLienQuan(tieuDe: 'Gợi ý', soLuong: 2),
+      m.mayChu.tra(
+        'GET /api/v1/shop/products',
+        trang([
+          mauSanPham(id: 'p1', ten: 'Bộ một', slug: 'bo-mot'),
+          mauSanPham(id: 'p2', ten: 'Bộ hai', slug: 'bo-hai'),
+          mauSanPham(id: 'p3', ten: 'Bộ ba', slug: 'bo-ba'),
+        ]),
       );
+      await m.dung(t, const SanPhamLienQuan(tieuDe: 'Gợi ý', soLuong: 2));
 
       // Hai thẻ vừa một hàng trên điện thoại. Thẻ thứ ba tràn ra ngoài mép.
       expect(find.text('Bộ một'), findsOneWidget);
@@ -82,12 +80,14 @@ void main() {
       expect(find.text('Bộ ba'), findsNothing);
     });
 
-    testWidgets('chỉ có một sản phẩm thì không kéo thẻ ra rộng cả hàng',
-        (t) async {
+    testWidgets('chỉ có một sản phẩm thì không kéo thẻ ra rộng cả hàng', (
+      t,
+    ) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/shop/products', trang([
-        mauSanPham(ten: 'Bộ duy nhất'),
-      ]));
+      m.mayChu.tra(
+        'GET /api/v1/shop/products',
+        trang([mauSanPham(ten: 'Bộ duy nhất')]),
+      );
       await m.dung(t, const SanPhamLienQuan(tieuDe: 'Gợi ý', soLuong: 2));
 
       final co = t.getSize(find.text('Bộ duy nhất'));
@@ -101,9 +101,10 @@ void main() {
   group('Lá bài ngày', () {
     testWidgets('rút xong thì hiện gợi ý bộ bài cùng dòng', (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/shop/products', trang([
-        mauSanPham(ten: 'Bộ Rider-Waite'),
-      ]));
+      m.mayChu.tra(
+        'GET /api/v1/shop/products',
+        trang([mauSanPham(ten: 'Bộ Rider-Waite')]),
+      );
       await m.dung(t, const RutBaiHangNgay());
 
       // Chưa rút thì chưa gợi ý gì: liên hệ chỉ có thật SAU khi người dùng
@@ -131,8 +132,9 @@ void main() {
       m.tra('GET /api/v1/unavailable-dates', []);
     }
 
-    testWidgets('chưa có hồ sơ thì có NÚT nộp đơn, không phải lời nhờ vả',
-        (t) async {
+    testWidgets('chưa có hồ sơ thì có NÚT nộp đơn, không phải lời nhờ vả', (
+      t,
+    ) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
       khaiHoSo(m.mayChu);
       m.mayChu.tra('GET /api/v1/readers/applications/me', null);
@@ -151,16 +153,19 @@ void main() {
 
     testWidgets('ô giá để trống nói rõ là KHÔNG nhận mốc đó', (t) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
-      khaiHoSo(m.mayChu, hoSo: {
-        'id': 'r1',
-        'bio': 'Reader lâu năm',
-        'specialties': ['Tarot'],
-        'yearsExperience': 4,
-        'pricePer15m': 100000,
-        'pricePer30m': null,
-        'pricePer60m': null,
-        'isAvailable': true,
-      });
+      khaiHoSo(
+        m.mayChu,
+        hoSo: {
+          'id': 'r1',
+          'bio': 'Reader lâu năm',
+          'specialties': ['Tarot'],
+          'yearsExperience': 4,
+          'pricePer15m': 100000,
+          'pricePer30m': null,
+          'pricePer60m': null,
+          'isAvailable': true,
+        },
+      );
       await m.dung(t, const ReaderProfileView());
 
       // Một ô trống trông giống hệt một ô chưa kịp điền. Phải nói rõ rằng để
@@ -173,16 +178,19 @@ void main() {
 
     testWidgets('gõ thêm số 0 thì dòng tiền đổi theo ngay', (t) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
-      khaiHoSo(m.mayChu, hoSo: {
-        'id': 'r1',
-        'bio': 'x',
-        'specialties': ['Tarot'],
-        'yearsExperience': 1,
-        'pricePer15m': 60000,
-        'pricePer30m': null,
-        'pricePer60m': null,
-        'isAvailable': true,
-      });
+      khaiHoSo(
+        m.mayChu,
+        hoSo: {
+          'id': 'r1',
+          'bio': 'x',
+          'specialties': ['Tarot'],
+          'yearsExperience': 1,
+          'pricePer15m': 60000,
+          'pricePer30m': null,
+          'pricePer60m': null,
+          'isAvailable': true,
+        },
+      );
       await m.dung(t, const ReaderProfileView());
       expect(find.text('60.000 đ'), findsOneWidget);
 
@@ -200,12 +208,14 @@ void main() {
   });
 
   group('Hồ sơ Reader công khai', () {
-    testWidgets('Reader chưa đặt giá nào thì nói rõ, không để ba mục rỗng',
-        (t) async {
+    testWidgets('Reader chưa đặt giá nào thì nói rõ, không để ba mục rỗng', (
+      t,
+    ) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra(
-          'GET /api/v1/readers/r1',
-          mauReader(id: 'r1', gia15: null, gia30: null, gia60: null));
+        'GET /api/v1/readers/r1',
+        mauReader(id: 'r1', gia15: null, gia30: null, gia60: null),
+      );
       m.mayChu.tra('GET /api/v1/readers/r1/reviews', trang([]));
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
 
@@ -222,13 +232,13 @@ void main() {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/readers/r1', mauReader(id: 'r1'));
       m.mayChu.tra('GET /api/v1/readers/r1/reviews', trang([]));
-      m.mayChu.tra('GET /api/v1/readers/r1/slots', []);
+      m.mayChu.tra('GET /api/v1/readers/r1/calendar', mauLich());
       m.mayChu.tra('GET /api/v1/readers/r1/slots/next-available', null);
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
 
       expect(find.textContaining('chưa đặt giá cho mốc nào'), findsNothing);
-      expect(find.text('Ngày'), findsOneWidget);
-      expect(find.text('Khung giờ còn trống'), findsOneWidget);
+      expect(find.textContaining('Tháng '), findsOneWidget);
+      expect(find.text('Khung giờ'), findsOneWidget);
     });
   });
 }

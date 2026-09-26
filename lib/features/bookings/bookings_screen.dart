@@ -11,6 +11,7 @@ import '../money/payment_sheet.dart';
 import 'booking.dart';
 import 'bookings_repository.dart';
 import 'chat_screen.dart';
+import 'lich_hen_thang.dart';
 import 'report_sheet.dart';
 import 'review_sheet.dart';
 
@@ -53,23 +54,31 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           ),
         ),
       ),
-      body: DanhSachPhanTrang<Booking>(
-        key: ValueKey(_chon),
-        tai: (t) => repo.cuaToi(trang: t, loc: loc),
-        loiDuPhong: 'Không tải được lịch hẹn.',
-        trong: loc == null
-            ? const KhoiTrong(
-                icon: Icons.event_available,
-                tieuDe: 'Chưa có lịch hẹn nào',
-                moTa: 'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt '
-                    'một khung giờ.',
-              )
-            : KhoiTrong(
-                icon: Icons.filter_alt_off_outlined,
-                tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
-                moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
-              ),
-        dong: (_, b) => _TheBuoi(booking: b),
+      body: Column(
+        children: [
+          const LichHenThang(cuaReader: false),
+          Expanded(
+            child: DanhSachPhanTrang<Booking>(
+              key: ValueKey(_chon),
+              tai: (t) => repo.cuaToi(trang: t, loc: loc),
+              loiDuPhong: 'Không tải được lịch hẹn.',
+              trong: loc == null
+                  ? const KhoiTrong(
+                      icon: Icons.event_available,
+                      tieuDe: 'Chưa có lịch hẹn nào',
+                      moTa:
+                          'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt '
+                          'một khung giờ.',
+                    )
+                  : KhoiTrong(
+                      icon: Icons.filter_alt_off_outlined,
+                      tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
+                      moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
+                    ),
+              dong: (_, b) => _TheBuoi(booking: b),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -148,13 +157,17 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                       Text(
                         b.readerName.isEmpty ? 'Reader' : b.readerName,
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút',
                         style: const TextStyle(
-                            color: Mau.chuMo, fontSize: 12.5),
+                          color: Mau.chuMo,
+                          fontSize: 12.5,
+                        ),
                       ),
                     ],
                   ),
@@ -168,26 +181,30 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 Text(
                   Dinh.tien(b.tongTien),
                   style: const TextStyle(
-                      color: Mau.vang,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600),
+                    color: Mau.vang,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 if (b.chuaTra)
-                  const Text('chưa thanh toán',
-                      style: TextStyle(
-                          fontSize: 11.5, color: Color(0xFFE0B341)))
+                  const Text(
+                    'chưa thanh toán',
+                    style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
+                  )
                 else
-                  const Text('đã thanh toán',
-                      style: TextStyle(
-                          fontSize: 11.5, color: Color(0xFF6BBF7B))),
+                  const Text(
+                    'đã thanh toán',
+                    style: TextStyle(fontSize: 11.5, color: Color(0xFF6BBF7B)),
+                  ),
               ],
             ),
             if (b.lyDoHuy != null && b.lyDoHuy!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('Lý do huỷ: ${b.lyDoHuy}',
-                  style:
-                      const TextStyle(fontSize: 12, color: Mau.chuMo)),
+              Text(
+                'Lý do huỷ: ${b.lyDoHuy}',
+                style: const TextStyle(fontSize: 12, color: Mau.chuMo),
+              ),
             ],
             if (b.ghiChuReader != null && b.ghiChuReader!.isNotEmpty) ...[
               const SizedBox(height: 10),
@@ -202,13 +219,15 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Ghi chú của Reader',
-                        style:
-                            TextStyle(fontSize: 10.5, color: Mau.chuMo)),
+                    const Text(
+                      'Ghi chú của Reader',
+                      style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
+                    ),
                     const SizedBox(height: 5),
-                    Text(b.ghiChuReader!,
-                        style:
-                            const TextStyle(fontSize: 12.5, height: 1.5)),
+                    Text(
+                      b.ghiChuReader!,
+                      style: const TextStyle(fontSize: 12.5, height: 1.5),
+                    ),
                   ],
                 ),
               ),
@@ -218,14 +237,12 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                if (b.chuaTra &&
-                    b.trangThai != TrangThaiBuoi.cancelled)
+                if (b.chuaTra && b.trangThai != TrangThaiBuoi.cancelled)
                   FilledButton(
                     onPressed: _dangTra ? null : _thanhToan,
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, 40),
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
                     ),
                     child: _dangTra
                         ? const SizedBox(
@@ -255,9 +272,10 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 if (b.trangThai == TrangThaiBuoi.completed && b.daDanhGia)
                   const Padding(
                     padding: EdgeInsets.only(top: 9),
-                    child: Text('Bạn đã đánh giá buổi này',
-                        style:
-                            TextStyle(fontSize: 11.5, color: Mau.chuMo)),
+                    child: Text(
+                      'Bạn đã đánh giá buổi này',
+                      style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
+                    ),
                   ),
                 // Báo cáo chỉ cho buổi đã xong, như web: trước đó chưa có gì
                 // để báo, và nút đỏ trên buổi sắp tới chỉ làm khách lo lắng.
@@ -289,9 +307,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 if (b.chatMo)
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(booking: b),
-                      ),
+                      MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
                     ),
                     icon: const Icon(Icons.chat_bubble_outline, size: 16),
                     label: const Text('Nhắn tin'),
@@ -318,11 +334,11 @@ class _Nhan extends StatelessWidget {
   final Booking b;
 
   Color get _mau => switch (b.trangThai) {
-        TrangThaiBuoi.confirmed => const Color(0xFF6BA8E5),
-        TrangThaiBuoi.completed => const Color(0xFF6BBF7B),
-        TrangThaiBuoi.cancelled => const Color(0xFFE5645E),
-        _ => const Color(0xFFE0B341),
-      };
+    TrangThaiBuoi.confirmed => const Color(0xFF6BA8E5),
+    TrangThaiBuoi.completed => const Color(0xFF6BBF7B),
+    TrangThaiBuoi.cancelled => const Color(0xFFE5645E),
+    _ => const Color(0xFFE0B341),
+  };
 
   @override
   Widget build(BuildContext context) {

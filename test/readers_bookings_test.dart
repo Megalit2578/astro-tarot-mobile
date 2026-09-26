@@ -19,24 +19,33 @@ void khaiReader(MayChuGia m, {int soDanhGia = 12}) {
     mauReader(id: 'r2', ten: 'Minh Tâm', nhanLich: false, soDanhGia: 0),
   ]);
   m.tra('GET /api/v1/readers/r1', mauReader(soDanhGia: soDanhGia));
-  m.tra('GET /api/v1/readers/r1/slots', [
-    mauSlot(homNay.add(const Duration(hours: 3))),
-    mauSlot(homNay.add(const Duration(hours: 4))),
-    // Khung đã qua giờ bị lọc bỏ ở phía app.
-    mauSlot(homNay.subtract(const Duration(hours: 2))),
-  ]);
-  m.tra('GET /api/v1/readers/r1/slots/next-available',
-      homNay.add(const Duration(days: 3)).toIso8601String().substring(0, 10));
-  m.tra('GET /api/v1/readers/r1/reviews', trang([
-    for (var i = 0; i < 3; i++)
-      {
-        'id': 'rv$i',
-        'authorName': 'Khách $i',
-        'rating': 5 - i,
-        'comment': i == 0 ? 'Rất hay' : null,
-        'createdAt': iso(homNay),
-      },
-  ], tong: soDanhGia));
+  m.tra(
+    'GET /api/v1/readers/r1/calendar',
+    mauLich(
+      oHomNay: [
+        mauSlot(homNay.add(const Duration(hours: 3))),
+        mauSlot(homNay.add(const Duration(hours: 4))),
+        mauSlot(homNay.subtract(const Duration(hours: 2)), trang: 'PAST'),
+      ],
+    ),
+  );
+  m.tra(
+    'GET /api/v1/readers/r1/slots/next-available',
+    homNay.add(const Duration(days: 3)).toIso8601String().substring(0, 10),
+  );
+  m.tra(
+    'GET /api/v1/readers/r1/reviews',
+    trang([
+      for (var i = 0; i < 3; i++)
+        {
+          'id': 'rv$i',
+          'authorName': 'Khách $i',
+          'rating': 5 - i,
+          'comment': i == 0 ? 'Rất hay' : null,
+          'createdAt': iso(homNay),
+        },
+    ], tong: soDanhGia),
+  );
 }
 
 void main() {
@@ -83,8 +92,10 @@ void main() {
       expect(find.text('Đọc bài theo hướng chữa lành.'), findsOneWidget);
       expect(find.text('Chiêm tinh'), findsOneWidget);
       await bam(t, find.textContaining('15 phút'));
-      expect(m.mayChu.lanCuoi('GET /api/v1/readers/r1/slots')!.query['duration'],
-          '15');
+      expect(
+        m.mayChu.lanCuoi('GET /api/v1/readers/r1/calendar')!.query['duration'],
+        '15',
+      );
       await bam(t, find.textContaining('30 phút'));
       // Ngày trống gần nhất → nhảy tới ngày đó.
       await bam(t, find.textContaining('Ngày trống gần nhất'));
@@ -93,16 +104,26 @@ void main() {
       expect(find.text('Rất hay'), findsOneWidget);
       expect(find.text('Xem tất cả 12 đánh giá'), findsOneWidget);
       // Chọn giờ rồi đặt.
-      final gio = find.textContaining(':').evaluate().map((e) => (e.widget as Text).data).toList();
+      final gio = find
+          .textContaining(':')
+          .evaluate()
+          .map((e) => (e.widget as Text).data)
+          .toList();
       expect(gio, isNotEmpty);
-      await t.scrollUntilVisible(find.byType(InkWell).last, 100,
-          scrollable: find.byType(Scrollable).first);
-      final oGio = find.byWidgetPredicate((w) =>
-          w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''));
+      await t.scrollUntilVisible(
+        find.byType(InkWell).last,
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      final oGio = find.byWidgetPredicate(
+        (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+      );
       await bam(t, oGio.first);
       await bam(t, find.widgetWithText(FilledButton, 'Đặt lịch'));
-      expect(m.mayChu.lanCuoi('POST /api/v1/bookings')!.than['durationMinutes'],
-          30);
+      expect(
+        m.mayChu.lanCuoi('POST /api/v1/bookings')!.than['durationMinutes'],
+        30,
+      );
       expect(find.text('Đã đặt lịch'), findsOneWidget);
       await bam(t, find.text('Đã hiểu'));
       expect(find.text('MỞ MÀN'), findsOneWidget);
@@ -113,8 +134,9 @@ void main() {
       khaiReader(m.mayChu);
       m.mayChu.loi('POST /api/v1/bookings', 'Khung giờ vừa có người đặt');
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
-      final oGio = find.byWidgetPredicate((w) =>
-          w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''));
+      final oGio = find.byWidgetPredicate(
+        (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+      );
       await bam(t, oGio.first);
       await bam(t, find.widgetWithText(FilledButton, 'Đặt lịch'));
       expect(find.text('Khung giờ vừa có người đặt'), findsOneWidget);
@@ -124,8 +146,9 @@ void main() {
       final m = MoiTruong();
       khaiReader(m.mayChu);
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
-      final oGio = find.byWidgetPredicate((w) =>
-          w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''));
+      final oGio = find.byWidgetPredicate(
+        (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+      );
       await bam(t, oGio.first);
       expect(find.text('Quay lại đăng nhập'), findsOneWidget);
     });
@@ -133,14 +156,17 @@ void main() {
     testWidgets('khung giờ lỗi rồi thử lại; không còn giờ trống', (t) async {
       final m = MoiTruong(user: nguoiDung());
       khaiReader(m.mayChu);
-      m.mayChu.loi('GET /api/v1/readers/r1/slots', 'Không tải được giờ');
+      m.mayChu.loi('GET /api/v1/readers/r1/calendar', 'Không tải được giờ');
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
       expect(find.text('Không tải được giờ'), findsOneWidget);
-      m.mayChu.tra('GET /api/v1/readers/r1/slots', []);
+      m.mayChu.tra('GET /api/v1/readers/r1/calendar', mauLich());
       await bam(t, find.text('Thử lại'));
-      expect(find.byWidgetPredicate((w) =>
-          w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? '')),
-          findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets('hồ sơ lỗi; Reader tạm ngưng; chưa có đánh giá', (t) async {
@@ -149,10 +175,18 @@ void main() {
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
       expect(find.text('Không thấy Reader'), findsOneWidget);
       khaiReader(m.mayChu, soDanhGia: 0);
-      m.mayChu.tra('GET /api/v1/readers/r1', mauReader(nhanLich: false, soDanhGia: 0));
+      m.mayChu.tra(
+        'GET /api/v1/readers/r1',
+        mauReader(nhanLich: false, soDanhGia: 0),
+      );
       m.mayChu.tra('GET /api/v1/readers/r1/reviews', trang([]));
       await bam(t, find.text('Thử lại'));
       expect(find.text('Reader này đang tạm ngưng nhận lịch.'), findsOneWidget);
+      await t.scrollUntilVisible(
+        find.text('Chưa có đánh giá nào.'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Chưa có đánh giá nào.'), findsOneWidget);
     });
 
@@ -166,8 +200,9 @@ void main() {
   });
 
   group('Lịch hẹn của tôi', () {
-    testWidgets('thanh toán chuyển khoản hiện số tài khoản và chép được',
-        (t) async {
+    testWidgets('thanh toán chuyển khoản hiện số tài khoản và chép được', (
+      t,
+    ) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/bookings/me', trang([mauBooking()]));
       m.mayChu.tra('POST /api/v1/bookings/b1/payment', {
@@ -207,8 +242,9 @@ void main() {
       expect(m.launcher.daMo, ['https://pay.payos.vn/x']);
     });
 
-    testWidgets('thanh toán: chưa cấu hình tài khoản, và lỗi máy chủ',
-        (t) async {
+    testWidgets('thanh toán: chưa cấu hình tài khoản, và lỗi máy chủ', (
+      t,
+    ) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/bookings/me', trang([mauBooking()]));
       m.mayChu.tra('POST /api/v1/bookings/b1/payment', {
@@ -218,21 +254,34 @@ void main() {
       });
       await m.dung(t, const BookingsScreen());
       await bam(t, find.text('Thanh toán'));
-      expect(find.textContaining('chưa cấu hình tài khoản nhận tiền'),
-          findsOneWidget);
+      expect(
+        find.textContaining('chưa cấu hình tài khoản nhận tiền'),
+        findsOneWidget,
+      );
       await bam(t, find.text('Tôi đã chuyển khoản'));
-      m.mayChu.loi('POST /api/v1/bookings/b1/payment', 'Lịch hẹn này đã thanh toán rồi');
+      m.mayChu.loi(
+        'POST /api/v1/bookings/b1/payment',
+        'Lịch hẹn này đã thanh toán rồi',
+      );
       await bam(t, find.text('Thanh toán'));
       expect(find.text('Lịch hẹn này đã thanh toán rồi'), findsOneWidget);
     });
 
     testWidgets('buổi đã xong: đánh giá và báo cáo', (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/bookings/me', trang([
-        mauBooking(trangThai: 'COMPLETED', traTien: 'PAID', chatMo: false),
-        mauBooking(id: 'b2', trangThai: 'COMPLETED', traTien: 'PAID',
-            daDanhGia: true, chatMo: false),
-      ]));
+      m.mayChu.tra(
+        'GET /api/v1/bookings/me',
+        trang([
+          mauBooking(trangThai: 'COMPLETED', traTien: 'PAID', chatMo: false),
+          mauBooking(
+            id: 'b2',
+            trangThai: 'COMPLETED',
+            traTien: 'PAID',
+            daDanhGia: true,
+            chatMo: false,
+          ),
+        ]),
+      );
       m.mayChu.tra('POST /api/v1/bookings/b1/review', null);
       m.mayChu.tra('POST /api/v1/reports', null);
       await m.dung(t, const BookingsScreen());
@@ -242,8 +291,10 @@ void main() {
       await bam(t, find.byIcon(Icons.star_border).last);
       await t.enterText(find.byType(TextField).last, 'Tuyệt');
       await bam(t, find.text('Gửi đánh giá'));
-      expect(m.mayChu.lanCuoi('POST /api/v1/bookings/b1/review')!.than,
-          {'rating': 5, 'comment': 'Tuyệt'});
+      expect(m.mayChu.lanCuoi('POST /api/v1/bookings/b1/review')!.than, {
+        'rating': 5,
+        'comment': 'Tuyệt',
+      });
 
       await bam(t, find.text('Báo cáo').first);
       expect(find.textContaining('không biết ai đã báo'), findsOneWidget);
@@ -260,9 +311,12 @@ void main() {
 
     testWidgets('gửi báo cáo lỗi', (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/bookings/me', trang([
-        mauBooking(trangThai: 'COMPLETED', traTien: 'PAID', daDanhGia: true),
-      ]));
+      m.mayChu.tra(
+        'GET /api/v1/bookings/me',
+        trang([
+          mauBooking(trangThai: 'COMPLETED', traTien: 'PAID', daDanhGia: true),
+        ]),
+      );
       m.mayChu.loi('POST /api/v1/reports', 'Bạn đã báo cáo buổi này');
       await m.dung(t, const BookingsScreen());
       await bam(t, find.text('Báo cáo'));
@@ -270,8 +324,7 @@ void main() {
       expect(find.text('Bạn đã báo cáo buổi này'), findsOneWidget);
     });
 
-    testWidgets('lọc theo trạng thái; khách huỷ buổi chưa diễn ra',
-        (t) async {
+    testWidgets('lọc theo trạng thái; khách huỷ buổi chưa diễn ra', (t) async {
       final m = MoiTruong(user: nguoiDung());
 
       // BỘ LỌC ĐI XUỐNG MÁY CHỦ, không lọc trong trang đã tải.
@@ -285,29 +338,37 @@ void main() {
         final tatCa = [
           mauBooking(),
           mauBooking(
-              id: 'b2',
-              trangThai: 'COMPLETED',
-              traTien: 'PAID',
-              chatMo: false),
+            id: 'b2',
+            trangThai: 'COMPLETED',
+            traTien: 'PAID',
+            chatMo: false,
+          ),
         ];
         final hop = loc == null
             ? tatCa
-            : [for (final b in tatCa) if (b['status'] == loc) b];
+            : [
+                for (final b in tatCa)
+                  if (b['status'] == loc) b,
+              ];
         return TraLoi(200, {
           'success': true,
           'message': 'OK',
           'data': trang(hop),
         });
       });
-      m.mayChu.tra('PATCH /api/v1/bookings/b1/cancel',
-          mauBooking(trangThai: 'CANCELLED'));
+      m.mayChu.tra(
+        'PATCH /api/v1/bookings/b1/cancel',
+        mauBooking(trangThai: 'CANCELLED'),
+      );
       await m.dung(t, const BookingsScreen());
       // Buổi đã xong thì không còn nút huỷ.
       expect(find.text('Huỷ lịch'), findsOneWidget);
 
       await bam(t, find.text('Hoàn tất'));
-      expect(m.mayChu.lanCuoi('GET /api/v1/bookings/me')!.query['status'],
-          'COMPLETED');
+      expect(
+        m.mayChu.lanCuoi('GET /api/v1/bookings/me')!.query['status'],
+        'COMPLETED',
+      );
       expect(find.text('Huỷ lịch'), findsNothing);
       expect(find.text('Đánh giá'), findsOneWidget);
 
@@ -317,8 +378,10 @@ void main() {
       await bam(t, find.text('Tất cả'));
       // "Tất cả" phải BỎcK HẴN tham số lọc, không gửi chuỗi rỗng:
       // backend ném 400 cho một trạng thái rỗng.
-      expect(m.mayChu.lanCuoi('GET /api/v1/bookings/me')!.query['status'],
-          isNull);
+      expect(
+        m.mayChu.lanCuoi('GET /api/v1/bookings/me')!.query['status'],
+        isNull,
+      );
 
       // Bấm Thoát thì giữ lịch, không gọi máy chủ.
       await bam(t, find.text('Huỷ lịch'));
@@ -328,21 +391,25 @@ void main() {
       await bam(t, find.text('Huỷ lịch'));
       await t.enterText(find.byType(TextField).last, '  Bận đột xuất ');
       await bam(t, find.text('Xác nhận huỷ'));
-      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel')!.than,
-          {'reason': 'Bận đột xuất'});
+      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel')!.than, {
+        'reason': 'Bận đột xuất',
+      });
       expect(find.text('Đã huỷ lịch hẹn'), findsOneWidget);
     });
 
     testWidgets('huỷ không ghi lý do; máy chủ từ chối', (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/bookings/me',
-          trang([mauBooking(trangThai: 'PENDING')]));
+      m.mayChu.tra(
+        'GET /api/v1/bookings/me',
+        trang([mauBooking(trangThai: 'PENDING')]),
+      );
       m.mayChu.loi('PATCH /api/v1/bookings/b1/cancel', 'Quá hạn huỷ');
       await m.dung(t, const BookingsScreen());
       await bam(t, find.text('Huỷ lịch'));
       await bam(t, find.text('Xác nhận huỷ'));
-      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel')!.than,
-          {'reason': null});
+      expect(m.mayChu.lanCuoi('PATCH /api/v1/bookings/b1/cancel')!.than, {
+        'reason': null,
+      });
       expect(find.text('Quá hạn huỷ'), findsOneWidget);
     });
 
@@ -367,35 +434,42 @@ void main() {
   });
 
   group('Trò chuyện và cuộc gọi', () {
-    Future<(MoiTruong, WebRtcGia)> moChat(WidgetTester t,
-        {bool coTin = true}) async {
+    Future<(MoiTruong, WebRtcGia)> moChat(
+      WidgetTester t, {
+      bool coTin = true,
+    }) async {
       final w = WebRtcGia(t)..batDau();
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/bookings/b1/messages', trang([
-        if (coTin) ...[
-          {
-            'id': 'm2',
-            'bookingId': 'b1',
-            'senderId': 'u-r1',
-            'senderName': 'Lan',
-            'body': 'Chào bạn',
-            'createdAt': iso(homNay),
-          },
-          {
-            'id': 'm1',
-            'bookingId': 'b1',
-            'senderId': 'u-USER',
-            'senderName': 'Minh Anh',
-            'body': 'Em chào chị',
-            'createdAt': iso(homNay.subtract(const Duration(minutes: 1))),
-          },
-        ],
-      ]));
+      m.mayChu.tra(
+        'GET /api/v1/bookings/b1/messages',
+        trang([
+          if (coTin) ...[
+            {
+              'id': 'm2',
+              'bookingId': 'b1',
+              'senderId': 'u-r1',
+              'senderName': 'Lan',
+              'body': 'Chào bạn',
+              'createdAt': iso(homNay),
+            },
+            {
+              'id': 'm1',
+              'bookingId': 'b1',
+              'senderId': 'u-USER',
+              'senderName': 'Minh Anh',
+              'body': 'Em chào chị',
+              'createdAt': iso(homNay.subtract(const Duration(minutes: 1))),
+            },
+          ],
+        ]),
+      );
       m.mayChu.tra('POST /api/v1/bookings/b1/messages/read', null);
       m.mayChu.tra('POST /api/v1/bookings/b1/messages', null);
       m.mayChu.tra('GET /api/v1/rtc/ice', {
         'iceServers': [
-          {'urls': ['stun:x']}
+          {
+            'urls': ['stun:x'],
+          },
         ],
         'hasTurn': false,
       });
@@ -403,13 +477,16 @@ void main() {
       return (m, w);
     }
 
-    testWidgets('tải tin, nhận tin realtime, gửi qua socket và REST',
-        (t) async {
+    testWidgets('tải tin, nhận tin realtime, gửi qua socket và REST', (
+      t,
+    ) async {
       final (m, _) = await moChat(t);
       expect(find.text('Chào bạn'), findsOneWidget);
       expect(find.text('Em chào chị'), findsOneWidget);
-      expect(m.mayChu.cacLan('POST /api/v1/bookings/b1/messages/read'),
-          hasLength(1));
+      expect(
+        m.mayChu.cacLan('POST /api/v1/bookings/b1/messages/read'),
+        hasLength(1),
+      );
 
       m.realtime.phat('/user/queue/booking-chat', {
         'id': 'm3',
@@ -443,14 +520,19 @@ void main() {
       m.realtime.guiDuoc = false;
       await t.enterText(find.byType(TextField), 'Qua REST');
       await bam(t, find.byIcon(Icons.send));
-      expect(m.mayChu.lanCuoi('POST /api/v1/bookings/b1/messages')!.than,
-          {'body': 'Qua REST'});
+      expect(m.mayChu.lanCuoi('POST /api/v1/bookings/b1/messages')!.than, {
+        'body': 'Qua REST',
+      });
     });
 
     testWidgets('tải tin lỗi thì có thử lại; rỗng thì mời chào', (t) async {
       final w = WebRtcGia(t)..batDau();
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.loi('GET /api/v1/bookings/b1/messages', 'Hội thoại đã đóng', ma: 403);
+      m.mayChu.loi(
+        'GET /api/v1/bookings/b1/messages',
+        'Hội thoại đã đóng',
+        ma: 403,
+      );
       m.mayChu.loi('GET /api/v1/rtc/ice', 'x');
       await m.dung(t, ChatScreen(booking: Booking.fromJson(mauBooking())));
       expect(find.text('Hội thoại đã đóng'), findsOneWidget);
@@ -463,8 +545,15 @@ void main() {
     testWidgets('gọi thoại: đổ chuông, được trả lời, nối, cúp máy', (t) async {
       final (m, w) = await moChat(t);
       await bam(t, find.byIcon(Icons.call).first);
-      expect(w.goi, containsAll(['getUserMedia', 'createPeerConnection',
-          'createOffer', 'setLocalDescription']));
+      expect(
+        w.goi,
+        containsAll([
+          'getUserMedia',
+          'createPeerConnection',
+          'createOffer',
+          'setLocalDescription',
+        ]),
+      );
       final offer = m.realtime.daGui.firstWhere((g) => g.$2['type'] == 'OFFER');
       expect(offer.$1, '/app/bookings/b1/call');
       expect(offer.$2['video'], isFalse);
@@ -482,7 +571,10 @@ void main() {
       });
       await xong(t);
       expect(w.goi, contains('addCandidate'));
-      await w.phatSuKien({'event': 'peerConnectionState', 'state': 'connected'});
+      await w.phatSuKien({
+        'event': 'peerConnectionState',
+        'state': 'connected',
+      });
       await w.phatSuKien({
         'event': 'onCandidate',
         'candidate': {'candidate': 'c2', 'sdpMid': '0', 'sdpMLineIndex': 0},
@@ -501,41 +593,55 @@ void main() {
       expect(m.realtime.daGui.last.$2, {'type': 'HANGUP'});
     });
 
-    testWidgets('có người gọi video tới: nhận máy; đang trong cuộc thì báo bận',
-        (t) async {
-      final (m, w) = await moChat(t);
-      m.realtime.phat('/user/queue/booking-call', {
-        'bookingId': 'b1',
-        'type': 'OFFER',
-        'payload': '{"sdp":"v=0","type":"offer"}',
-        'fromName': 'Lan',
-        'video': true,
-      });
-      await xong(t);
-      expect(m.realtime.daGui.last.$2, {'type': 'RINGING'});
-      expect(find.textContaining('Lan'), findsWidgets);
-      // Cuộc thứ hai tới khi đang có chuông → bận.
-      m.realtime.phat('/user/queue/booking-call', {
-        'bookingId': 'b1',
-        'type': 'OFFER',
-        'payload': '{}',
-      });
-      await xong(t);
-      expect(m.realtime.daGui.last.$2, {'type': 'BUSY'});
-      // Chuông của buổi khác không reo ở đây.
-      m.realtime.phat('/user/queue/booking-call',
-          {'bookingId': 'khac', 'type': 'HANGUP'});
-      await bam(t, find.descendant(
-          of: find.byType(CallPanel), matching: find.byIcon(Icons.call)));
-      expect(w.goi, contains('createAnswer'));
-      expect(m.realtime.daGui.any((g) => g.$2['type'] == 'ANSWER'), isTrue);
-      await bam(t, find.descendant(
-          of: find.byType(CallPanel), matching: find.byIcon(Icons.videocam)));
-      await w.phatSuKien({'event': 'peerConnectionState', 'state': 'failed'});
-      await xong(t);
-      expect(find.textContaining('chuyển sang wifi'), findsOneWidget);
-      await bam(t, find.text('Đóng'));
-    });
+    testWidgets(
+      'có người gọi video tới: nhận máy; đang trong cuộc thì báo bận',
+      (t) async {
+        final (m, w) = await moChat(t);
+        m.realtime.phat('/user/queue/booking-call', {
+          'bookingId': 'b1',
+          'type': 'OFFER',
+          'payload': '{"sdp":"v=0","type":"offer"}',
+          'fromName': 'Lan',
+          'video': true,
+        });
+        await xong(t);
+        expect(m.realtime.daGui.last.$2, {'type': 'RINGING'});
+        expect(find.textContaining('Lan'), findsWidgets);
+        // Cuộc thứ hai tới khi đang có chuông → bận.
+        m.realtime.phat('/user/queue/booking-call', {
+          'bookingId': 'b1',
+          'type': 'OFFER',
+          'payload': '{}',
+        });
+        await xong(t);
+        expect(m.realtime.daGui.last.$2, {'type': 'BUSY'});
+        // Chuông của buổi khác không reo ở đây.
+        m.realtime.phat('/user/queue/booking-call', {
+          'bookingId': 'khac',
+          'type': 'HANGUP',
+        });
+        await bam(
+          t,
+          find.descendant(
+            of: find.byType(CallPanel),
+            matching: find.byIcon(Icons.call),
+          ),
+        );
+        expect(w.goi, contains('createAnswer'));
+        expect(m.realtime.daGui.any((g) => g.$2['type'] == 'ANSWER'), isTrue);
+        await bam(
+          t,
+          find.descendant(
+            of: find.byType(CallPanel),
+            matching: find.byIcon(Icons.videocam),
+          ),
+        );
+        await w.phatSuKien({'event': 'peerConnectionState', 'state': 'failed'});
+        await xong(t);
+        expect(find.textContaining('chuyển sang wifi'), findsOneWidget);
+        await bam(t, find.text('Đóng'));
+      },
+    );
 
     testWidgets('phía kia cúp máy và báo bận', (t) async {
       final (m, _) = await moChat(t);
@@ -563,8 +669,9 @@ void main() {
       });
     }
 
-    testWidgets('xin quyền treo quá hạn thì nói rõ là chờ cấp quyền',
-        (t) async {
+    testWidgets('xin quyền treo quá hạn thì nói rõ là chờ cấp quyền', (
+      t,
+    ) async {
       final (m, w) = await moChat(t);
       w.treoGetUserMedia = true;
       await bam(t, find.byIcon(Icons.call).first);
