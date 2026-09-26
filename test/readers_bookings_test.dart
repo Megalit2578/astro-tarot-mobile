@@ -273,11 +273,32 @@ void main() {
     testWidgets('lọc theo trạng thái; khách huỷ buổi chưa diễn ra',
         (t) async {
       final m = MoiTruong(user: nguoiDung());
-      m.mayChu.tra('GET /api/v1/bookings/me', trang([
-        mauBooking(),
-        mauBooking(id: 'b2', trangThai: 'COMPLETED', traTien: 'PAID',
-            chatMo: false),
-      ]));
+
+      // BỘ LỌC ĐI XUỐNG MÁY CHỦ, không lọc trong trang đã tải.
+      //
+      // Máy chủ giả ở đây trả lời theo đúng tham số `status` — nếu màn hình
+      // quên gửi nó và lọc ở máy khách, phép kiểm này đỏ ngay. Đó là điểm
+      // chính: lọc ở máy khách chỉ lọc được trong hai mươi buổi gần nhất, nên
+      // người có nhiều lịch hẹn sẽ thấy ít hơn thật mà không có dấu hiệu gì.
+      m.mayChu.xuLy('GET /api/v1/bookings/me', (g) {
+        final loc = g.query['status'];
+        final tatCa = [
+          mauBooking(),
+          mauBooking(
+              id: 'b2',
+              trangThai: 'COMPLETED',
+              traTien: 'PAID',
+              chatMo: false),
+        ];
+        final hop = loc == null
+            ? tatCa
+            : [for (final b in tatCa) if (b['status'] == loc) b];
+        return TraLoi(200, {
+          'success': true,
+          'message': 'OK',
+          'data': trang(hop),
+        });
+      });
       m.mayChu.tra('PATCH /api/v1/bookings/b1/cancel',
           mauBooking(trangThai: 'CANCELLED'));
       await m.dung(t, const BookingsScreen());
@@ -285,11 +306,19 @@ void main() {
       expect(find.text('Huỷ lịch'), findsOneWidget);
 
       await bam(t, find.text('Hoàn tất'));
+      expect(m.mayChu.lanCuoi('GET /api/v1/bookings/me')!.query['status'],
+          'COMPLETED');
       expect(find.text('Huỷ lịch'), findsNothing);
       expect(find.text('Đánh giá'), findsOneWidget);
+
       await bam(t, find.text('Đã huỷ'));
       expect(find.text('Không có buổi nào "Đã huỷ"'), findsOneWidget);
+
       await bam(t, find.text('Tất cả'));
+      // "Tất cả" phải BỎcK HẴN tham số lọc, không gửi chuỗi rỗng:
+      // backend ném 400 cho một trạng thái rỗng.
+      expect(m.mayChu.lanCuoi('GET /api/v1/bookings/me')!.query['status'],
+          isNull);
 
       // Bấm Thoát thì giữ lịch, không gọi máy chủ.
       await bam(t, find.text('Huỷ lịch'));

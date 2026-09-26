@@ -10,6 +10,9 @@ Map<String, dynamic> mauReader({
   String ten = 'Lan Hương',
   bool nhanLich = true,
   int soDanhGia = 12,
+  int? gia15 = 100000,
+  int? gia30 = 180000,
+  int? gia60,
 }) =>
     {
       'id': id,
@@ -20,9 +23,9 @@ Map<String, dynamic> mauReader({
       'bio': 'Đọc bài theo hướng chữa lành.',
       'specialties': ['Tarot', 'Chiêm tinh'],
       'yearsExperience': 5,
-      'pricePer15m': 100000,
-      'pricePer30m': 180000,
-      'pricePer60m': null,
+      'pricePer15m': gia15,
+      'pricePer30m': gia30,
+      'pricePer60m': gia60,
       'rating': 4.8,
       'totalReviews': soDanhGia,
       'isAvailable': nhanLich,
@@ -69,12 +72,13 @@ Map<String, dynamic> mauBooking({
 Map<String, dynamic> mauSanPham({
   String id = 'p1',
   String slug = 'bo-bai-rider',
+  String ten = 'Bộ bài Rider-Waite',
   bool coLink = true,
   bool dangBan = true,
 }) =>
     {
       'id': id,
-      'name': 'Bộ bài Rider-Waite',
+      'name': ten,
       'slug': slug,
       'price': 250000,
       'compareAtPrice': 300000,

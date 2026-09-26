@@ -189,16 +189,17 @@ void main() {
 
   group('Thông báo', () {
     void khai(MayChuGia m) {
+      // ThỨ TỰ ĐÚNG NHƯ MÁY CHỦ TRẢ: ghim trước, rồi mới tới thời gian giảm
+      // dần. Backend làm việc này bằng chính tên truy vấn
+      // (`findByUserIdOrderByPinnedDescCreatedAtDesc`), và controller truyền
+      // `PageRequest.of(page, size)` không kèm Sort riêng nên thứ tự ấy là
+      // bảo đảm.
+      //
+      // Dữ liệu giả trước đây đặt tin ghim ở giữa, và phép kiểm vẫn xanh vì
+      // màn hình tự sắp lại ở máy khách — tức là nó đang kiểm miếng vá, không
+      // kiểm hành vi thật. Sắp lại ở máy khách còn sai khi có nhiều trang: một
+      // tin ghim nằm ở trang hai sẽ bị xếp xuống dưới tin thường của trang một.
       m.tra('GET /api/v1/me/notifications', trang([
-        {
-          'id': 'n1',
-          'title': 'Reader đã nhận lịch',
-          'message': 'Buổi 20:00 đã xác nhận',
-          'type': 'BOOKING_CONFIRMED',
-          'read': false,
-          'pinned': false,
-          'createdAt': iso(homNay),
-        },
         {
           'id': 'n2',
           'title': 'Tin ghim',
@@ -207,6 +208,15 @@ void main() {
           'read': true,
           'pinned': true,
           'createdAt': iso(homNay.subtract(const Duration(days: 1))),
+        },
+        {
+          'id': 'n1',
+          'title': 'Reader đã nhận lịch',
+          'message': 'Buổi 20:00 đã xác nhận',
+          'type': 'BOOKING_CONFIRMED',
+          'read': false,
+          'pinned': false,
+          'createdAt': iso(homNay),
         },
         {
           'id': 'n3',
@@ -231,7 +241,8 @@ void main() {
       final m = MoiTruong(user: nguoiDung());
       khai(m.mayChu);
       await m.dung(t, const NotificationsScreen());
-      // Tin ghim đứng đầu.
+      // Tin ghim đứng đầu — theo thứ tự máy chủ trả, không phải do màn hình
+      // tự sắp lại.
       final y1 = t.getTopLeft(find.text('Tin ghim')).dy;
       final y2 = t.getTopLeft(find.text('Reader đã nhận lịch')).dy;
       expect(y1, lessThan(y2));

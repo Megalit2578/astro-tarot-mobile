@@ -12,8 +12,7 @@ import 'reader_reviews.dart';
 import 'readers_repository.dart';
 import 'slot.dart';
 
-final _readerProvider =
-    FutureProvider.family<Reader, String>((ref, id) async {
+final _readerProvider = FutureProvider.family<Reader, String>((ref, id) async {
   return ref.watch(readersRepositoryProvider).chiTiet(id);
 });
 
@@ -23,8 +22,7 @@ class ReaderDetailScreen extends ConsumerStatefulWidget {
   final String readerId;
 
   @override
-  ConsumerState<ReaderDetailScreen> createState() =>
-      _ReaderDetailScreenState();
+  ConsumerState<ReaderDetailScreen> createState() => _ReaderDetailScreenState();
 }
 
 class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
@@ -47,12 +45,12 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(r.asData?.value.ten ?? 'Hồ sơ Reader')),
       body: r.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Mau.vang),
-        ),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(color: Mau.vang)),
         error: (e, _) => KhoiLoi(
-          thongDiep:
-              e is ApiException ? e.message : 'Không tải được hồ sơ Reader.',
+          thongDiep: e is ApiException
+              ? e.message
+              : 'Không tải được hồ sơ Reader.',
           thuLai: () => ref.invalidate(_readerProvider(widget.readerId)),
         ),
         data: (reader) => _Noi(
@@ -83,11 +81,9 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
     if (s == null || _dangDat) return;
     setState(() => _dangDat = true);
     try {
-      final b = await ref.read(bookingsRepositoryProvider).dat(
-            readerProfileId: widget.readerId,
-            batDau: s.batDau,
-            phut: _phut,
-          );
+      final b = await ref
+          .read(bookingsRepositoryProvider)
+          .dat(readerProfileId: widget.readerId, batDau: s.batDau, phut: _phut);
       // Danh sách lịch hẹn giờ đã cũ.
       ref.invalidate(myBookingsProvider);
       // Khung giờ vừa đặt không còn trống.
@@ -153,16 +149,17 @@ class _Noi extends ConsumerWidget {
   /// Chỉ hiện mức đã khai giá: bày ra mức chưa có giá thì người dùng chọn vào
   /// rồi không có khung giờ nào, và không hiểu tại sao.
   List<({int phut, int gia})> get _mucGia => [
-        if (reader.pricePer15m != null) (phut: 15, gia: reader.pricePer15m!),
-        if (reader.pricePer30m != null) (phut: 30, gia: reader.pricePer30m!),
-        if (reader.pricePer60m != null) (phut: 60, gia: reader.pricePer60m!),
-      ];
+    if (reader.pricePer15m != null) (phut: 15, gia: reader.pricePer15m!),
+    if (reader.pricePer30m != null) (phut: 30, gia: reader.pricePer30m!),
+    if (reader.pricePer60m != null) (phut: 60, gia: reader.pricePer60m!),
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final muc = _mucGia;
-    final phutHopLe =
-        muc.any((m) => m.phut == phut) ? phut : (muc.isEmpty ? phut : muc.first.phut);
+    final phutHopLe = muc.any((m) => m.phut == phut)
+        ? phut
+        : (muc.isEmpty ? phut : muc.first.phut);
 
     return Column(
       children: [
@@ -176,7 +173,10 @@ class _Noi extends ConsumerWidget {
                 Text(
                   reader.bio!,
                   style: const TextStyle(
-                      fontSize: 13.5, height: 1.7, color: Mau.chu),
+                    fontSize: 13.5,
+                    height: 1.7,
+                    color: Mau.chu,
+                  ),
                 ),
               ],
               if (reader.specialties.isNotEmpty) ...[
@@ -188,14 +188,20 @@ class _Noi extends ConsumerWidget {
                     for (final s in reader.specialties)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(color: const Color(0x33D4AF37)),
                         ),
-                        child: Text(s,
-                            style: const TextStyle(
-                                fontSize: 11.5, color: Mau.vangNhat)),
+                        child: Text(
+                          s,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Mau.vangNhat,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -220,48 +226,72 @@ class _Noi extends ConsumerWidget {
               const SizedBox(height: 24),
               const _Nhan('Thời lượng'),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final m in muc)
-                    ChoiceChip(
-                      selected: m.phut == phutHopLe,
-                      onSelected: (_) => doiPhut(m.phut),
-                      label: Text('${m.phut} phút · ${Dinh.tien(m.gia)}'),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        color: m.phut == phutHopLe ? Mau.vang : Mau.chuMo,
+              // Reader chưa đặt giá nào thì không có mốc nào để hiện.
+              //
+              // `findBookable` ở backend đã ẩn họ khỏi danh sách công khai, nhưng
+              // vẫn tới được đây bằng đường dẫn trực tiếp — một liên kết được chia
+              // sẻ từ trước, hoặc chính Reader đang xem lại hồ sơ của mình. Để
+              // trống thì ba mục liền nhau (Thời lượng, Ngày, Khung giờ) đều rỗng và
+              // trang trông như tải hỏng.
+              if (muc.isEmpty)
+                const Text(
+                  'Reader này chưa đặt giá cho mốc nào, nên chưa nhận đặt lịch.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: Mau.chuMo,
+                    height: 1.5,
+                  ),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final m in muc)
+                      ChoiceChip(
+                        selected: m.phut == phutHopLe,
+                        onSelected: (_) => doiPhut(m.phut),
+                        label: Text('${m.phut} phút · ${Dinh.tien(m.gia)}'),
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          color: m.phut == phutHopLe ? Mau.vang : Mau.chuMo,
+                        ),
+                        backgroundColor: Mau.the,
+                        selectedColor: Mau.vang.withValues(alpha: 0.16),
+                        side: BorderSide(
+                          color: m.phut == phutHopLe ? Mau.vang : Mau.vien,
+                        ),
+                        showCheckmark: false,
                       ),
-                      backgroundColor: Mau.the,
-                      selectedColor: Mau.vang.withValues(alpha: 0.16),
-                      side: BorderSide(
-                        color: m.phut == phutHopLe ? Mau.vang : Mau.vien,
-                      ),
-                      showCheckmark: false,
-                    ),
-                ],
-              ),
+                  ],
+                ),
 
-              const SizedBox(height: 22),
-              const _Nhan('Ngày'),
-              const SizedBox(height: 10),
-              _ChonNgay(ngay: ngay, doiNgay: doiNgay),
-              _GoiYNgayTrong(
-                readerId: reader.id,
-                phut: phutHopLe,
-                ngay: ngay,
-                doiNgay: doiNgay,
-              ),
+              // Không hỏi khung giờ khi chưa có mốc nào: câu hỏi "còn trống khung
+              // 15 phút nào không" vô nghĩa khi Reader không nhận buổi 15 phút.
+              if (muc.isNotEmpty) ...[
+                const SizedBox(height: 22),
+                const _Nhan('Ngày'),
+                const SizedBox(height: 10),
+                _ChonNgay(ngay: ngay, doiNgay: doiNgay),
+                _GoiYNgayTrong(
+                  readerId: reader.id,
+                  phut: phutHopLe,
+                  ngay: ngay,
+                  doiNgay: doiNgay,
+                ),
 
-              const SizedBox(height: 22),
-              const _Nhan('Khung giờ còn trống'),
-              const SizedBox(height: 10),
-              _Slots(
-                query: SlotQuery(
-                    readerId: reader.id, ngay: ngay, phut: phutHopLe),
-                chon: chon,
-                doiChon: doiChon,
-              ),
+                const SizedBox(height: 22),
+                const _Nhan('Khung giờ còn trống'),
+                const SizedBox(height: 10),
+                _Slots(
+                  query: SlotQuery(
+                    readerId: reader.id,
+                    ngay: ngay,
+                    phut: phutHopLe,
+                  ),
+                  chon: chon,
+                  doiChon: doiChon,
+                ),
+              ],
 
               const SizedBox(height: 26),
               _Nhan('Đánh giá (${reader.totalReviews})'),
@@ -331,10 +361,9 @@ class _Nhan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-            fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4),
-      );
+    text,
+    style: const TextStyle(fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4),
+  );
 }
 
 class _Dau extends StatelessWidget {
@@ -355,23 +384,31 @@ class _Dau extends StatelessWidget {
             border: Border.all(color: Mau.vien),
             image: co
                 ? DecorationImage(
-                    image: NetworkImage(reader.avatar!), fit: BoxFit.cover)
+                    image: NetworkImage(reader.avatar!),
+                    fit: BoxFit.cover,
+                  )
                 : null,
           ),
           alignment: Alignment.center,
           child: co
               ? null
-              : Text(reader.chuDau,
-                  style: const TextStyle(fontSize: 24, color: Mau.vang)),
+              : Text(
+                  reader.chuDau,
+                  style: const TextStyle(fontSize: 24, color: Mau.vang),
+                ),
         ),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(reader.ten,
-                  style: const TextStyle(
-                      fontSize: 19, fontWeight: FontWeight.w600)),
+              Text(
+                reader.ten,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 3),
               Text(
                 reader.yearsExperience != null
@@ -384,9 +421,10 @@ class _Dau extends StatelessWidget {
                 children: [
                   const Icon(Icons.star, size: 14, color: Mau.vang),
                   const SizedBox(width: 4),
-                  Text(Dinh.diem(reader.rating, reader.totalReviews),
-                      style:
-                          const TextStyle(color: Mau.vang, fontSize: 12.5)),
+                  Text(
+                    Dinh.diem(reader.rating, reader.totalReviews),
+                    style: const TextStyle(color: Mau.vang, fontSize: 12.5),
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     reader.totalReviews > 0
@@ -429,9 +467,8 @@ class _ChonNgay extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final n = goc.add(Duration(days: i));
-          final chon = n.year == ngay.year &&
-              n.month == ngay.month &&
-              n.day == ngay.day;
+          final chon =
+              n.year == ngay.year && n.month == ngay.month && n.day == ngay.day;
           return InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () => doiNgay(n),
@@ -448,8 +485,9 @@ class _ChonNgay extends StatelessWidget {
                   Text(
                     i == 0 ? 'Nay' : _thu[n.weekday - 1],
                     style: TextStyle(
-                        fontSize: 11,
-                        color: chon ? Mau.vang : Mau.chuMo),
+                      fontSize: 11,
+                      color: chon ? Mau.vang : Mau.chuMo,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -596,7 +634,11 @@ class _CanDangNhap extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
-          20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+        20,
+        14,
+        20,
+        14 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: const BoxDecoration(
         color: Mau.the,
         border: Border(top: BorderSide(color: Mau.vien)),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/api/trang.dart';
 import '../../core/auth/auth_controller.dart';
 
 /// Số dư ký quỹ của Reader.
@@ -109,23 +110,26 @@ class MoneyRepository {
   Future<SoDu> soDu() async =>
       SoDu.fromJson(await _api.get<Map<String, dynamic>>(_escrow));
 
-  Future<List<GiaoDichKyQuy>> giaoDich() async {
+  /// Một trang sổ ký quỹ.
+  ///
+  /// Trả [Trang] chứ không phải [List] để màn hình biết CÒN NỮA hay không.
+  /// Trước đây hàm này tải đúng trang đầu rồi trả mảng phẳng: Reader làm lâu
+  /// có hàng trăm dòng sổ, và họ chỉ thấy ba mươi dòng gần nhất — không có
+  /// dấu hiệu nào cho biết phần còn lại tồn tại. Đúng câu hỏi Reader hay hỏi
+  /// ("vì sao tháng này tôi nhận ít hơn?") lại nằm ở phần bị cắt.
+  Future<Trang<GiaoDichKyQuy>> giaoDich({int trang = 0}) async {
     final d = await _api.get<dynamic>('$_escrow/transactions',
-        query: {'page': 0, 'size': 30});
-    final l = d is Map ? d['content'] : d;
-    if (l is! List) return const [];
-    return l
-        .whereType<Map<String, dynamic>>()
-        .map(GiaoDichKyQuy.fromJson)
-        .toList();
+        query: {'page': trang, 'size': _coTrang});
+    return Trang.tu(d, GiaoDichKyQuy.fromJson);
   }
 
-  Future<List<YeuCauRut>> yeuCauRut() async {
-    final d = await _api.get<dynamic>(_payouts, query: {'page': 0, 'size': 30});
-    final l = d is Map ? d['content'] : d;
-    if (l is! List) return const [];
-    return l.whereType<Map<String, dynamic>>().map(YeuCauRut.fromJson).toList();
+  Future<Trang<YeuCauRut>> yeuCauRut({int trang = 0}) async {
+    final d = await _api
+        .get<dynamic>(_payouts, query: {'page': trang, 'size': _coTrang});
+    return Trang.tu(d, YeuCauRut.fromJson);
   }
+
+  static const _coTrang = 20;
 
   Future<void> xinRut({
     required int soTien,
@@ -150,10 +154,12 @@ final moneyRepositoryProvider =
 final soDuProvider =
     FutureProvider<SoDu>((ref) => ref.watch(moneyRepositoryProvider).soDu());
 
-final giaoDichProvider = FutureProvider<List<GiaoDichKyQuy>>(
+/// Trang ĐẦU của mỗi danh sách. Màn Thu nhập tự dồn các trang sau bằng nút
+/// "Tải thêm"; hai provider này chỉ để mở màn có ngay cái gì đó.
+final giaoDichProvider = FutureProvider<Trang<GiaoDichKyQuy>>(
     (ref) => ref.watch(moneyRepositoryProvider).giaoDich());
 
-final yeuCauRutProvider = FutureProvider<List<YeuCauRut>>(
+final yeuCauRutProvider = FutureProvider<Trang<YeuCauRut>>(
     (ref) => ref.watch(moneyRepositoryProvider).yeuCauRut());
 
 /// Nhãn tiếng Việt cho loại giao dịch ký quỹ.

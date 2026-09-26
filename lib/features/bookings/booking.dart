@@ -1,6 +1,18 @@
 /// Trạng thái buổi hẹn, khớp enum bên backend.
 enum TrangThaiBuoi { pending, confirmed, completed, cancelled, khac }
 
+/// Mã trạng thái gửi LÊN máy chủ. null = không lọc.
+///
+/// Không dùng `name.toUpperCase()`: `khac` sẽ thành "KHAC", một giá trị backend
+/// không biết, và nó trả 400 cho một thao tác đáng lẽ là "xem tất cả".
+String? tenTrangThai(TrangThaiBuoi? t) => switch (t) {
+      TrangThaiBuoi.pending => 'PENDING',
+      TrangThaiBuoi.confirmed => 'CONFIRMED',
+      TrangThaiBuoi.completed => 'COMPLETED',
+      TrangThaiBuoi.cancelled => 'CANCELLED',
+      TrangThaiBuoi.khac || null => null,
+    };
+
 TrangThaiBuoi trangThaiTu(String? s) => switch (s) {
       'PENDING' => TrangThaiBuoi.pending,
       'CONFIRMED' => TrangThaiBuoi.confirmed,

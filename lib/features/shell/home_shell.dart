@@ -55,7 +55,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       (_) {
         if (!mounted) return;
         ref.invalidate(soChuaDocProvider);
-        ref.invalidate(thongBaoProvider);
+        ref.read(thucThongBaoProvider.notifier).thuc();
       },
     );
   }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/dai_chon.dart';
+import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import '../money/payment_sheet.dart';
@@ -32,9 +32,12 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
   ];
   int _chon = 0;
 
+  /// Đổi bộ lọc là bắt đầu lại từ trang đầu. Truyền chỉ số vào key để
+  /// DanhSachPhanTrang dựng lại từ đầu — giữ trang cũ khi đã đổi bộ lọc là
+  /// trộn kết quả của hai bộ lọc vào một danh sách.
   @override
   Widget build(BuildContext context) {
-    final ds = ref.watch(myBookingsProvider);
+    final repo = ref.watch(bookingsRepositoryProvider);
     final loc = _loc[_chon].$2;
 
     return Scaffold(
@@ -50,47 +53,23 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           ),
         ),
       ),
-      body: RefreshIndicator(
-        color: Mau.vang,
-        backgroundColor: Mau.the,
-        onRefresh: () => ref.refresh(myBookingsProvider.future),
-        child: ds.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: Mau.vang),
-          ),
-          error: (e, _) => KhoiLoi(
-            thongDiep: e is ApiException
-                ? e.message
-                : 'Không tải được lịch hẹn.',
-            thuLai: () => ref.invalidate(myBookingsProvider),
-          ),
-          data: (tatCa) {
-            final list = loc == null
-                ? tatCa
-                : [for (final b in tatCa) if (b.trangThai == loc) b];
-            if (tatCa.isEmpty) {
-              return const KhoiTrong(
+      body: DanhSachPhanTrang<Booking>(
+        key: ValueKey(_chon),
+        tai: (t) => repo.cuaToi(trang: t, loc: loc),
+        loiDuPhong: 'Không tải được lịch hẹn.',
+        trong: loc == null
+            ? const KhoiTrong(
                 icon: Icons.event_available,
                 tieuDe: 'Chưa có lịch hẹn nào',
                 moTa: 'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt '
                     'một khung giờ.',
-              );
-            }
-            if (list.isEmpty) {
-              return KhoiTrong(
+              )
+            : KhoiTrong(
                 icon: Icons.filter_alt_off_outlined,
                 tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
                 moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
-              );
-            }
-            return ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: list.length,
-              itemBuilder: (_, i) => _TheBuoi(booking: list[i]),
-            );
-          },
-        ),
+              ),
+        dong: (_, b) => _TheBuoi(booking: b),
       ),
     );
   }

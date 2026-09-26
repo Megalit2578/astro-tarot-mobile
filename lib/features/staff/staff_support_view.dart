@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../core/api/trang.dart';
+import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/trang_thai.dart';
 import '../support/support_repository.dart';
 import '../support/support_screen.dart';
@@ -15,55 +16,51 @@ import '../support/support_screen.dart';
 /// Khác màn Hỗ trợ của khách ở chỗ nó lấy TẤT CẢ phiếu đang chờ, không chỉ
 /// phiếu của mình. Tái dùng chung màn chi tiết: nhân viên và khách nhìn cùng
 /// một hội thoại, chỉ khác ai đứng bên nào.
-final hangChoHoTroProvider = FutureProvider<List<Ticket>>((ref) async {
-  final api = ref.watch(apiClientProvider);
+/// Tải MỘT trang hàng chờ hỗ trợ.
+///
+/// Trước đây lấy đúng năm mươi phiếu đầu rồi dừng. Hàng chờ hỗ trợ là nơi
+/// để dồn lại nhiều nhất — ai cũng xử những phiếu trên cùng — nên chính những
+/// phiếu cũ bị bỏ quên lại là những phiếu không hiện ra.
+Future<Trang<Ticket>> _taiHangCho(WidgetRef ref, int trang) async {
+  final api = ref.read(apiClientProvider);
   final d = await api.get<dynamic>('${Endpoints.support}/queue',
-      query: {'page': 0, 'size': 50});
-  final l = d is Map ? d['content'] : d;
-  if (l is! List) return const [];
-  return l.whereType<Map<String, dynamic>>().map(Ticket.fromJson).toList();
-});
+      query: {'page': trang, 'size': 30});
+  return Trang.tu(d, Ticket.fromJson);
+}
 
-class StaffSupportView extends ConsumerWidget {
+class StaffSupportView extends ConsumerStatefulWidget {
   const StaffSupportView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ds = ref.watch(hangChoHoTroProvider);
+  ConsumerState<StaffSupportView> createState() => _StaffSupportViewState();
+}
 
-    return RefreshIndicator(
-      color: Mau.vang,
-      backgroundColor: Mau.the,
-      onRefresh: () => ref.refresh(hangChoHoTroProvider.future),
-      child: ds.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator(color: Mau.vang)),
-        error: (e, _) => KhoiLoi(
-          thongDiep: e is ApiException
-              ? e.message
-              : 'Không tải được hàng chờ hỗ trợ.',
-          thuLai: () => ref.invalidate(hangChoHoTroProvider),
-        ),
-        data: (list) => list.isEmpty
-            ? const KhoiTrong(
-                icon: Icons.inbox_outlined,
-                tieuDe: 'Hàng chờ trống',
-                moTa: 'Không có yêu cầu nào đang đợi trả lời.',
-              )
-            : ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                itemCount: list.length,
-                itemBuilder: (_, i) => _TheCho(t: list[i]),
-              ),
+class _StaffSupportViewState extends ConsumerState<StaffSupportView> {
+  final _dieuKhien = DieuKhienDanhSach();
+
+  @override
+  Widget build(BuildContext context) {
+    return DanhSachPhanTrang<Ticket>(
+      dieuKhien: _dieuKhien,
+      tai: (t) => _taiHangCho(ref, t),
+      loiDuPhong: 'Không tải được hàng chờ hỗ trợ.',
+      trong: const KhoiTrong(
+        icon: Icons.inbox_outlined,
+        tieuDe: 'Hàng chờ trống',
+        moTa: 'Không có yêu cầu nào đang đợi trả lời.',
       ),
+      dong: (_, t) => _TheCho(t: t, taiLai: _dieuKhien.taiLai),
     );
   }
 }
 
 class _TheCho extends ConsumerWidget {
-  const _TheCho({required this.t});
+  const _TheCho({required this.t, required this.taiLai});
   final Ticket t;
+
+  /// Tải lại hàng chờ sau khi mở một phiếu — trả lời xong thì trạng thái
+  /// phiếu đã khác, và nó có thể không còn thuộc hàng chờ nữa.
+  final Future<void> Function() taiLai;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -79,7 +76,7 @@ class _TheCho extends ConsumerWidget {
             MaterialPageRoute(
                 builder: (_) => TicketDetailScreen(ticket: t, nhanVien: true)),
           );
-          ref.invalidate(hangChoHoTroProvider);
+          await taiLai();
         },
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/config.dart';
 import '../../theme.dart';
+import '../shop/san_pham_lien_quan.dart';
 import '../tarot/tarot_screen.dart';
 
 /// Một lá Ẩn Chính dùng cho khối rút bài trên trang chủ.
@@ -386,6 +387,15 @@ class _RutBaiHangNgayState extends State<RutBaiHangNgay> {
           child: const Text('Trải bài đầy đủ'),
         ),
       ],
+    ),
+    // Liên hệ có thật, không phải ghép cho có: ảnh lá bài ở trên lấy từ chính
+    // bản in Rider-Waite-Smith 1909 — cùng bộ bài đang bán. Khớp khối
+    // RelatedProducts của web ở cùng vị trí.
+    const SanPhamLienQuan(
+      danhMucSlug: 'bai-tarot',
+      tieuDe: 'Muốn tự rút bài ở nhà?',
+      goiY: 'Ảnh lá bài phía trên lấy từ bộ Rider-Waite-Smith. '
+          'Đây là những bộ bài cùng dòng.',
     ),
   ];
 }

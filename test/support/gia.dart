@@ -398,8 +398,19 @@ Future<void> bam(WidgetTester tester, Finder f) async {
   final e = f.evaluate().first;
   if (Scrollable.maybeOf(e) != null) {
     await Scrollable.ensureVisible(e, alignment: 0.5);
+    // `xong` chứ không phải một `pump` đơn.
+    //
+    // ensureVisible có thể kéo theo cả một chuỗi: cuộn xong thì bố cục dựng
+    // lại, widget con đổi chỗ, RefreshIndicator bao ngoài chạy nốt hiệu ứng.
+    // Một khung hình không đủ cho chuỗi ấy lắng xuống, nên toạ độ lúc chạm
+    // là toạ độ của khung TRƯỚC — cú chạm rơi ra ngoài nút.
+    //
+    // Và nó trượt IM LẶNG vì warnIfMissed: false bên dưới. Bắt được lỗi này
+    // đã mất một lúc: phép kiểm báo "không gọi máy chủ" trong khi nút vẫn
+    // hiện ra đủ cả, chạm tay vào thì chạy bình thường. Chỉ lộ ra khi một
+    // thay đổi giao diện làm form cao thêm vài chục điểm ảnh.
+    await xong(tester);
   }
-  await tester.pump();
   await tester.tap(f.first, warnIfMissed: false);
   await xong(tester);
 }
