@@ -72,6 +72,7 @@ class Endpoints {
   static String bookingMessages(String id) => '/api/v1/bookings/$id/messages';
   static String bookingMessagesRead(String id) =>
       '/api/v1/bookings/$id/messages/read';
+  static String bookingPresence(String id) => '/api/v1/bookings/$id/presence';
 
   // Bốn hành động dưới đây đều là PATCH, không phải POST.
   static String bookingConfirm(String id) => '/api/v1/bookings/$id/confirm';

@@ -9,6 +9,7 @@ import '../../theme.dart';
 import 'booking.dart';
 import 'call_controller.dart';
 import 'call_panel.dart';
+import 'hoat_dong.dart';
 import 'message.dart';
 
 /// Hộp trao đổi của một buổi tư vấn.
@@ -35,6 +36,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _dangTai = true;
   bool _dangGui = false;
   String? _loi;
+  bool? _online;
+  DateTime? _lastSeen;
   VoidCallback? _huyNghe;
   CallController? _goi;
 
@@ -44,6 +47,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _tai();
+    _taiHienDien();
     _nghe();
     _dungBoGoi();
   }
@@ -73,6 +77,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _taiHienDien() async {
+    try {
+      final data = await ref
+          .read(apiClientProvider)
+          .get<Map<String, dynamic>>(Endpoints.bookingPresence(_bookingId));
+      final luc = data['lastSeenAt'];
+      if (!mounted) return;
+      setState(() {
+        _online = data['online'] == true;
+        _lastSeen = luc is String ? DateTime.tryParse(luc) : null;
+      });
+    } catch (_) {
+      // Không biết thì im. Đừng hiện lỗi ở chỗ chỉ báo có mặt.
+    }
+  }
+
   Future<void> _tai() async {
     try {
       final api = ref.read(apiClientProvider);
@@ -83,9 +103,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final content = data['content'];
       final ds = content is List
           ? content
-              .whereType<Map<String, dynamic>>()
-              .map(TinNhan.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(TinNhan.fromJson)
+                .toList()
           : <TinNhan>[];
       if (!mounted) return;
       setState(() {
@@ -148,11 +168,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     setState(() => _dangGui = true);
     final rt = ref.read(realtimeProvider);
-    final quaSocket = rt.gui(Endpoints.stompChat(_bookingId), {'body': noiDung});
+    final quaSocket = rt.gui(Endpoints.stompChat(_bookingId), {
+      'body': noiDung,
+    });
 
     try {
       if (!quaSocket) {
-        await ref.read(apiClientProvider).post(
+        await ref
+            .read(apiClientProvider)
+            .post(
               Endpoints.bookingMessages(_bookingId),
               body: {'body': noiDung},
             );
@@ -185,25 +209,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(doiPhuong, style: const TextStyle(fontSize: 16)),
-            ValueListenableBuilder<bool>(
-              valueListenable: rt.dangNoi,
-              builder: (_, noi, _) => Row(
+            if (moTaHoatDong(online: _online, lastSeen: _lastSeen)
+                case final moTa?)
+              Row(
                 children: [
                   Icon(
-                    noi ? Icons.wifi : Icons.wifi_off,
-                    size: 11,
-                    color: noi ? const Color(0xFF6BBF7B) : Mau.chuMo,
+                    Icons.circle,
+                    size: 8,
+                    color: _online == true
+                        ? const Color(0xFF6BBF7B)
+                        : Mau.chuMo,
                   ),
                   const SizedBox(width: 5),
-                  Text(
-                    noi ? 'Đang kết nối tức thời' : 'Mất kết nối tức thời',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: noi ? const Color(0xFF6BBF7B) : Mau.chuMo,
+                  Expanded(
+                    child: Text(
+                      moTa,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10.5, color: Mau.chuMo),
                     ),
                   ),
                 ],
               ),
+            ValueListenableBuilder<bool>(
+              valueListenable: rt.dangNoi,
+              builder: (_, noi, _) {
+                if (noi) return const SizedBox.shrink();
+                return const Row(
+                  children: [
+                    Icon(Icons.wifi_off, size: 11, color: Mau.chuMo),
+                    SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        'Mất kết nối tức thời — tin vẫn gửi được, chỉ chậm hơn',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -284,9 +330,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_loi!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13)),
+              Text(
+                _loi!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13),
+              ),
               const SizedBox(height: 16),
               OutlinedButton(
                 onPressed: () {
@@ -333,7 +381,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _oNhap() {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          12, 10, 12, 10 + MediaQuery.of(context).padding.bottom),
+        12,
+        10,
+        12,
+        10 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: const BoxDecoration(
         color: Mau.the,
         border: Border(top: BorderSide(color: Mau.vien)),
@@ -350,8 +402,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               decoration: const InputDecoration(
                 hintText: 'Nhắn gì đó…',
                 isDense: true,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -407,11 +461,14 @@ class _BongBong extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment:
-              cuaToi ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: cuaToi
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
-            Text(tin.body,
-                style: const TextStyle(fontSize: 13.5, height: 1.45)),
+            Text(
+              tin.body,
+              style: const TextStyle(fontSize: 13.5, height: 1.45),
+            ),
             // Dấu thời gian chỉ hiện khi CÓ. Rỗng nghĩa là gói đẩy thiếu
             // createdAt — thà trống còn hơn vẽ ra mốc 1970.
             if (gio.isNotEmpty) ...[
