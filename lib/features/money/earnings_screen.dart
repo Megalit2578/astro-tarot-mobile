@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../core/api/trang.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import 'money_repository.dart';
 import 'payout_sheet.dart';
@@ -13,19 +15,70 @@ import 'payout_sheet.dart';
 /// KHÔNG có Scaffold hay AppBar riêng: màn này luôn nằm trong Bàn làm việc,
 /// vốn đã có thanh tiêu đề của nó. Bọc thêm một Scaffold nữa là hai thanh
 /// tiêu đề chồng lên nhau.
-class EarningsScreen extends ConsumerWidget {
+class EarningsScreen extends ConsumerStatefulWidget {
   const EarningsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EarningsScreen> createState() => _EarningsScreenState();
+}
+
+class _EarningsScreenState extends ConsumerState<EarningsScreen> {
+  /// Các trang đã dồn thêm sau trang đầu. Trang đầu vẫn do provider giữ, để
+  /// mở màn là có ngay cái gì đó thay vì một vòng xoay.
+  Trang<GiaoDichKyQuy>? _gdDon;
+  Trang<YeuCauRut>? _ycDon;
+  bool _dangTaiGd = false;
+  bool _dangTaiYc = false;
+
+  /// Kéo làm mới thì bỏ hết phần đã dồn — giữ lại là trộn dữ liệu cũ với mới.
+  void _datLai() {
+    setState(() {
+      _gdDon = null;
+      _ycDon = null;
+    });
+  }
+
+  Future<void> _taiThemGd(Trang<GiaoDichKyQuy> hien) async {
+    if (_dangTaiGd || !hien.conNua) return;
+    setState(() => _dangTaiGd = true);
+    try {
+      final sau =
+          await ref.read(moneyRepositoryProvider).giaoDich(trang: hien.so + 1);
+      if (mounted) setState(() => _gdDon = hien.noi(sau));
+    } catch (e) {
+      if (mounted) baoLoi(context, e, 'Khong tai them duoc so ky quy.');
+    } finally {
+      if (mounted) setState(() => _dangTaiGd = false);
+    }
+  }
+
+  Future<void> _taiThemYc(Trang<YeuCauRut> hien) async {
+    if (_dangTaiYc || !hien.conNua) return;
+    setState(() => _dangTaiYc = true);
+    try {
+      final sau =
+          await ref.read(moneyRepositoryProvider).yeuCauRut(trang: hien.so + 1);
+      if (mounted) setState(() => _ycDon = hien.noi(sau));
+    } catch (e) {
+      if (mounted) baoLoi(context, e, 'Khong tai them duoc lenh rut.');
+    } finally {
+      if (mounted) setState(() => _dangTaiYc = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sd = ref.watch(soDuProvider);
-    final gd = ref.watch(giaoDichProvider);
-    final yc = ref.watch(yeuCauRutProvider);
+    // Trang dau tu provider, cong voi nhung trang da bam "Tai them".
+    final gd = _gdDon ?? ref.watch(giaoDichProvider).asData?.value;
+    final yc = _ycDon ?? ref.watch(yeuCauRutProvider).asData?.value;
+    final gdDangTai = _gdDon == null && ref.watch(giaoDichProvider).isLoading;
 
     return RefreshIndicator(
         color: Mau.vang,
         backgroundColor: Mau.the,
         onRefresh: () async {
+          _datLai();
           ref.invalidate(soDuProvider);
           ref.invalidate(giaoDichProvider);
           ref.invalidate(yeuCauRutProvider);
@@ -50,6 +103,7 @@ class EarningsScreen extends ConsumerWidget {
                     ? () async {
                         final ok = await moXinRut(context, s);
                         if (ok) {
+                          _datLai();
                           ref.invalidate(soDuProvider);
                           ref.invalidate(yeuCauRutProvider);
                         }
@@ -74,28 +128,36 @@ class EarningsScreen extends ConsumerWidget {
                 ),
               ],
 
-              ...switch (yc.asData?.value) {
-                final l? when l.isNotEmpty => [
+              ...switch (yc) {
+                final t? when t.muc.isNotEmpty => [
                     const SizedBox(height: 26),
-                    const _Nhan('Yêu cầu rút tiền'),
+                    _Nhan('Yêu cầu rút tiền',
+                        phu: '${t.muc.length}/${t.tongSo}'),
                     const SizedBox(height: 10),
-                    for (final y in l) _TheRut(y: y),
+                    for (final y in t.muc) _TheRut(y: y),
+                    if (t.conNua)
+                      NutTaiThem(
+                          dangTai: _dangTaiYc, bam: () => _taiThemYc(t)),
                   ],
                 _ => const <Widget>[],
               },
 
               const SizedBox(height: 26),
-              const _Nhan('Lịch sử ký quỹ'),
+              _Nhan('Lịch sử ký quỹ',
+                  phu: gd == null ? null : '${gd.muc.length}/${gd.tongSo}'),
               const SizedBox(height: 10),
-              ...switch (gd.asData?.value) {
-                final l? when l.isNotEmpty => [
-                    for (final g in l) _TheGiaoDich(g: g),
+              ...switch (gd) {
+                final t? when t.muc.isNotEmpty => [
+                    for (final g in t.muc) _TheGiaoDich(g: g),
+                    if (t.conNua)
+                      NutTaiThem(
+                          dangTai: _dangTaiGd, bam: () => _taiThemGd(t)),
                   ],
-                final l? when l.isEmpty => const [
+                final t? when t.muc.isEmpty => const [
                     Text('Chưa có giao dịch nào.',
                         style: TextStyle(fontSize: 12.5, color: Mau.chuMo)),
                   ],
-                _ => const [
+                _ when gdDangTai => const [
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       child: Center(
@@ -108,6 +170,7 @@ class EarningsScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                _ => const <Widget>[],
               },
             ],
           ),
@@ -117,12 +180,30 @@ class EarningsScreen extends ConsumerWidget {
 }
 
 class _Nhan extends StatelessWidget {
-  const _Nhan(this.text);
+  const _Nhan(this.text, {this.phu});
   final String text;
+
+  /// Dem "da hien / tong so", vi du 20/143.
+  ///
+  /// Khong co con so nay thi nut "Tai them" la dau hieu duy nhat cho biet con
+  /// nua, va khi het trang thi nut bien mat — nguoi dung khong biet minh dang
+  /// nhin toan bo hay mot phan.
+  final String? phu;
+
   @override
-  Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(
-          fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4));
+  Widget build(BuildContext context) {
+    const kieu =
+        TextStyle(fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4);
+    final p = phu;
+    if (p == null) return Text(text, style: kieu);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(text, style: kieu),
+        Text(p, style: const TextStyle(fontSize: 11, color: Mau.chuMo)),
+      ],
+    );
+  }
 }
 
 class _KhoiSoDu extends StatelessWidget {

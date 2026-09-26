@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/dai_chon.dart';
+import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import '../bookings/booking.dart';
@@ -11,47 +12,86 @@ import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
 
 /// Lịch hẹn Reader nhận được — một mục trong Bàn làm việc.
-class StaffBookingsView extends ConsumerWidget {
+///
+/// Có bộ lọc trạng thái và phân trang như trang `/staff` của web. Bộ lọc gửi
+/// xuống máy chủ chứ không lọc trong trang đã tải: Reader làm lâu sẽ có hàng
+/// trăm buổi, và lọc ở máy khách chỉ lọc trong hai mươi buổi gần nhất — hiện
+/// ra ít hơn thật mà không báo gì.
+class StaffBookingsView extends ConsumerStatefulWidget {
   const StaffBookingsView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ds = ref.watch(readerBookingsProvider);
+  ConsumerState<StaffBookingsView> createState() => _StaffBookingsViewState();
+}
 
-    return RefreshIndicator(
-        color: Mau.vang,
-        backgroundColor: Mau.the,
-        onRefresh: () => ref.refresh(readerBookingsProvider.future),
-        child: ds.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: Mau.vang)),
-          error: (e, _) => KhoiLoi(
-            thongDiep: e is ApiException
-                ? e.message
-                : 'Không tải được lịch hẹn của bạn.',
-            thuLai: () => ref.invalidate(readerBookingsProvider),
+class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
+  static const _loc = <(String, TrangThaiBuoi?)>[
+    ('Tất cả', null),
+    ('Chờ nhận', TrangThaiBuoi.pending),
+    ('Đã nhận', TrangThaiBuoi.confirmed),
+    ('Hoàn tất', TrangThaiBuoi.completed),
+    ('Đã huỷ', TrangThaiBuoi.cancelled),
+  ];
+  int _chon = 0;
+
+  /// Để các thẻ con bắt danh sách tải lại sau khi nhận / hoàn tất / huỷ.
+  final _dieuKhien = DieuKhienDanhSach();
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = ref.watch(bookingsRepositoryProvider);
+    final loc = _loc[_chon].$2;
+
+    // Material trong suốt: DaiChon có ô bấm nên cần một Material phía trên.
+    // Màn này nhúng trong Bàn làm việc nên KHÔNG tự dựng Scaffold — mà dựa
+    // vào Scaffold của cha là một ràng buộc ngầm, và nó vỡ ngay lúc ai đó
+    // nhúng màn này ở chỗ khác.
+    return Material(
+      type: MaterialType.transparency,
+      child: Column(
+        children: [
+          DaiChon(
+            cuon: true,
+            nhan: [for (final l in _loc) l.$1],
+            chon: _chon,
+            khiChon: (i) => setState(() => _chon = i),
           ),
-          data: (list) => list.isEmpty
-              ? const KhoiTrong(
-                  icon: Icons.work_outline,
-                  tieuDe: 'Chưa có lịch hẹn nào',
-                  moTa: 'Khách đặt buổi với bạn thì sẽ hiện ở đây. Nhớ đặt '
-                      'giá và khung giờ rảnh trong hồ sơ Reader.',
-                )
-              : ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: list.length,
-                  itemBuilder: (_, i) => _TheViec(booking: list[i]),
-                ),
+          Expanded(
+            child: DanhSachPhanTrang<Booking>(
+              // Đổi bộ lọc thì dựng lại từ trang đầu.
+              key: ValueKey(_chon),
+              dieuKhien: _dieuKhien,
+              tai: (t) => repo.cuaReader(trang: t, loc: loc),
+              loiDuPhong: 'Không tải được lịch hẹn của bạn.',
+              trong: loc == null
+                  ? const KhoiTrong(
+                      icon: Icons.work_outline,
+                      tieuDe: 'Chưa có lịch hẹn nào',
+                      moTa:
+                          'Khách đặt buổi với bạn thì sẽ hiện ở đây. Nhớ đặt '
+                          'giá và khung giờ rảnh trong hồ sơ Reader.',
+                    )
+                  : KhoiTrong(
+                      icon: Icons.filter_alt_off_outlined,
+                      tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
+                      moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
+                    ),
+              dong: (_, b) => _TheViec(booking: b, taiLai: _dieuKhien.taiLai),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _TheViec extends ConsumerStatefulWidget {
-  const _TheViec({required this.booking});
+  const _TheViec({required this.booking, required this.taiLai});
   final Booking booking;
+
+  /// Tải lại danh sách sau khi đổi trạng thái. Không có nó thì thẻ vừa thao
+  /// tác vẫn hiện trạng thái cũ cho tới khi người dùng tự kéo xuống làm mới.
+  final Future<void> Function() taiLai;
 
   @override
   ConsumerState<_TheViec> createState() => _TheViecState();
@@ -70,6 +110,8 @@ class _TheViecState extends ConsumerState<_TheViec> {
     // lần lượt hết giờ.
     try {
       await viec();
+      await widget.taiLai();
+      // Trang chủ và chấm đỏ đọc provider này; nó đã cũ sau thao tác vừa rồi.
       ref.invalidate(readerBookingsProvider);
       if (mounted) baoTin(context, xong);
     } catch (e) {
@@ -89,7 +131,9 @@ class _TheViecState extends ConsumerState<_TheViec> {
     // lý do. Hai chuyện khác nhau, đừng gộp.
     if (lyDo == null) return;
     await _chay(
-      () => ref.read(bookingsRepositoryProvider).huy(b.id, lyDo.isEmpty ? null : lyDo),
+      () => ref
+          .read(bookingsRepositoryProvider)
+          .huy(b.id, lyDo.isEmpty ? null : lyDo),
       'Đã huỷ buổi hẹn',
     );
   }
@@ -116,15 +160,14 @@ class _TheViecState extends ConsumerState<_TheViec> {
     required String goiY,
     required bool batBuoc,
     String banDau = '',
-  }) =>
-      hoiNoiDung(
-        context,
-        tieuDe: tieuDe,
-        goiY: goiY,
-        giaTriDau: banDau,
-        gui: 'Xong',
-        batBuoc: batBuoc,
-      );
+  }) => hoiNoiDung(
+    context,
+    tieuDe: tieuDe,
+    goiY: goiY,
+    giaTriDau: banDau,
+    gui: 'Xong',
+    batBuoc: batBuoc,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -148,13 +191,17 @@ class _TheViecState extends ConsumerState<_TheViec> {
                       Text(
                         b.customerName.isEmpty ? 'Khách' : b.customerName,
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút',
-                        style:
-                            const TextStyle(color: Mau.chuMo, fontSize: 12.5),
+                        style: const TextStyle(
+                          color: Mau.chuMo,
+                          fontSize: 12.5,
+                        ),
                       ),
                     ],
                   ),
@@ -170,9 +217,10 @@ class _TheViecState extends ConsumerState<_TheViec> {
                     Text(
                       Dinh.tien(b.tongTien),
                       style: const TextStyle(
-                          color: Mau.vang,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600),
+                        color: Mau.vang,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -196,10 +244,8 @@ class _TheViecState extends ConsumerState<_TheViec> {
                     icon: Icons.check,
                     chinh: true,
                     tat: _dangChay,
-                    onTap: () => _chay(
-                      () => repo.nhanLich(b.id),
-                      'Đã nhận lịch',
-                    ),
+                    onTap: () =>
+                        _chay(() => repo.nhanLich(b.id), 'Đã nhận lịch'),
                   ),
                 if (b.trangThai == TrangThaiBuoi.confirmed)
                   _Nut(
@@ -207,10 +253,8 @@ class _TheViecState extends ConsumerState<_TheViec> {
                     icon: Icons.task_alt,
                     chinh: true,
                     tat: _dangChay,
-                    onTap: () => _chay(
-                      () => repo.hoanTat(b.id),
-                      'Đã đánh dấu hoàn tất',
-                    ),
+                    onTap: () =>
+                        _chay(() => repo.hoanTat(b.id), 'Đã đánh dấu hoàn tất'),
                   ),
                 if (b.trangThai == TrangThaiBuoi.pending ||
                     b.trangThai == TrangThaiBuoi.confirmed)
@@ -227,9 +271,7 @@ class _TheViecState extends ConsumerState<_TheViec> {
                     icon: Icons.chat_bubble_outline,
                     tat: false,
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(booking: b),
-                      ),
+                      MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
                     ),
                   ),
                 // Ghi chú chỉ có nghĩa sau khi buổi đã diễn ra.
@@ -290,9 +332,7 @@ class _Nut extends StatelessWidget {
         minimumSize: const Size(0, 40),
         foregroundColor: mau,
         side: BorderSide(color: mau.withValues(alpha: 0.4)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
     );
   }

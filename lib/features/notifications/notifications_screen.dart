@@ -7,6 +7,8 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/hop_thoai.dart';
+import '../../core/api/trang.dart';
+import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/trang_thai.dart';
 import '../bookings/bookings_screen.dart';
 import '../readerapply/reader_apply_screen.dart';
@@ -94,26 +96,43 @@ class ThongBao {
       );
 }
 
-final thongBaoProvider = FutureProvider<List<ThongBao>>((ref) async {
-  final api = ref.watch(apiClientProvider);
+/// Nhịp báo "có thông báo mới, tải lại đi".
+///
+/// Danh sách thông báo phân trang nên nó không còn là một provider để nơi
+/// khác invalidate. Nhưng KHUNG app vẫn phải thúc được nó: kênh sự kiện
+/// realtime chạy ở khung chứ không ở màn này, vì chấm đỏ trên chuông phải cập
+/// nhật kể cả khi người dùng đang ở tab khác.
+///
+/// Một số đếm tăng dần là cách nhẹ nhất: màn thông báo `ref.listen` nó và tải
+/// lại mỗi lần đổi, còn khung chỉ việc gọi [ThucThongBao.thuc].
+class ThucThongBao extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void thuc() => state = state + 1;
+}
+
+final thucThongBaoProvider =
+    NotifierProvider<ThucThongBao, int>(ThucThongBao.new);
+
+/// Tải MỘT trang thông báo.
+///
+/// Không sắp xếp lại ở máy khách. Backend sắp sẵn bằng chính tên truy vấn
+/// (`findByUserIdOrderByPinnedDescCreatedAtDesc`) và controller truyền
+/// `PageRequest.of(page, size)` không kèm Sort riêng, nên thứ tự ghim-trước
+/// là bảo đảm.
+///
+/// Sắp lại ở đây KHÔNG phải thừa một cách vô hại — nó sai khi có nhiều trang:
+/// một tin ghim nằm ở trang hai sẽ bị xếp xuống dưới những tin thường của
+/// trang một, tức là đúng thứ "ghim lên đầu" hứa hẹn thì không xảy ra.
+Future<Trang<ThongBao>> _taiTrangThongBao(WidgetRef ref, int trang) async {
+  final api = ref.read(apiClientProvider);
   final d = await api.get<dynamic>(
     Endpoints.notifications,
-    query: {'page': 0, 'size': 50},
+    query: {'page': trang, 'size': 30},
   );
-  final l = d is Map ? d['content'] : d;
-  if (l is! List) return const [];
-  final ds =
-      l.whereType<Map<String, dynamic>>().map(ThongBao.fromJson).toList();
-  // Ghim lên đầu, rồi mới tới thứ tự thời gian. Backend đã có cờ pinned nhưng
-  // không bảo đảm thứ tự, mà ghim mà nằm lẫn giữa danh sách thì vô nghĩa.
-  ds.sort((a, b) {
-    if (a.ghim != b.ghim) return a.ghim ? -1 : 1;
-    final x = a.luc, y = b.luc;
-    if (x == null || y == null) return 0;
-    return y.compareTo(x);
-  });
-  return ds;
-});
+  return Trang.tu(d, ThongBao.fromJson);
+}
 
 final soChuaDocProvider = FutureProvider<int>((ref) async {
   try {
@@ -132,36 +151,52 @@ final soChuaDocProvider = FutureProvider<int>((ref) async {
   }
 });
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
+  /// Chạy một thao tác rồi tải lại danh sách và chấm đỏ.
+  ///
+  /// [taiLai] đến từ [DieuKhienDanhSach] của màn: danh sách có phân trang nên
+  /// không còn provider nào để invalidate, và không gọi lại thì thẻ vừa ghim
+  /// vẫn nằm nguyên chỗ cũ.
   static Future<void> _chay(
     BuildContext context,
     WidgetRef ref,
     Future<void> Function() viec,
+    Future<void> Function() taiLai,
   ) async {
     try {
       await viec();
     } catch (e) {
       if (context.mounted) baoLoi(context, e, 'Thao tác không thành công.');
     }
-    ref.invalidate(thongBaoProvider);
+    await taiLai();
     ref.invalidate(soChuaDocProvider);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ds = ref.watch(thongBaoProvider);
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  final _dieuKhien = DieuKhienDanhSach();
+
+  @override
+  Widget build(BuildContext context) {
+    // Có thông báo mới đẩy về trong lúc màn này đang mở thì tải lại ngay.
+    ref.listen(thucThongBaoProvider, (_, _) => _dieuKhien.taiLai());
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Thông báo'),
         actions: [
           TextButton(
-            onPressed: () => _chay(
+            onPressed: () => NotificationsScreen._chay(
               context,
               ref,
               () => ref.read(notificationsRepositoryProvider).docHet(),
+              _dieuKhien.taiLai,
             ),
             style: TextButton.styleFrom(foregroundColor: Mau.chuMo),
             child: const Text('Đọc hết', style: TextStyle(fontSize: 12.5)),
@@ -169,11 +204,11 @@ class NotificationsScreen extends ConsumerWidget {
           PopupMenuButton<String>(
             tooltip: 'Thêm',
             color: Mau.the,
-            onSelected: (_) => _chay(context, ref, () async {
+            onSelected: (_) => NotificationsScreen._chay(context, ref, () async {
               final n =
                   await ref.read(notificationsRepositoryProvider).xoaDaDoc();
               if (context.mounted) baoTin(context, 'Đã xoá $n thông báo.');
-            }),
+            }, _dieuKhien.taiLai),
             itemBuilder: (_) => const [
               PopupMenuItem(
                 value: 'xoa-da-doc',
@@ -183,40 +218,28 @@ class NotificationsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        color: Mau.vang,
-        backgroundColor: Mau.the,
-        onRefresh: () => ref.refresh(thongBaoProvider.future),
-        child: ds.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: Mau.vang)),
-          error: (e, _) => KhoiLoi(
-            thongDiep:
-                e is ApiException ? e.message : 'Không tải được thông báo.',
-            thuLai: () => ref.invalidate(thongBaoProvider),
-          ),
-          data: (list) => list.isEmpty
-              ? const KhoiTrong(
-                  icon: Icons.notifications_none,
-                  tieuDe: 'Chưa có thông báo nào',
-                  moTa: 'Khi có người nhận lịch, nhắn tin hay thanh toán, '
-                      'bạn sẽ thấy ở đây.',
-                )
-              : ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: list.length,
-                  itemBuilder: (_, i) => _The(tb: list[i]),
-                ),
+      body: DanhSachPhanTrang<ThongBao>(
+        dieuKhien: _dieuKhien,
+        tai: (t) => _taiTrangThongBao(ref, t),
+        loiDuPhong: 'Không tải được thông báo.',
+        trong: const KhoiTrong(
+          icon: Icons.notifications_none,
+          tieuDe: 'Chưa có thông báo nào',
+          moTa: 'Khi có người nhận lịch, nhắn tin hay thanh toán, '
+              'bạn sẽ thấy ở đây.',
         ),
+        dong: (_, tb) => _The(tb: tb, taiLai: _dieuKhien.taiLai),
       ),
     );
   }
 }
 
 class _The extends ConsumerWidget {
-  const _The({required this.tb});
+  const _The({required this.tb, required this.taiLai});
   final ThongBao tb;
+
+  /// Tải lại danh sách sau khi ghim / xoá / đánh dấu đã đọc.
+  final Future<void> Function() taiLai;
 
   /// Giữ ngón tay trên một thông báo: ghim / bỏ ghim / xoá.
   Future<void> _menu(BuildContext context, WidgetRef ref) async {
@@ -249,6 +272,7 @@ class _The extends ConsumerWidget {
       context,
       ref,
       () => chon == 'ghim' ? repo.ghim(tb.id, !tb.ghim) : repo.xoa(tb.id),
+      taiLai,
     );
   }
 
@@ -266,7 +290,7 @@ class _The extends ConsumerWidget {
             } catch (_) {
               // Đánh dấu đã đọc hỏng không được chặn việc mở màn đích.
             }
-            ref.invalidate(thongBaoProvider);
+            await taiLai();
             ref.invalidate(soChuaDocProvider);
           }
           final man = manChoThongBao(tb.loai);

@@ -7,6 +7,8 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../core/api/trang.dart';
+import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/trang_thai.dart';
 
 class BaiViet {
@@ -47,14 +49,17 @@ class BaiViet {
   }
 }
 
-final baiVietProvider = FutureProvider<List<BaiViet>>((ref) async {
-  final api = ref.watch(apiClientProvider);
-  final d =
-      await api.get<dynamic>(Endpoints.blogs, query: {'page': 0, 'size': 30});
-  final l = d is Map ? d['content'] : d;
-  if (l is! List) return const [];
-  return l.whereType<Map<String, dynamic>>().map(BaiViet.fromJson).toList();
-});
+/// Tải MỘT trang bài viết.
+///
+/// Danh sách bài viết chỉ dài thêm theo thời gian, nên một con số cứng ở đây
+/// là một hạn mức sẽ âm thầm chạm tới — và lúc ấy những bài cũ nhất biến mất
+/// mà không ai biết là chúng từng ở đó.
+Future<Trang<BaiViet>> _taiTrangBaiViet(WidgetRef ref, int trang) async {
+  final api = ref.read(apiClientProvider);
+  final d = await api
+      .get<dynamic>(Endpoints.blogs, query: {'page': trang, 'size': 20});
+  return Trang.tu(d, BaiViet.fromJson);
+}
 
 final baiVietChiTietProvider =
     FutureProvider.family<BaiViet, String>((ref, slug) async {
@@ -68,35 +73,18 @@ class BlogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ds = ref.watch(baiVietProvider);
-
     return Scaffold(
       appBar: AppBar(title: const Text('Bài viết')),
-      body: RefreshIndicator(
-        color: Mau.vang,
-        backgroundColor: Mau.the,
-        onRefresh: () => ref.refresh(baiVietProvider.future),
-        child: ds.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: Mau.vang)),
-          error: (e, _) => KhoiLoi(
-            thongDiep:
-                e is ApiException ? e.message : 'Không tải được bài viết.',
-            thuLai: () => ref.invalidate(baiVietProvider),
-          ),
-          data: (list) => list.isEmpty
-              ? const KhoiTrong(
-                  icon: Icons.article_outlined,
-                  tieuDe: 'Chưa có bài viết nào',
-                  moTa: 'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.',
-                )
-              : ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                  itemCount: list.length,
-                  itemBuilder: (_, i) => _The(b: list[i]),
-                ),
+      body: DanhSachPhanTrang<BaiViet>(
+        tai: (t) => _taiTrangBaiViet(ref, t),
+        loiDuPhong: 'Không tải được bài viết.',
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+        trong: const KhoiTrong(
+          icon: Icons.article_outlined,
+          tieuDe: 'Chưa có bài viết nào',
+          moTa: 'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.',
         ),
+        dong: (_, b) => _The(b: b),
       ),
     );
   }
