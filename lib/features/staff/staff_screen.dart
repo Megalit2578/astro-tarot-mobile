@@ -20,29 +20,41 @@ import 'staff_support_view.dart';
 /// TabBar kéo theo cả cơ chế vuốt ngang — vuốt nhầm giữa lúc đang cuộn danh
 /// sách là chuyện xảy ra suốt.
 class StaffScreen extends ConsumerStatefulWidget {
-  const StaffScreen({super.key});
+  const StaffScreen({super.key, this.tabDau});
+
+  /// Tab mở sẵn khi vào màn: 'bookings', 'support', 'profile', 'earnings'.
+  ///
+  /// Chỉ định bằng KHOÁ chứ không bằng chỉ số: danh sách tab dựng theo quyền,
+  /// nên cùng một con số trỏ vào tab khác nhau tuỳ tài khoản — Reader không
+  /// làm hỗ trợ có ba tab, nhân viên đủ quyền có bốn.
+  ///
+  /// Khoá trỏ tới tab đang bị ẩn vì thiếu quyền thì rơi về tab đầu.
+  final String? tabDau;
 
   @override
   ConsumerState<StaffScreen> createState() => _StaffScreenState();
 }
 
 class _StaffScreenState extends ConsumerState<StaffScreen> {
-  int _chon = 0;
+  /// Null nghĩa là người dùng chưa tự bấm tab nào — lúc ấy [StaffScreen.tabDau]
+  /// quyết định. Sau cú bấm đầu tiên thì lựa chọn của họ thắng, kể cả khi màn
+  /// được dựng lại.
+  int? _chon;
 
   @override
   Widget build(BuildContext context) {
     final u = ref.watch(authControllerProvider).user;
     if (u == null) return const SizedBox.shrink();
 
-    final muc = <({String nhan, Widget man})>[
+    final muc = <({String khoa, String nhan, Widget man})>[
       if (u.co('READER_MANAGE_PROFILE'))
-        (nhan: 'Lịch hẹn', man: const StaffBookingsView()),
+        (khoa: 'bookings', nhan: 'Lịch hẹn', man: const StaffBookingsView()),
       if (u.co('SUPPORT_RESPOND') || u.co('SUPPORT_VIEW'))
-        (nhan: 'Hỗ trợ', man: const StaffSupportView()),
+        (khoa: 'support', nhan: 'Hỗ trợ', man: const StaffSupportView()),
       if (u.co('READER_MANAGE_PROFILE'))
-        (nhan: 'Hồ sơ', man: const ReaderProfileView()),
+        (khoa: 'profile', nhan: 'Hồ sơ', man: const ReaderProfileView()),
       if (u.co('PAYOUT_REQUEST'))
-        (nhan: 'Thu nhập', man: const EarningsScreen()),
+        (khoa: 'earnings', nhan: 'Thu nhập', man: const EarningsScreen()),
     ];
 
     if (muc.isEmpty) {
@@ -61,9 +73,16 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
       );
     }
 
+    // Chưa bấm tab nào thì mở tab được yêu cầu. indexWhere trả -1 khi khoá
+    // trỏ tới tab đang bị ẩn vì thiếu quyền — rơi về tab đầu, không để màn
+    // trắng vì một khoá sai.
+    final theoKhoa = widget.tabDau == null
+        ? 0
+        : muc.indexWhere((m) => m.khoa == widget.tabDau);
     // Quyền có thể đổi giữa phiên, làm số mục ít đi. Không kẹp thì chỉ số cũ
     // trỏ ra ngoài mảng và app đổ.
-    final chon = _chon.clamp(0, muc.length - 1);
+    final chon = (_chon ?? (theoKhoa < 0 ? 0 : theoKhoa))
+        .clamp(0, muc.length - 1);
 
     return Scaffold(
       appBar: AppBar(
