@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/format.dart';
 import '../../theme.dart';
 import 'ngay_nghi_view.dart';
 import '../../widgets/trang_thai.dart';
+import '../readerapply/reader_apply_screen.dart';
 import '../readers/readers_repository.dart';
 import 'reader_profile_repository.dart';
 
@@ -20,31 +22,55 @@ class ReaderProfileView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hs = ref.watch(hoSoReaderProvider);
 
-    return RefreshIndicator(
-      color: Mau.vang,
-      backgroundColor: Mau.the,
-      onRefresh: () async {
-        ref.invalidate(hoSoReaderProvider);
-        ref.invalidate(khungRanhProvider);
-        ref.invalidate(ngayNghiProvider);
-        await ref.read(hoSoReaderProvider.future);
-      },
-      child: hs.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator(color: Mau.vang)),
-        error: (e, _) => KhoiLoi(
-          thongDiep:
-              e is ApiException ? e.message : 'Không tải được hồ sơ Reader.',
-          thuLai: () => ref.invalidate(hoSoReaderProvider),
+    // Material trong suốt: màn này đầy ô nhập và nút, mà nó nhúng trong Bàn
+    // làm việc nên không tự dựng Scaffold. Dựa vào Scaffold của cha là một
+    // ràng buộc ngầm — nó vỡ ngay lúc ai đó nhúng màn này ở chỗ khác.
+    return Material(
+      type: MaterialType.transparency,
+      child: RefreshIndicator(
+        color: Mau.vang,
+        backgroundColor: Mau.the,
+        onRefresh: () async {
+          ref.invalidate(hoSoReaderProvider);
+          ref.invalidate(khungRanhProvider);
+          ref.invalidate(ngayNghiProvider);
+          await ref.read(hoSoReaderProvider.future);
+        },
+        child: hs.when(
+          loading: () =>
+              const Center(child: CircularProgressIndicator(color: Mau.vang)),
+          error: (e, _) => KhoiLoi(
+            thongDiep: e is ApiException
+                ? e.message
+                : 'Không tải được hồ sơ Reader.',
+            thuLai: () => ref.invalidate(hoSoReaderProvider),
+          ),
+          data: (h) => h == null
+              ? KhoiTrong(
+                  icon: Icons.badge_outlined,
+                  tieuDe: 'Bạn chưa có hồ sơ Reader',
+                  moTa:
+                      'Nộp đơn để bắt đầu nhận lịch. Nhân viên được duyệt '
+                      'ngay, không phải xếp hàng chờ.',
+                  // Trước đây chỗ này chỉ nói "màn nộp đơn chưa dựng trong app"
+                  // và đẩy người dùng sang website — trong khi màn nộp đơn ĐÃ
+                  // có sẵn, chỉ là không ai nối vào đây. Một ngõ cụt: nhân viên
+                  // mở Hồ sơ Reader, đọc một câu nhờ vả, rồi không có nút nào
+                  // để bấm.
+                  hanhDong: FilledButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ReaderApplyScreen(),
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 46),
+                    ),
+                    child: const Text('Nộp đơn làm Reader'),
+                  ),
+                )
+              : _Noi(h: h),
         ),
-        data: (h) => h == null
-            ? const KhoiTrong(
-                icon: Icons.badge_outlined,
-                tieuDe: 'Bạn chưa có hồ sơ Reader',
-                moTa: 'Nộp đơn trên astrotarot.date để bắt đầu nhận lịch. '
-                    'Màn nộp đơn chưa dựng trong app.',
-              )
-            : _Noi(h: h),
       ),
     );
   }
@@ -100,7 +126,9 @@ class _NoiState extends ConsumerState<_Noi> {
     FocusScope.of(context).unfocus();
     setState(() => _dangLuu = true);
     try {
-      await ref.read(readerProfileRepositoryProvider).luu(
+      await ref
+          .read(readerProfileRepositoryProvider)
+          .luu(
             gioiThieu: _gioiThieu.text.trim(),
             soNam: _so(_soNam),
             gia15: _so(_g15),
@@ -118,7 +146,9 @@ class _NoiState extends ConsumerState<_Noi> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Đã lưu hồ sơ Reader'), backgroundColor: Mau.the),
+          content: Text('Đã lưu hồ sơ Reader'),
+          backgroundColor: Mau.the,
+        ),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -163,7 +193,8 @@ class _NoiState extends ConsumerState<_Noi> {
         TextField(
           controller: _chuyenMon,
           decoration: const InputDecoration(
-              hintText: 'Tarot, Chiêm tinh, Thần số học'),
+            hintText: 'Tarot, Chiêm tinh, Thần số học',
+          ),
         ),
 
         const SizedBox(height: 14),
@@ -186,11 +217,17 @@ class _NoiState extends ConsumerState<_Noi> {
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _OGia(nhan: '15 phút', c: _g15)),
+            Expanded(
+              child: _OGia(nhan: '15 phút', c: _g15),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _OGia(nhan: '30 phút', c: _g30)),
+            Expanded(
+              child: _OGia(nhan: '30 phút', c: _g30),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _OGia(nhan: '60 phút', c: _g60)),
+            Expanded(
+              child: _OGia(nhan: '60 phút', c: _g60),
+            ),
           ],
         ),
 
@@ -201,7 +238,8 @@ class _NoiState extends ConsumerState<_Noi> {
               ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2))
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Text('Lưu hồ sơ'),
         ),
 
@@ -229,27 +267,71 @@ class _Nhan extends StatelessWidget {
   const _Nhan(this.text);
   final String text;
   @override
-  Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(
-          fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4));
+  Widget build(BuildContext context) => Text(
+    text,
+    style: const TextStyle(fontSize: 12, color: Mau.chuMo, letterSpacing: 0.4),
+  );
 }
 
-class _OGia extends StatelessWidget {
+/// Ô giá cho một mốc thời lượng, kèm dòng nhắc bên dưới.
+///
+/// Dòng nhắc đổi theo nội dung đang gõ, khớp với web:
+///
+/// - Để trống  → "Không nhận buổi này". Một ô trống trông giống hệt một ô
+///   chưa kịp điền, nên phải nói rõ rằng để trống LÀ một lựa chọn có nghĩa.
+/// - Có số     → số tiền đã định dạng. Ô nhập là số trần, nên gõ thừa một số
+///   0 nhìn không khác gì đúng; "600.000 đ" thì khác hẳn "60.000 đ".
+class _OGia extends StatefulWidget {
   const _OGia({required this.nhan, required this.c});
   final String nhan;
   final TextEditingController c;
 
   @override
+  State<_OGia> createState() => _OGiaState();
+}
+
+class _OGiaState extends State<_OGia> {
+  @override
+  void initState() {
+    super.initState();
+    widget.c.addListener(_doi);
+  }
+
+  @override
+  void dispose() {
+    widget.c.removeListener(_doi);
+    super.dispose();
+  }
+
+  void _doi() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final so = int.tryParse(widget.c.text.trim());
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(nhan, style: const TextStyle(fontSize: 11, color: Mau.chuMo)),
+        Text(
+          widget.nhan,
+          style: const TextStyle(fontSize: 11, color: Mau.chuMo),
+        ),
         const SizedBox(height: 5),
         TextField(
-          controller: c,
+          controller: widget.c,
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(hintText: '—', isDense: true),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          so == null ? 'Không nhận buổi này' : Dinh.tien(so),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 10.5,
+            color: so == null ? Mau.chuMo : Mau.vang,
+          ),
         ),
       ],
     );
@@ -280,20 +362,23 @@ class _KhoiTinhTrang extends StatelessWidget {
         color: ok ? const Color(0x186BBF7B) : const Color(0x18E0B341),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: ok ? const Color(0x556BBF7B) : const Color(0x55E0B341)),
+          color: ok ? const Color(0x556BBF7B) : const Color(0x55E0B341),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(ok ? Icons.check_circle_outline : Icons.info_outline,
-              size: 19,
-              color: ok ? const Color(0xFF6BBF7B) : const Color(0xFFE0B341)),
+          Icon(
+            ok ? Icons.check_circle_outline : Icons.info_outline,
+            size: 19,
+            color: ok ? const Color(0xFF6BBF7B) : const Color(0xFFE0B341),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               ok
                   ? 'Hồ sơ của bạn đang hiện trong danh sách Reader và khách '
-                      'đặt lịch được.'
+                        'đặt lịch được.'
                   : 'Khách CHƯA thấy hồ sơ của bạn. Cần ${thieu.join(' và ')}.',
               style: const TextStyle(fontSize: 12.5, height: 1.6),
             ),
@@ -317,8 +402,7 @@ class _KhungRanh extends ConsumerWidget {
           child: SizedBox(
             height: 18,
             width: 18,
-            child:
-                CircularProgressIndicator(strokeWidth: 2, color: Mau.vang),
+            child: CircularProgressIndicator(strokeWidth: 2, color: Mau.vang),
           ),
         ),
       ),
@@ -333,8 +417,7 @@ class _KhungRanh extends ConsumerWidget {
             const Text(
               'Chưa có khung nào. Khách chỉ đặt được trong những khung bạn '
               'khai ở đây.',
-              style:
-                  TextStyle(fontSize: 12.5, color: Mau.chuMo, height: 1.6),
+              style: TextStyle(fontSize: 12.5, color: Mau.chuMo, height: 1.6),
             )
           else
             for (final k in ds) _DongKhung(k: k),
@@ -347,8 +430,9 @@ class _KhungRanh extends ConsumerWidget {
               minimumSize: const Size.fromHeight(44),
               foregroundColor: Mau.vang,
               side: const BorderSide(color: Mau.vien),
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
           ),
         ],
@@ -375,12 +459,15 @@ class _KhungRanh extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Thêm khung giờ rảnh',
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text(
+                'Thêm khung giờ rảnh',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 16),
-              const Text('Thứ',
-                  style: TextStyle(fontSize: 12, color: Mau.chuMo)),
+              const Text(
+                'Thứ',
+                style: TextStyle(fontSize: 12, color: Mau.chuMo),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
@@ -394,12 +481,12 @@ class _KhungRanh extends ConsumerWidget {
                       // rồi thêm "T" — ra "THai", "TBa", "TSáu".
                       label: Text(_thuNgan[i]),
                       labelStyle: TextStyle(
-                          fontSize: 12,
-                          color: thu == i ? Mau.vang : Mau.chuMo),
+                        fontSize: 12,
+                        color: thu == i ? Mau.vang : Mau.chuMo,
+                      ),
                       backgroundColor: Mau.nen,
                       selectedColor: Mau.vang.withValues(alpha: 0.16),
-                      side: BorderSide(
-                          color: thu == i ? Mau.vang : Mau.vien),
+                      side: BorderSide(color: thu == i ? Mau.vang : Mau.vien),
                       showCheckmark: false,
                     ),
                 ],
@@ -434,8 +521,7 @@ class _KhungRanh extends ConsumerWidget {
                   if (b <= a) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       const SnackBar(
-                        content:
-                            Text('Giờ kết thúc phải sau giờ bắt đầu.'),
+                        content: Text('Giờ kết thúc phải sau giờ bắt đầu.'),
                         backgroundColor: Mau.nen,
                       ),
                     );
@@ -456,11 +542,9 @@ class _KhungRanh extends ConsumerWidget {
         '${t.hour.toString().padLeft(2, '0')}:'
         '${t.minute.toString().padLeft(2, '0')}:00';
     try {
-      await ref.read(readerProfileRepositoryProvider).themKhung(
-            thu: thu,
-            batDau: hms(batDau),
-            ketThuc: hms(ketThuc),
-          );
+      await ref
+          .read(readerProfileRepositoryProvider)
+          .themKhung(thu: thu, batDau: hms(batDau), ketThuc: hms(ketThuc));
       ref.invalidate(khungRanhProvider);
     } on ApiException catch (e) {
       if (!context.mounted) return;
@@ -475,11 +559,7 @@ class _KhungRanh extends ConsumerWidget {
 const _thuNgan = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
 class _NutGio extends StatelessWidget {
-  const _NutGio({
-    required this.nhan,
-    required this.gio,
-    required this.onPick,
-  });
+  const _NutGio({required this.nhan, required this.gio, required this.onPick});
 
   final String nhan;
   final TimeOfDay gio;
@@ -499,8 +579,7 @@ class _NutGio extends StatelessWidget {
             if (t != null) onPick(t);
           },
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
             decoration: BoxDecoration(
               color: Mau.nen,
               borderRadius: BorderRadius.circular(12),
@@ -538,21 +617,17 @@ class _DongKhung extends ConsumerWidget {
           IconButton(
             onPressed: () async {
               try {
-                await ref
-                    .read(readerProfileRepositoryProvider)
-                    .xoaKhung(k.id);
+                await ref.read(readerProfileRepositoryProvider).xoaKhung(k.id);
                 ref.invalidate(khungRanhProvider);
               } on ApiException catch (e) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(e.message), backgroundColor: Mau.the),
+                  SnackBar(content: Text(e.message), backgroundColor: Mau.the),
                 );
               }
             },
             tooltip: 'Xoá khung này',
-            icon: const Icon(Icons.close,
-                size: 17, color: Color(0xFFE5645E)),
+            icon: const Icon(Icons.close, size: 17, color: Color(0xFFE5645E)),
           ),
         ],
       ),

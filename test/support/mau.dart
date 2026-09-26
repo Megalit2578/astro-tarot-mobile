@@ -69,12 +69,13 @@ Map<String, dynamic> mauBooking({
 Map<String, dynamic> mauSanPham({
   String id = 'p1',
   String slug = 'bo-bai-rider',
+  String ten = 'Bộ bài Rider-Waite',
   bool coLink = true,
   bool dangBan = true,
 }) =>
     {
       'id': id,
-      'name': 'Bộ bài Rider-Waite',
+      'name': ten,
       'slug': slug,
       'price': 250000,
       'compareAtPrice': 300000,
