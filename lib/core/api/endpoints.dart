@@ -56,13 +56,16 @@ class Endpoints {
   static String readerReviews(String id) => '/api/v1/readers/$id/reviews';
   static String readerNextAvailable(String id) =>
       '/api/v1/readers/$id/slots/next-available';
+  static String readerCalendar(String id) => '/api/v1/readers/$id/calendar';
   static const readerApply = '/api/v1/readers/apply';
   static const myReaderApplication = '/api/v1/readers/applications/me';
   static const unavailableDates = '/api/v1/unavailable-dates';
 
   // ---- Lịch hẹn ----
   static const myBookings = '/api/v1/bookings/me';
+  static const myBookingsCalendar = '/api/v1/bookings/me/calendar';
   static const readerBookings = '/api/v1/bookings/reader';
+  static const readerBookingsCalendar = '/api/v1/bookings/reader/calendar';
   static const bookings = '/api/v1/bookings';
   static String booking(String id) => '/api/v1/bookings/$id';
   static String bookingPayment(String id) => '/api/v1/bookings/$id/payment';
@@ -88,8 +91,7 @@ class Endpoints {
   // ---- Bản đồ sao: /api/me/…, KHÔNG có /v1 ----
   static const astrologyProfiles = '/api/me/astrology/profiles';
   static const astrologyPrimary = '/api/me/astrology/profiles/primary';
-  static String astrologyProfile(String id) =>
-      '/api/me/astrology/profiles/$id';
+  static String astrologyProfile(String id) => '/api/me/astrology/profiles/$id';
 
   // ---- Quản trị ----
   static const adminStats = '/api/v1/admin/stats';

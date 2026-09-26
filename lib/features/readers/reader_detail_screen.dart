@@ -11,6 +11,7 @@ import 'reader.dart';
 import 'reader_reviews.dart';
 import 'readers_repository.dart';
 import 'slot.dart';
+import '../../widgets/lich_thang.dart';
 
 final _readerProvider = FutureProvider.family<Reader, String>((ref, id) async {
   return ref.watch(readersRepositoryProvider).chiTiet(id);
@@ -86,8 +87,7 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
           .dat(readerProfileId: widget.readerId, batDau: s.batDau, phut: _phut);
       // Danh sách lịch hẹn giờ đã cũ.
       ref.invalidate(myBookingsProvider);
-      // Khung giờ vừa đặt không còn trống.
-      ref.invalidate(slotsProvider);
+      ref.invalidate(lichThangProvider);
       if (!mounted) return;
       await showDialog<void>(
         context: context,
@@ -269,27 +269,19 @@ class _Noi extends ConsumerWidget {
               // 15 phút nào không" vô nghĩa khi Reader không nhận buổi 15 phút.
               if (muc.isNotEmpty) ...[
                 const SizedBox(height: 22),
-                const _Nhan('Ngày'),
-                const SizedBox(height: 10),
-                _ChonNgay(ngay: ngay, doiNgay: doiNgay),
+                _LichDat(
+                  readerId: reader.id,
+                  phut: phutHopLe,
+                  ngay: ngay,
+                  chon: chon,
+                  doiNgay: doiNgay,
+                  doiChon: doiChon,
+                ),
                 _GoiYNgayTrong(
                   readerId: reader.id,
                   phut: phutHopLe,
                   ngay: ngay,
                   doiNgay: doiNgay,
-                ),
-
-                const SizedBox(height: 22),
-                const _Nhan('Khung giờ còn trống'),
-                const SizedBox(height: 10),
-                _Slots(
-                  query: SlotQuery(
-                    readerId: reader.id,
-                    ngay: ngay,
-                    phut: phutHopLe,
-                  ),
-                  chon: chon,
-                  doiChon: doiChon,
                 ),
               ],
 
@@ -442,86 +434,45 @@ class _Dau extends StatelessWidget {
   }
 }
 
-/// Dải 14 ngày tới.
+/// Lịch tháng của một Reader và ô giờ của ngày đang chọn.
 ///
-/// Không dùng hộp chọn ngày của hệ điều hành: người dùng phải mở hộp thoại,
-/// chọn, đóng, rồi mới thấy khung giờ. Dải ngang lướt được cho phép so sánh
-/// nhanh vài ngày liền nhau — đúng việc họ đang làm.
-class _ChonNgay extends StatelessWidget {
-  const _ChonNgay({required this.ngay, required this.doiNgay});
-
-  final DateTime ngay;
-  final void Function(DateTime) doiNgay;
-
-  static const _thu = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-
-  @override
-  Widget build(BuildContext context) {
-    final homNay = DateTime.now();
-    final goc = DateTime(homNay.year, homNay.month, homNay.day);
-    return SizedBox(
-      height: 66,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: 14,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final n = goc.add(Duration(days: i));
-          final chon =
-              n.year == ngay.year && n.month == ngay.month && n.day == ngay.day;
-          return InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => doiNgay(n),
-            child: Container(
-              width: 54,
-              decoration: BoxDecoration(
-                color: chon ? Mau.vang.withValues(alpha: 0.16) : Mau.the,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: chon ? Mau.vang : Mau.vien),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    i == 0 ? 'Nay' : _thu[n.weekday - 1],
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: chon ? Mau.vang : Mau.chuMo,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${n.day}/${n.month}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: chon ? Mau.vang : Mau.chu,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _Slots extends ConsumerWidget {
-  const _Slots({
-    required this.query,
+/// Khung đã có người đặt vẫn hiện, mờ, không bấm được. Hai người cùng mở lịch
+/// này thấy cùng một Reader, nên ô vừa kín thì người kia thấy ngay lần tải sau.
+class _LichDat extends ConsumerWidget {
+  const _LichDat({
+    required this.readerId,
+    required this.phut,
+    required this.ngay,
     required this.chon,
+    required this.doiNgay,
     required this.doiChon,
   });
 
-  final SlotQuery query;
+  final String readerId;
+  final int phut;
+  final DateTime ngay;
   final Slot? chon;
+  final void Function(DateTime) doiNgay;
   final void Function(Slot) doiChon;
+
+  bool _thangDat(DateTime t) {
+    final n = DateTime.now();
+    final hien = n.year * 12 + n.month;
+    final xin = t.year * 12 + t.month;
+    return xin >= hien && xin <= hien + 2;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ds = ref.watch(slotsProvider(query));
+    final query = LichQuery(
+      readerId: readerId,
+      nam: ngay.year,
+      thang: ngay.month,
+      phut: phut,
+    );
+    final ds = ref.watch(lichThangProvider(query));
+    final truoc = DateTime(ngay.year, ngay.month - 1, 1);
+    final sau = DateTime(ngay.year, ngay.month + 1, 1);
 
     return ds.when(
       loading: () => const Padding(
@@ -540,14 +491,12 @@ class _Slots extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              e is ApiException
-                  ? e.message
-                  : 'Không tải được khung giờ của ngày này.',
+              e is ApiException ? e.message : 'Không tải được lịch của Reader.',
               style: const TextStyle(fontSize: 12.5, color: Mau.chuMo),
             ),
             const SizedBox(height: 10),
             OutlinedButton(
-              onPressed: () => ref.invalidate(slotsProvider(query)),
+              onPressed: () => ref.invalidate(lichThangProvider(query)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Mau.vang,
                 side: const BorderSide(color: Mau.vien),
@@ -557,30 +506,117 @@ class _Slots extends ConsumerWidget {
           ],
         ),
       ),
-      data: (list) {
-        if (list.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 22),
-            child: Text(
-              'Ngày này không còn khung trống. Thử chọn ngày khác hoặc đổi '
-              'thời lượng.',
-              style: TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
-            ),
-          );
-        }
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
+      data: (thang) {
+        final hom = thang.cua(ngay);
+        final loai = {
+          for (final n in thang.ngay) LuoiThang.khoa(n.ngay): n.loai,
+        };
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final s in list)
-              _OGio(
-                slot: s,
-                chon: chon != null && chon!.batDau == s.batDau,
-                onTap: () => doiChon(s),
+            LuoiThang(
+              thang: ngay,
+              chon: ngay,
+              loai: loai,
+              coTruoc: _thangDat(truoc),
+              coSau: _thangDat(sau),
+              doiNgay: doiNgay,
+              doiThang: (delta) {
+                final moi = DateTime(ngay.year, ngay.month + delta, 1);
+                final bayGio = DateTime.now();
+                final homNay = DateTime(bayGio.year, bayGio.month, bayGio.day);
+                doiNgay(
+                  moi.year == homNay.year && moi.month == homNay.month
+                      ? homNay
+                      : moi,
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            const Wrap(
+              spacing: 12,
+              children: [
+                _Chu('Còn trống', Mau.vang, false),
+                _Chu('Đã kín', Mau.chuMo, false),
+                _Chu('Nghỉ', Mau.chuMo, true),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const _Nhan('Khung giờ'),
+            const SizedBox(height: 10),
+            if ((hom?.o ?? const <Slot>[])
+                .where((s) => s.trang != TrangO.past)
+                .isEmpty)
+              Text(
+                _loiNgay(hom),
+                style: const TextStyle(
+                  color: Mau.chuMo,
+                  fontSize: 12.5,
+                  height: 1.6,
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final s in (hom?.o ?? const <Slot>[]).where(
+                    (s) => s.trang != TrangO.past,
+                  ))
+                    _OGio(
+                      slot: s,
+                      chon: chon != null && chon!.batDau == s.batDau,
+                      onTap: s.datDuoc ? () => doiChon(s) : null,
+                    ),
+                ],
               ),
           ],
         );
       },
+    );
+  }
+
+  String _loiNgay(NgayLich? hom) {
+    final laHomNay =
+        DateTime(ngay.year, ngay.month, ngay.day) ==
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    return switch (hom?.loai) {
+      LoaiNgay.off => 'Reader nghỉ ngày này.',
+      LoaiNgay.closed => 'Reader không làm việc ngày này.',
+      LoaiNgay.full => 'Ngày này đã kín.',
+      LoaiNgay.over =>
+        laHomNay
+            ? 'Hôm nay đã qua giờ làm việc của Reader.'
+            : 'Ngày này đã qua giờ làm việc.',
+      LoaiNgay.past => 'Ngày đã qua.',
+      _ => 'Ngày này không còn khung trống.',
+    };
+  }
+}
+
+class _Chu extends StatelessWidget {
+  const _Chu(this.chu, this.mau, this.vien);
+  final String chu;
+  final Color mau;
+  final bool vien;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 6,
+          width: 6,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: vien ? Colors.transparent : mau,
+            border: vien ? Border.all(color: mau) : null,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(chu, style: const TextStyle(fontSize: 10, color: Mau.chuMo)),
+      ],
     );
   }
 }
@@ -590,35 +626,57 @@ class _OGio extends StatelessWidget {
 
   final Slot slot;
   final bool chon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      // KHÔNG đặt `alignment` cho Container này.
-      //
-      // Container có alignment sẽ dùng Align bên trong, mà Align không có
-      // widthFactor thì nở ra BẰNG ràng buộc lớn nhất được phép. Trong Wrap
-      // ràng buộc ấy là cả chiều ngang màn hình, nên mỗi ô giờ chiếm trọn một
-      // hàng và lưới biến thành danh sách dọc dài dằng dặc. Bỏ alignment đi
-      // thì Container tự co theo nội dung, và phần đệm đã canh giữa sẵn.
-      child: Container(
-        // Đệm dọc 12 thay cho height: 44 — vừa canh giữa chữ, vừa cho ô cao
-        // khoảng 44 (đúng ngưỡng chạm tối thiểu) mà không cần alignment.
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: chon ? Mau.vang.withValues(alpha: 0.18) : Mau.the,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: chon ? Mau.vang : Mau.vien),
-        ),
-        child: Text(
-          Dinh.gio(slot.batDau),
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: chon ? FontWeight.w600 : FontWeight.w400,
-            color: chon ? Mau.vang : Mau.chu,
+    final mo = onTap != null;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        splashColor: Mau.vang.withValues(alpha: 0.2),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: chon
+                ? Mau.vang.withValues(alpha: 0.18)
+                : mo
+                ? Mau.the
+                : Mau.the.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: chon
+                  ? Mau.vang
+                  : mo
+                  ? Mau.vien
+                  : Mau.vien.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                Dinh.gio(slot.batDau),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: chon ? FontWeight.w600 : FontWeight.w400,
+                  color: chon
+                      ? Mau.vang
+                      : mo
+                      ? Mau.chu
+                      : Mau.chuMo,
+                  decoration: mo ? null : TextDecoration.lineThrough,
+                  decorationColor: Mau.chuMo,
+                ),
+              ),
+              if (!mo)
+                Text(
+                  slot.trang == TrangO.taken ? 'Đã kín' : 'Đã qua',
+                  style: const TextStyle(fontSize: 9, color: Mau.chuMo),
+                ),
+            ],
           ),
         ),
       ),

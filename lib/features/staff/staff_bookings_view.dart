@@ -10,6 +10,7 @@ import '../../widgets/trang_thai.dart';
 import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
+import '../bookings/lich_hen_thang.dart';
 
 /// Lịch hẹn Reader nhận được — một mục trong Bàn làm việc.
 ///
@@ -56,6 +57,7 @@ class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
             chon: _chon,
             khiChon: (i) => setState(() => _chon = i),
           ),
+          const LichHenThang(cuaReader: true),
           Expanded(
             child: DanhSachPhanTrang<Booking>(
               // Đổi bộ lọc thì dựng lại từ trang đầu.

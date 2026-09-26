@@ -44,18 +44,35 @@ class BookingsRepository {
   Future<Trang<Booking>> cuaReader({int trang = 0, TrangThaiBuoi? loc}) =>
       _trang(Endpoints.readerBookings, trang, loc);
 
+  /// Cả tháng, để vẽ lịch. Khác danh sách phân trang: một tháng phải đủ buổi.
+  Future<List<Booking>> lichThang({
+    required bool cuaReader,
+    required int nam,
+    required int thang,
+  }) async {
+    final data = await _api.get<List<dynamic>>(
+      cuaReader
+          ? Endpoints.readerBookingsCalendar
+          : Endpoints.myBookingsCalendar,
+      query: {'year': nam, 'month': thang},
+    );
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(Booking.fromJson)
+        .toList();
+  }
+
   static const _coTrang = 20;
 
   Future<Trang<Booking>> _trang(
-      String duong, int trang, TrangThaiBuoi? loc) async {
+    String duong,
+    int trang,
+    TrangThaiBuoi? loc,
+  ) async {
     final ma = tenTrangThai(loc);
     final data = await _api.get<dynamic>(
       duong,
-      query: {
-        'page': trang,
-        'size': _coTrang,
-        'status': ?ma,
-      },
+      query: {'page': trang, 'size': _coTrang, 'status': ?ma},
     );
     return Trang.tu(data, Booking.fromJson);
   }
@@ -79,13 +96,13 @@ class BookingsRepository {
 
   /// Chấm điểm buổi đã hoàn tất. POST, không phải PATCH như bốn cái trên.
   Future<void> danhGia(String id, int diem, String? nhanXet) => _api.post(
-        Endpoints.bookingReview(id),
-        body: {
-          'rating': diem,
-          if (nhanXet != null && nhanXet.trim().isNotEmpty)
-            'comment': nhanXet.trim(),
-        },
-      );
+    Endpoints.bookingReview(id),
+    body: {
+      'rating': diem,
+      if (nhanXet != null && nhanXet.trim().isNotEmpty)
+        'comment': nhanXet.trim(),
+    },
+  );
 
   Future<Booking> _hanhDong(String duong, {Object? body}) async {
     final data = await _api.patch<Map<String, dynamic>>(duong, body: body);
@@ -98,9 +115,11 @@ class BookingsRepository {
   /// và nội dung). Gọi lại khi đã có giao dịch chờ thì máy chủ trả đúng giao
   /// dịch cũ, không tạo thêm.
   Future<HuongDanThanhToan> taoThanhToan(String bookingId) async =>
-      HuongDanThanhToan.fromJson(await _api.post<Map<String, dynamic>>(
-        Endpoints.bookingPayment(bookingId),
-      ));
+      HuongDanThanhToan.fromJson(
+        await _api.post<Map<String, dynamic>>(
+          Endpoints.bookingPayment(bookingId),
+        ),
+      );
 
   /// Báo cáo người kia trong một buổi xem. Người bị báo cáo không biết ai
   /// đã báo.
@@ -109,13 +128,15 @@ class BookingsRepository {
     required String loai,
     String? moTa,
     String? bookingId,
-  }) =>
-      _api.post(Endpoints.reports, body: {
-        'reportedUserId': nguoiBiBao,
-        'reportType': loai,
-        if (moTa != null && moTa.trim().isNotEmpty) 'description': moTa.trim(),
-        'bookingId': ?bookingId,
-      });
+  }) => _api.post(
+    Endpoints.reports,
+    body: {
+      'reportedUserId': nguoiBiBao,
+      'reportType': loai,
+      if (moTa != null && moTa.trim().isNotEmpty) 'description': moTa.trim(),
+      'bookingId': ?bookingId,
+    },
+  );
 }
 
 final bookingsRepositoryProvider = Provider(
