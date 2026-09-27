@@ -114,12 +114,15 @@ class BookingsRepository {
   /// Có thể là PayOS (kèm link) hoặc chuyển khoản tay (chỉ có số tài khoản
   /// và nội dung). Gọi lại khi đã có giao dịch chờ thì máy chủ trả đúng giao
   /// dịch cũ, không tạo thêm.
-  Future<HuongDanThanhToan> taoThanhToan(String bookingId) async =>
-      HuongDanThanhToan.fromJson(
-        await _api.post<Map<String, dynamic>>(
-          Endpoints.bookingPayment(bookingId),
-        ),
-      );
+  Future<HuongDanThanhToan> taoThanhToan(
+    String bookingId, {
+    String? phase,
+  }) async => HuongDanThanhToan.fromJson(
+    await _api.post<Map<String, dynamic>>(
+      Endpoints.bookingPayment(bookingId),
+      body: phase == null ? const <String, String>{} : {'phase': phase},
+    ),
+  );
 
   /// Báo cáo người kia trong một buổi xem. Người bị báo cáo không biết ai
   /// đã báo.
