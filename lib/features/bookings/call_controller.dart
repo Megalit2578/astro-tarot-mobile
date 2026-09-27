@@ -50,9 +50,13 @@ class CallController extends ChangeNotifier {
 
   RTCPeerConnection? _pc;
   List<Map<String, dynamic>> _iceServers = const [];
+
   /// Ứng viên ICE tới TRƯỚC khi có remote description — phải xếp hàng.
   final List<RTCIceCandidate> _iceCho = [];
   String? _offerDen;
+
+  /// Đã nhận ANSWER chưa. Hết giờ mà chưa có thì là không bắt máy.
+  bool _daCoTraLoi = false;
   Timer? _dongHo;
   VoidCallback? _huyNghe;
   bool _daHuy = false;
@@ -76,8 +80,8 @@ class CallController extends ChangeNotifier {
       // Không lấy được thì vẫn thử với STUN công cộng, còn hơn không gọi được.
       _iceServers = const [
         {
-          'urls': ['stun:stun.l.google.com:19302']
-        }
+          'urls': ['stun:stun.l.google.com:19302'],
+        },
       ];
       coTurn = false;
     }
@@ -110,14 +114,14 @@ class CallController extends ChangeNotifier {
       // Chưa có luồng nào nghĩa là getUserMedia còn đang treo — gần như luôn
       // là quyền chưa cấp. Nói đúng việc cần làm, đừng đổ cho người kia không
       // bắt máy khi cuộc gọi còn chưa đi khỏi máy này.
-      if (luongCuaToi == null) {
-        _hong('Ứng dụng đang chờ bạn cho phép dùng micro/camera. '
-            'Cấp quyền rồi gọi lại nhé.');
-        return;
-      }
-      _hong(coTurn
-          ? 'Người kia không bắt máy.'
-          : 'Không nối được cuộc gọi. Nếu đang dùng 4G, thử chuyển sang wifi.');
+      _hong(
+        luongCuaToi == null
+            ? 'Ứng dụng đang chờ bạn cho phép dùng micro/camera. '
+                  'Cấp quyền rồi gọi lại nhé.'
+            : _daCoTraLoi
+            ? 'Không nối được cuộc gọi. Hai máy không tìm được đường đến nhau. Nhắn tin vẫn gửi được.'
+            : 'Người kia không bắt máy.',
+      );
     });
   }
 
@@ -156,10 +160,10 @@ class CallController extends ChangeNotifier {
       } else if (s == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
         // Đây chính là cảnh thiếu TURN gây ra. Nói thẳng nguyên nhân thay vì
         // "đã xảy ra lỗi", để người dùng biết đổi sang wifi là xong.
-        _hong(coTurn
-            ? 'Mất kết nối với người kia.'
-            : 'Không nối được cuộc gọi. Hai máy đang ở hai mạng không tự '
-                'thấy nhau — thử chuyển sang wifi thay vì 4G.');
+        _hong(
+          'Không nối được cuộc gọi. Hai máy không tìm được đường đến nhau. '
+          'Nhắn tin vẫn gửi được.',
+        );
       }
     };
 
@@ -263,7 +267,8 @@ class CallController extends ChangeNotifier {
         // nên sau một cuộc gọi hỏng, máy lặng lẽ từ chối MỌI cuộc gọi tới cho
         // tới khi người dùng bấm tắt dải báo lỗi. Người gọi thì thấy "Người
         // kia đang bận" trong khi phía kia chẳng bận gì.
-        final dangTrongCuoc = trangThai == TrangThaiGoi.dangGoi ||
+        final dangTrongCuoc =
+            trangThai == TrangThaiGoi.dangGoi ||
             trangThai == TrangThaiGoi.coNguoiGoi ||
             trangThai == TrangThaiGoi.dangNoi ||
             trangThai == TrangThaiGoi.dangChay;
@@ -289,6 +294,7 @@ class CallController extends ChangeNotifier {
           RTCSessionDescription(m['sdp'] as String?, m['type'] as String?),
         );
         await _xaIce(pc);
+        _daCoTraLoi = true;
         trangThai = TrangThaiGoi.dangNoi;
         _bao();
 
@@ -357,6 +363,7 @@ class CallController extends ChangeNotifier {
     _pc = null;
     _iceCho.clear();
     _offerDen = null;
+    _daCoTraLoi = false;
     tenDoiPhuong = null;
     micBat = true;
     camBat = true;

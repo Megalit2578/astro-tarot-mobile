@@ -670,7 +670,7 @@ void main() {
         );
         await w.phatSuKien({'event': 'peerConnectionState', 'state': 'failed'});
         await xong(t);
-        expect(find.textContaining('chuyển sang wifi'), findsOneWidget);
+        expect(find.textContaining('không tìm được đường'), findsOneWidget);
         await bam(t, find.text('Đóng'));
       },
     );
