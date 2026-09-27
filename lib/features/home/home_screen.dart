@@ -455,7 +455,7 @@ class _TheSapToi extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 b.daCoc
-                    ? 'Đã đặt cọc — vào tab Lịch hẹn để trả nốt trước buổi 12 tiếng'
+                    ? 'Đã đặt cọc — vào tab Lịch hẹn để trả nốt sau khi Reader đọc xong'
                     : 'Chưa thanh toán — vào tab Lịch hẹn để trả',
                 style: const TextStyle(
                   fontSize: 11.5,

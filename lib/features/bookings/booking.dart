@@ -75,7 +75,7 @@ class Booking {
   final String? lyDoHuy;
   final String? ghiChuReader;
 
-  /// Cọc 50% và phần còn lại. Hạn trả nốt là 12 tiếng trước giờ hẹn.
+  /// Cọc 50% và phần còn lại. Phần còn lại trả sau khi Reader đọc xong.
   final int? tienCoc;
   final int? tienConLai;
   final DateTime? hanTraNot;

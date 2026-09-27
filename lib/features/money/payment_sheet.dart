@@ -65,11 +65,10 @@ class HuongDanThanhToan {
 
   String get loiGiai {
     return switch (giaiDoan) {
-      'DEPOSIT' =>
-        'Đây là khoản đặt cọc 50%. Trả nốt phần còn lại trước buổi xem '
-            '12 tiếng — quá hạn thì mất cọc.',
-      'REMAINING' => 'Đây là phần còn lại. Chuyển đủ trước hạn 12 tiếng, quá hạn thì mất cọc.',
-      'FULL' => 'Lịch hẹn dưới 12 tiếng. Bạn cần thanh toán toàn bộ ngay.',
+      'DEPOSIT' => 'Đây là khoản đặt cọc 50%. Sau khi Reader đọc xong, thanh toán nốt 50% còn lại.',
+      'REMAINING' =>
+        'Đây là 50% còn lại. Reader đọc xong thì chuyển khoản nốt số này.',
+      'FULL' => 'Bạn thanh toán toàn bộ một lần, không đặt cọc.',
       _ =>
         laPayOs
             ? 'Mở PayOS để quét VietQR hoặc chuyển khoản. Hệ thống xác '

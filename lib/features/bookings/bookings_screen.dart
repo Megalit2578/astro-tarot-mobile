@@ -97,10 +97,12 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
 
   Booking get b => widget.booking;
 
-  Future<void> _thanhToan() async {
+  Future<void> _thanhToan({String? phase}) async {
     setState(() => _dangTra = true);
     try {
-      final h = await ref.read(bookingsRepositoryProvider).taoThanhToan(b.id);
+      final h = await ref
+          .read(bookingsRepositoryProvider)
+          .taoThanhToan(b.id, phase: phase);
       if (!mounted) return;
       await moHuongDanThanhToan(context, h);
     } catch (e) {
@@ -209,9 +211,11 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
             if (b.daCoc) ...[
               const SizedBox(height: 6),
               Text(
-                'Còn ${Dinh.tien(b.tienConLai ?? 0)}'
-                '${b.hanTraNot == null ? '' : ' · hạn ${Dinh.ngayGio(b.hanTraNot)}'}'
-                ' — quá hạn thì mất cọc',
+                b.trangThai == TrangThaiBuoi.completed
+                    ? 'Reader đã đọc xong. Thanh toán nốt 50% còn lại '
+                          '(${Dinh.tien(b.tienConLai ?? 0)}).'
+                    : 'Đã cọc 50%. Phần còn lại thanh toán sau khi Reader đọc xong '
+                          '(${Dinh.tien(b.tienConLai ?? 0)}).',
                 style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
               ),
             ],
@@ -253,9 +257,33 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                if (b.conPhaiTra && b.trangThai != TrangThaiBuoi.cancelled)
+                if (b.chuaTra && b.trangThai != TrangThaiBuoi.cancelled) ...[
                   FilledButton(
-                    onPressed: _dangTra ? null : _thanhToan,
+                    onPressed: _dangTra
+                        ? null
+                        : () => _thanhToan(phase: 'DEPOSIT'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                    ),
+                    child: const Text('Đặt cọc 50%'),
+                  ),
+                  OutlinedButton(
+                    onPressed: _dangTra
+                        ? null
+                        : () => _thanhToan(phase: 'FULL'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      foregroundColor: Mau.vang,
+                      side: const BorderSide(color: Mau.vien),
+                    ),
+                    child: const Text('Thanh toán hết'),
+                  ),
+                ],
+                if (b.daCoc && b.trangThai != TrangThaiBuoi.cancelled)
+                  FilledButton(
+                    onPressed: _dangTra ? null : () => _thanhToan(),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, 40),
                       padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -266,7 +294,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                             width: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(b.daCoc ? 'Thanh toán nốt' : 'Thanh toán'),
+                        : const Text('Thanh toán nốt'),
                   ),
                 // Nút trò chuyện chỉ hiện khi MÁY CHỦ nói hội thoại đang mở.
                 // Không tự suy từ trạng thái + thanh toán: luật còn có hạn ân

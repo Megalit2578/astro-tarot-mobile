@@ -217,7 +217,7 @@ void main() {
       });
       await m.dung(t, const BookingsScreen());
       expect(find.text('Lan Hương'), findsOneWidget);
-      await bam(t, find.text('Thanh toán'));
+      await bam(t, find.text('Thanh toán hết'));
       expect(find.text('Chuyển khoản'), findsOneWidget);
       expect(find.text('0123456789'), findsOneWidget);
       await bam(t, find.byTooltip('Chép Số tài khoản'));
@@ -250,9 +250,9 @@ void main() {
       });
       await m.dung(t, const BookingsScreen());
       expect(find.textContaining('đã đặt cọc'), findsOneWidget);
-      expect(find.textContaining('quá hạn thì mất cọc'), findsOneWidget);
+      expect(find.textContaining('sau khi Reader đọc xong'), findsOneWidget);
       await bam(t, find.text('Thanh toán nốt'));
-      expect(find.textContaining('trước hạn 12 tiếng'), findsOneWidget);
+      expect(find.textContaining('50% còn lại'), findsOneWidget);
       expect(find.byType(QrImageView), findsOneWidget);
     });
 
@@ -267,7 +267,7 @@ void main() {
         'bankAccountNumber': 'Chưa cấu hình',
       });
       await m.dung(t, const BookingsScreen());
-      await bam(t, find.text('Thanh toán'));
+      await bam(t, find.text('Thanh toán hết'));
       expect(find.text('Thanh toán PayOS'), findsOneWidget);
       await bam(t, find.text('Thanh toán với PayOS'));
       expect(m.launcher.daMo, ['https://pay.payos.vn/x']);
@@ -284,7 +284,7 @@ void main() {
         'bankAccountNumber': 'Chưa cấu hình',
       });
       await m.dung(t, const BookingsScreen());
-      await bam(t, find.text('Thanh toán'));
+      await bam(t, find.text('Thanh toán hết'));
       expect(
         find.textContaining('chưa cấu hình tài khoản nhận tiền'),
         findsOneWidget,
@@ -294,7 +294,7 @@ void main() {
         'POST /api/v1/bookings/b1/payment',
         'Lịch hẹn này đã thanh toán rồi',
       );
-      await bam(t, find.text('Thanh toán'));
+      await bam(t, find.text('Thanh toán hết'));
       expect(find.text('Lịch hẹn này đã thanh toán rồi'), findsOneWidget);
     });
 
