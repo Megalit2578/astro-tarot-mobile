@@ -203,113 +203,132 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? widget.booking.readerName
         : widget.booking.customerName;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(doiPhuong, style: const TextStyle(fontSize: 16)),
-            if (moTaHoatDong(online: _online, lastSeen: _lastSeen)
-                case final moTa?)
-              Row(
-                children: [
-                  Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: _online == true
-                        ? const Color(0xFF6BBF7B)
-                        : Mau.chuMo,
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      moTa,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 10.5, color: Mau.chuMo),
-                    ),
-                  ),
-                ],
-              ),
-            ValueListenableBuilder<bool>(
-              valueListenable: rt.dangNoi,
-              builder: (_, noi, _) {
-                if (noi) return const SizedBox.shrink();
-                return const Row(
-                  children: [
-                    Icon(Icons.wifi_off, size: 11, color: Mau.chuMo),
-                    SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        'Mất kết nối tức thời — tin vẫn gửi được, chỉ chậm hơn',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(doiPhuong, style: const TextStyle(fontSize: 16)),
+                if (moTaHoatDong(online: _online, lastSeen: _lastSeen)
+                    case final moTa?)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: _online == true
+                            ? const Color(0xFF6BBF7B)
+                            : Mau.chuMo,
                       ),
-                    ),
-                  ],
-                );
-              },
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          moTa,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: Mau.chuMo,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: rt.dangNoi,
+                  builder: (_, noi, _) {
+                    if (noi) return const SizedBox.shrink();
+                    return const Row(
+                      children: [
+                        Icon(Icons.wifi_off, size: 11, color: Mau.chuMo),
+                        SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            'Mất kết nối tức thời — tin vẫn gửi được, chỉ chậm hơn',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
+            actions: [
+              if (widget.booking.chatMo && _goi != null) ...[
+                IconButton(
+                  onPressed: () => _goi!.goi(video: false),
+                  tooltip: 'Gọi thoại',
+                  icon: const Icon(Icons.call, size: 20),
+                ),
+                IconButton(
+                  onPressed: () => _goi!.goi(video: true),
+                  tooltip: 'Gọi video',
+                  icon: const Icon(Icons.videocam, size: 20),
+                ),
+              ],
+            ],
+          ),
+          body: Column(
+            children: [
+              if (_goi != null)
+                ListenableBuilder(
+                  listenable: _goi!,
+                  builder: (_, _) => _goi!.trangThai == TrangThaiGoi.coNguoiGoi
+                      ? const SizedBox.shrink()
+                      : Column(
+                          children: [
+                            CallPanel(c: _goi!),
+                            // Cảnh báo trước khi gọi, không phải sau khi thất bại.
+                            // Dự án chạy chỉ STUN nên hai máy cùng sau NAT đối xứng sẽ
+                            // không nối được — để người dùng biết trước còn hơn ngồi
+                            // nhìn "đang kết nối" cho tới khi hết giờ.
+                            if (!_goi!.coTurn &&
+                                _goi!.trangThai == TrangThaiGoi.rong)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(10),
+                                color: const Color(0x18E0B341),
+                                child: const Text(
+                                  'Cuộc gọi nối thẳng giữa hai máy. Không nối được thì '
+                                  'nhắn tin vẫn dùng được.',
+                                  style: TextStyle(fontSize: 10.5, height: 1.5),
+                                ),
+                              ),
+                          ],
+                        ),
+                ),
+              if (!widget.booking.chatMo)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(11),
+                  color: const Color(0x22E0B341),
+                  child: const Text(
+                    'Hội thoại đã đóng. Bạn vẫn đọc lại được, nhưng không gửi '
+                    'thêm tin.',
+                    style: TextStyle(fontSize: 11.5, height: 1.5),
+                  ),
+                ),
+              Expanded(child: _than(toi?.id)),
+              if (widget.booking.chatMo) _oNhap(),
+            ],
+          ),
         ),
-        actions: [
-          if (widget.booking.chatMo && _goi != null) ...[
-            IconButton(
-              onPressed: () => _goi!.goi(video: false),
-              tooltip: 'Gọi thoại',
-              icon: const Icon(Icons.call, size: 20),
-            ),
-            IconButton(
-              onPressed: () => _goi!.goi(video: true),
-              tooltip: 'Gọi video',
-              icon: const Icon(Icons.videocam, size: 20),
-            ),
-          ],
-        ],
-      ),
-      body: Column(
-        children: [
-          if (_goi != null)
-            ListenableBuilder(
+        if (_goi != null)
+          Positioned.fill(
+            child: ListenableBuilder(
               listenable: _goi!,
-              builder: (_, _) => Column(
-                children: [
-                  CallPanel(c: _goi!),
-                  // Cảnh báo trước khi gọi, không phải sau khi thất bại.
-                  // Dự án chạy chỉ STUN nên hai máy cùng sau NAT đối xứng sẽ
-                  // không nối được — để người dùng biết trước còn hơn ngồi
-                  // nhìn "đang kết nối" cho tới khi hết giờ.
-                  if (!_goi!.coTurn && _goi!.trangThai == TrangThaiGoi.rong)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      color: const Color(0x18E0B341),
-                      child: const Text(
-                        'Cuộc gọi chỉ chạy khi hai bên cùng mạng wifi thông '
-                        'thường. Dùng 4G có thể không nối được — nhắn tin vẫn '
-                        'bình thường.',
-                        style: TextStyle(fontSize: 10.5, height: 1.5),
-                      ),
-                    ),
-                ],
-              ),
+              builder: (_, _) => _goi!.trangThai == TrangThaiGoi.coNguoiGoi
+                  ? CallPanel(c: _goi!)
+                  : const IgnorePointer(child: SizedBox.shrink()),
             ),
-          if (!widget.booking.chatMo)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(11),
-              color: const Color(0x22E0B341),
-              child: const Text(
-                'Hội thoại đã đóng. Bạn vẫn đọc lại được, nhưng không gửi '
-                'thêm tin.',
-                style: TextStyle(fontSize: 11.5, height: 1.5),
-              ),
-            ),
-          Expanded(child: _than(toi?.id)),
-          if (widget.booking.chatMo) _oNhap(),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -443,44 +462,69 @@ class _BongBong extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gio = Dinh.ngayGio(tin.taoLuc);
-    return Align(
-      alignment: cuaToi ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.76,
-        ),
-        decoration: BoxDecoration(
-          color: cuaToi ? const Color(0xFF3A3218) : const Color(0xFF241F33),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(14),
-            topRight: const Radius.circular(14),
-            bottomLeft: Radius.circular(cuaToi ? 14 : 4),
-            bottomRight: Radius.circular(cuaToi ? 4 : 14),
+    final hang = Row(
+      mainAxisAlignment: cuaToi
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (!cuaToi) ...[
+          CircleAvatar(
+            radius: 13,
+            backgroundColor: const Color(0xFF3A3B3C),
+            child: Text(
+              (tin.senderName.isEmpty ? '?' : tin.senderName[0]).toUpperCase(),
+              style: const TextStyle(fontSize: 12, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 6),
+        ],
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.76,
+            ),
+            decoration: BoxDecoration(
+              color: cuaToi ? const Color(0xFF0084FF) : const Color(0xFF3A3B3C),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(14),
+                topRight: const Radius.circular(14),
+                bottomLeft: Radius.circular(cuaToi ? 14 : 4),
+                bottomRight: Radius.circular(cuaToi ? 4 : 14),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: cuaToi
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tin.body,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    height: 1.45,
+                    color: Colors.white,
+                  ),
+                ),
+                // Dấu thời gian chỉ hiện khi CÓ. Rỗng nghĩa là gói đẩy thiếu
+                // createdAt — thà trống còn hơn vẽ ra mốc 1970.
+                if (gio.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    cuaToi && tin.daDoc ? '$gio · đã xem' : gio,
+                    style: const TextStyle(
+                      fontSize: 9.5,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: cuaToi
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            Text(
-              tin.body,
-              style: const TextStyle(fontSize: 13.5, height: 1.45),
-            ),
-            // Dấu thời gian chỉ hiện khi CÓ. Rỗng nghĩa là gói đẩy thiếu
-            // createdAt — thà trống còn hơn vẽ ra mốc 1970.
-            if (gio.isNotEmpty) ...[
-              const SizedBox(height: 3),
-              Text(
-                cuaToi && tin.daDoc ? '$gio · đã xem' : gio,
-                style: const TextStyle(fontSize: 9.5, color: Mau.chuMo),
-              ),
-            ],
-          ],
-        ),
-      ),
+      ],
     );
+    return Padding(padding: const EdgeInsets.only(bottom: 8), child: hang);
   }
 }
