@@ -718,7 +718,7 @@ void main() {
       await bam(t, find.byIcon(Icons.call).first);
       await t.pump(const Duration(seconds: 61));
       await xong(t);
-      expect(find.textContaining('Không nối được cuộc gọi'), findsOneWidget);
+      expect(find.textContaining('không bắt máy'), findsOneWidget);
     });
 
     test('trạng thái rỗng lúc đầu', () {
