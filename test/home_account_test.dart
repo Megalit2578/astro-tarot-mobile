@@ -171,7 +171,7 @@ void main() {
       await m.dung(t, const HomeScreen());
       await cuonToi(t, find.textContaining('Chưa thanh toán'));
       expect(find.textContaining('Chưa thanh toán'), findsOneWidget);
-      await bam(t, find.text('Nhắn tin'));
+      await bam(t, find.text('Nhắn tin / Gọi'));
       expect(find.text('Nhắn gì đó…'), findsOneWidget);
     });
 

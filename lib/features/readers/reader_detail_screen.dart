@@ -549,10 +549,8 @@ class _LichDat extends ConsumerWidget {
             const _Nhan('Khung giờ'),
             const SizedBox(height: 4),
             const Text(
-              'Cùng một ngày nhiều người đặt được, mỗi người một khung giờ. '
-              'Khung gạch ngang đã có người. Đặt xong thì chọn đặt cọc 50% '
-              'hoặc thanh toán hết ở tab Lịch hẹn. Huỷ từ 12 tiếng trước giờ '
-              'hẹn thì hoàn cọc.',
+              'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. '
+              'Khung gạch ngang đã có người.',
               style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.4),
             ),
             const SizedBox(height: 10),
