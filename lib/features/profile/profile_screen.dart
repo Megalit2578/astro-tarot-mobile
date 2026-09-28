@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/config.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
@@ -188,10 +189,10 @@ class _FormState extends ConsumerState<_Form> {
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Mau.the,
-                      backgroundImage: (h.avatar != null && h.avatar!.isNotEmpty)
-                          ? NetworkImage(h.avatar!)
-                          : null,
-                      child: (h.avatar == null || h.avatar!.isEmpty)
+                      backgroundImage: AppConfig.anhNguoi(h.avatar) == null
+                          ? null
+                          : NetworkImage(AppConfig.anhNguoi(h.avatar)!),
+                      child: AppConfig.anhNguoi(h.avatar) == null
                           ? const Icon(Icons.person, size: 34, color: Mau.vang)
                           : null,
                     ),

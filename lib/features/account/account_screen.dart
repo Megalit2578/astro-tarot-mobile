@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/app_user.dart';
+import '../../core/config.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
@@ -46,11 +47,10 @@ class AccountScreen extends ConsumerWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: Mau.the,
-                backgroundImage:
-                    (u.avatar != null && u.avatar!.isNotEmpty)
-                        ? NetworkImage(u.avatar!)
-                        : null,
-                child: (u.avatar == null || u.avatar!.isEmpty)
+                backgroundImage: AppConfig.anhNguoi(u.avatar) == null
+                    ? null
+                    : NetworkImage(AppConfig.anhNguoi(u.avatar)!),
+                child: AppConfig.anhNguoi(u.avatar) == null
                     ? Text(
                         u.fullName.isNotEmpty
                             ? u.fullName.characters.first.toUpperCase()

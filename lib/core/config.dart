@@ -42,12 +42,30 @@ class AppConfig {
     defaultValue: 'https://astrotarot.date',
   );
 
-  /// Ghép đường dẫn ảnh tương đối thành URL đầy đủ.
+  /// Ghép đường dẫn ảnh tương đối của trang web thành URL đầy đủ.
+  ///
+  /// Ảnh tĩnh (`/products/...`) nằm trên tên miền trang. Avatar do API trả
+  /// về đường `/api/v1/users/...` — ghép vào trang web thì ảnh vỡ. Dùng
+  /// [anhNguoi] cho avatar.
   static String? anh(String? duong) {
     if (duong == null || duong.trim().isEmpty) return null;
     final d = duong.trim();
     if (d.startsWith('http://') || d.startsWith('https://')) return d;
     return '$webBaseUrl${d.startsWith('/') ? '' : '/'}$d';
+  }
+
+  /// Avatar người dùng. URL đầy đủ giữ nguyên; đường `/api/...` ghép gốc API.
+  static String? anhNguoi(String? duong) {
+    if (duong == null || duong.trim().isEmpty) return null;
+    final d = duong.trim();
+    if (d.startsWith('http://') || d.startsWith('https://')) return d;
+    if (d.startsWith('/api/')) {
+      final goc = apiBaseUrl.endsWith('/')
+          ? apiBaseUrl.substring(0, apiBaseUrl.length - 1)
+          : apiBaseUrl;
+      return '$goc$d';
+    }
+    return anh(d);
   }
 
   /// Bật log mạng. Chỉ khi chạy debug — bản phát hành in ra là rò token.

@@ -124,9 +124,17 @@ class _TheViecState extends ConsumerState<_TheViec> {
   }
 
   Future<void> _huy() async {
+    final daTra = b.trangThaiTra == TrangThaiTra.paid
+        ? b.tongTien
+        : b.daCoc
+        ? (b.tienCoc ?? 0)
+        : 0;
     final lyDo = await _hoiChu(
       tieuDe: 'Huỷ buổi hẹn',
-      goiY: 'Lý do huỷ. Bạn huỷ thì khách được hoàn toàn bộ số đã trả.',
+      moTa: daTra > 0
+          ? 'Bạn huỷ thì khách được hoàn toàn bộ số đã trả (${Dinh.tien(daTra)}).'
+          : 'Bạn huỷ thì khách được hoàn toàn bộ số đã trả.',
+      goiY: 'Ví dụ: mình có việc đột xuất...',
       batBuoc: false,
     );
     // null = người dùng bấm Thoát. Chuỗi rỗng = họ xác nhận nhưng không ghi
@@ -161,10 +169,12 @@ class _TheViecState extends ConsumerState<_TheViec> {
     required String tieuDe,
     required String goiY,
     required bool batBuoc,
+    String moTa = '',
     String banDau = '',
   }) => hoiNoiDung(
     context,
     tieuDe: tieuDe,
+    moTa: moTa,
     goiY: goiY,
     giaTriDau: banDau,
     gui: 'Xong',
@@ -274,7 +284,7 @@ class _TheViecState extends ConsumerState<_TheViec> {
                   ),
                 if (b.chatMo)
                   _Nut(
-                    nhan: 'Nhắn tin',
+                    nhan: 'Nhắn tin / Gọi',
                     icon: Icons.chat_bubble_outline,
                     tat: false,
                     onTap: () => Navigator.of(context).push(
@@ -326,8 +336,10 @@ class _Nut extends StatelessWidget {
         icon: Icon(icon, size: 16),
         label: Text(nhan),
         style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          textStyle: const TextStyle(fontSize: 12.5),
         ),
       );
     }
@@ -336,7 +348,10 @@ class _Nut extends StatelessWidget {
       icon: Icon(icon, size: 16),
       label: Text(nhan),
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 40),
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: const TextStyle(fontSize: 12.5),
         foregroundColor: mau,
         side: BorderSide(color: mau.withValues(alpha: 0.4)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),

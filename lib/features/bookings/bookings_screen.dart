@@ -93,12 +93,15 @@ class _TheBuoi extends ConsumerStatefulWidget {
 }
 
 class _TheBuoiState extends ConsumerState<_TheBuoi> {
-  bool _dangTra = false;
+  String? _phaseDangTra;
 
   Booking get b => widget.booking;
 
+  bool get _dangTra => _phaseDangTra != null;
+
   Future<void> _thanhToan({String? phase}) async {
-    setState(() => _dangTra = true);
+    final khoa = phase ?? 'REMAINING';
+    setState(() => _phaseDangTra = khoa);
     try {
       final h = await ref
           .read(bookingsRepositoryProvider)
@@ -108,8 +111,31 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
     } catch (e) {
       if (mounted) baoLoi(context, e, 'Không tạo được thanh toán.');
     } finally {
-      if (mounted) setState(() => _dangTra = false);
+      if (mounted) setState(() => _phaseDangTra = null);
     }
+  }
+
+  /// Số đã trả: đủ tiền, hoặc đúng khoản cọc. Chưa trả thì 0.
+  int get _daTra {
+    if (b.trangThaiTra == TrangThaiTra.paid) return b.tongTien;
+    if (b.daCoc) return b.tienCoc ?? 0;
+    return 0;
+  }
+
+  /// Cùng luật hoàn cọc với web: trước 12 tiếng hoàn hết, trong 12 tiếng mất cọc.
+  String get _chinhSachHuy {
+    final da = _daTra;
+    if (da == 0) {
+      return 'Buổi này chưa đặt cọc. Huỷ lúc này không mất tiền.';
+    }
+    final moc = b.hanTraNot ?? b.batDau.subtract(const Duration(hours: 12));
+    if (moc.isAfter(DateTime.now())) {
+      return 'Còn trước hạn 12 tiếng — hoàn lại ${Dinh.tien(da)}.';
+    }
+    final coc = b.tienCoc ?? 0;
+    final hoan = da > coc ? da - coc : 0;
+    return 'Đã trong 12 tiếng trước buổi — mất cọc ${Dinh.tien(coc)}, '
+        'hoàn ${Dinh.tien(hoan)}.';
   }
 
   /// Khách huỷ buổi chưa diễn ra. Lý do không bắt buộc; Reader đọc được.
@@ -117,14 +143,13 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
     final lyDo = await hoiNoiDung(
       context,
       tieuDe: 'Huỷ lịch hẹn?',
-      goiY:
-          'Lý do huỷ. Chưa đặt cọc thì không mất tiền. Đã cọc: huỷ từ 12 '
-          'tiếng trước giờ hẹn thì hoàn cọc.',
+      moTa: _chinhSachHuy,
+      goiY: 'Ví dụ: mình có việc đột xuất...',
       gui: 'Xác nhận huỷ',
     );
     // null = bấm Thoát, giữ lịch. Chuỗi rỗng = huỷ mà không ghi lý do.
     if (lyDo == null || !mounted) return;
-    setState(() => _dangTra = true);
+    setState(() => _phaseDangTra = 'HUY');
     try {
       await ref
           .read(bookingsRepositoryProvider)
@@ -134,13 +159,35 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
     } catch (e) {
       if (mounted) baoLoi(context, e, 'Không huỷ được lịch hẹn.');
     } finally {
-      if (mounted) setState(() => _dangTra = false);
+      if (mounted) setState(() => _phaseDangTra = null);
     }
   }
 
   bool get _huyDuoc =>
       b.trangThai == TrangThaiBuoi.pending ||
       b.trangThai == TrangThaiBuoi.confirmed;
+
+  /// Nút gọn: chữ 12.5, cao 36, để hai nút tiền không tràn một dòng trên máy hẹp.
+  ButtonStyle _kieuNut({bool vien = false}) {
+    const chu = TextStyle(fontSize: 12.5);
+    if (vien) {
+      return OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: Mau.vang,
+        side: const BorderSide(color: Mau.vien),
+        textStyle: chu,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      );
+    }
+    return FilledButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      textStyle: chu,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,36 +198,22 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        b.readerName.isEmpty ? 'Reader' : b.readerName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút',
-                        style: const TextStyle(
-                          color: Mau.chuMo,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _Nhan(b: b),
-              ],
+            Text(
+              b.readerName.isEmpty ? 'Reader' : b.readerName,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
+            const SizedBox(height: 3),
+            Text(
+              '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút',
+              style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
+            ),
+            const SizedBox(height: 8),
+            Align(alignment: Alignment.centerLeft, child: _Nhan(b: b)),
             const SizedBox(height: 10),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   Dinh.tien(b.tongTien),
@@ -190,20 +223,22 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 8),
                 if (b.chuaTra)
                   const Text(
-                    'chưa thanh toán',
+                    'Chưa thanh toán',
                     style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
                   )
                 else if (b.daCoc)
-                  const Text(
-                    'đã đặt cọc',
-                    style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
+                  Text(
+                    'Đã đặt cọc · Còn ${Dinh.tien(b.tienConLai ?? 0)}',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFFE0B341),
+                    ),
                   )
                 else
                   const Text(
-                    'đã thanh toán',
+                    'Đã thanh toán',
                     style: TextStyle(fontSize: 11.5, color: Color(0xFF6BBF7B)),
                   ),
               ],
@@ -262,39 +297,34 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     onPressed: _dangTra
                         ? null
                         : () => _thanhToan(phase: 'DEPOSIT'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                    style: _kieuNut(),
+                    child: Text(
+                      _phaseDangTra == 'DEPOSIT'
+                          ? 'Đang mở thanh toán…'
+                          : 'Đặt cọc 50% (${Dinh.tien(b.tienCoc ?? 0)})',
                     ),
-                    child: const Text('Đặt cọc 50%'),
                   ),
                   OutlinedButton(
                     onPressed: _dangTra
                         ? null
                         : () => _thanhToan(phase: 'FULL'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      foregroundColor: Mau.vang,
-                      side: const BorderSide(color: Mau.vien),
+                    style: _kieuNut(vien: true),
+                    child: Text(
+                      _phaseDangTra == 'FULL'
+                          ? 'Đang mở thanh toán…'
+                          : 'Thanh toán hết (${Dinh.tien(b.tongTien)})',
                     ),
-                    child: const Text('Thanh toán hết'),
                   ),
                 ],
                 if (b.daCoc && b.trangThai != TrangThaiBuoi.cancelled)
                   FilledButton(
                     onPressed: _dangTra ? null : () => _thanhToan(),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                    style: _kieuNut(),
+                    child: Text(
+                      _phaseDangTra == 'REMAINING'
+                          ? 'Đang mở thanh toán…'
+                          : 'Thanh toán nốt (${Dinh.tien(b.tienConLai ?? 0)})',
                     ),
-                    child: _dangTra
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Thanh toán nốt'),
                   ),
                 // Nút trò chuyện chỉ hiện khi MÁY CHỦ nói hội thoại đang mở.
                 // Không tự suy từ trạng thái + thanh toán: luật còn có hạn ân
@@ -308,10 +338,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     onPressed: () => moDanhGia(context, b),
                     icon: const Icon(Icons.star_border, size: 16),
                     label: const Text('Đánh giá'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
+                    style: _kieuNut(),
                   ),
                 if (b.trangThai == TrangThaiBuoi.completed && b.daDanhGia)
                   const Padding(
@@ -335,7 +362,10 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     label: const Text('Báo cáo'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE5645E),
-                      minimumSize: const Size(0, 40),
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(fontSize: 12.5),
                     ),
                   ),
                 if (_huyDuoc)
@@ -345,7 +375,10 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     label: const Text('Huỷ lịch'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE5645E),
-                      minimumSize: const Size(0, 40),
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(fontSize: 12.5),
                     ),
                   ),
                 if (b.chatMo)
@@ -354,15 +387,8 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                       MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
                     ),
                     icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                    label: const Text('Nhắn tin'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 40),
-                      foregroundColor: Mau.vang,
-                      side: const BorderSide(color: Mau.vien),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
+                    label: const Text('Nhắn tin / Gọi'),
+                    style: _kieuNut(vien: true),
                   ),
               ],
             ),

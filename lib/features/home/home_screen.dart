@@ -470,7 +470,7 @@ class _TheSapToi extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
                 ),
                 icon: const Icon(Icons.chat_bubble_outline, size: 15),
-                label: const Text('Nhắn tin'),
+                label: const Text('Nhắn tin / Gọi'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(0, 38),
                   foregroundColor: Mau.vang,
