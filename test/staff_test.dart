@@ -130,7 +130,7 @@ void main() {
       await bam(t, find.text('Nhận lịch'));
       expect(find.text('Đã quá giờ'), findsOneWidget);
       m.mayChu.tra('GET /api/v1/bookings/k1/messages', trang([]));
-      await bam(t, find.text('Nhắn tin'));
+      await bam(t, find.text('Nhắn tin / Gọi'));
       expect(find.text('Nhắn gì đó…'), findsOneWidget);
     });
 
