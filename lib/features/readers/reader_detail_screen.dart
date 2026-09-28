@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/config.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
@@ -97,7 +98,8 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
           content: Text(
             '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút\n'
             '${Dinh.tien(b.tongTien)}\n\n'
-            'Buổi hẹn đang chờ Reader nhận. Vào tab Lịch hẹn để thanh toán.',
+            'Buổi hẹn đang chờ Reader nhận. Vào tab Lịch hẹn để đặt cọc 50% '
+            'hoặc thanh toán hết.',
             style: const TextStyle(height: 1.6, fontSize: 13.5),
           ),
           actions: [
@@ -364,7 +366,8 @@ class _Dau extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final co = reader.avatar != null && reader.avatar!.isNotEmpty;
+    final anh = AppConfig.anhNguoi(reader.avatar);
+    final co = anh != null;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -376,7 +379,7 @@ class _Dau extends StatelessWidget {
             border: Border.all(color: Mau.vien),
             image: co
                 ? DecorationImage(
-                    image: NetworkImage(reader.avatar!),
+                    image: NetworkImage(anh),
                     fit: BoxFit.cover,
                   )
                 : null,
@@ -546,8 +549,10 @@ class _LichDat extends ConsumerWidget {
             const _Nhan('Khung giờ'),
             const SizedBox(height: 4),
             const Text(
-              'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. '
-              'Khung gạch ngang đã có người.',
+              'Cùng một ngày nhiều người đặt được, mỗi người một khung giờ. '
+              'Khung gạch ngang đã có người. Đặt xong thì chọn đặt cọc 50% '
+              'hoặc thanh toán hết ở tab Lịch hẹn. Huỷ từ 12 tiếng trước giờ '
+              'hẹn thì hoàn cọc.',
               style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.4),
             ),
             const SizedBox(height: 10),
@@ -753,43 +758,55 @@ class _ThanhDat extends StatelessWidget {
         color: Mau.the,
         border: Border(top: BorderSide(color: Mau.vien)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${Dinh.ngayGio(slot.batDau)} · $phut phút',
-                  style: const TextStyle(fontSize: 12.5, color: Mau.chuMo),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final hep = c.maxWidth < 360;
+          final tom = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${Dinh.ngayGio(slot.batDau)} · $phut phút',
+                style: const TextStyle(fontSize: 12.5, color: Mau.chuMo),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                Dinh.tien(slot.gia),
+                style: const TextStyle(
+                  fontSize: 17,
+                  color: Mau.vang,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  Dinh.tien(slot.gia),
-                  style: const TextStyle(
-                    fontSize: 17,
-                    color: Mau.vang,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          );
+          final nut = FilledButton(
+            onPressed: dangDat ? null : dat,
+            style: FilledButton.styleFrom(
+              minimumSize: Size(hep ? double.infinity : 112, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
-          ),
-          const SizedBox(width: 14),
-          SizedBox(
-            width: 140,
-            child: FilledButton(
-              onPressed: dangDat ? null : dat,
-              child: dangDat
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Đặt lịch'),
-            ),
-          ),
-        ],
+            child: dangDat
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Đặt lịch'),
+          );
+          if (hep) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [tom, const SizedBox(height: 10), nut],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: tom),
+              const SizedBox(width: 12),
+              nut,
+            ],
+          );
+        },
       ),
     );
   }

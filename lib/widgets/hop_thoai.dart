@@ -60,6 +60,7 @@ Future<bool> hoiXacNhan(
 Future<String?> hoiNoiDung(
   BuildContext context, {
   required String tieuDe,
+  String moTa = '',
   String goiY = '',
   String giaTriDau = '',
   String gui = 'Gửi',
@@ -71,6 +72,7 @@ Future<String?> hoiNoiDung(
       context: context,
       builder: (_) => _HopNhap(
         tieuDe: tieuDe,
+        moTa: moTa,
         goiY: goiY,
         giaTriDau: giaTriDau,
         gui: gui,
@@ -89,6 +91,7 @@ Future<String?> hoiNoiDung(
 class _HopNhap extends StatefulWidget {
   const _HopNhap({
     required this.tieuDe,
+    required this.moTa,
     required this.goiY,
     required this.giaTriDau,
     required this.gui,
@@ -98,6 +101,7 @@ class _HopNhap extends StatefulWidget {
   });
 
   final String tieuDe;
+  final String moTa;
   final String goiY;
   final String giaTriDau;
   final String gui;
@@ -123,14 +127,31 @@ class _HopNhapState extends State<_HopNhap> {
     return AlertDialog(
       backgroundColor: Mau.the,
       title: Text(widget.tieuDe, style: const TextStyle(fontSize: 16)),
-      content: TextField(
-        controller: _o,
-        autofocus: true,
-        keyboardType: widget.kieuNhap,
-        minLines: widget.dongToiDa > 1 ? 2 : 1,
-        maxLines: widget.dongToiDa,
-        onChanged: (_) => setState(() {}),
-        decoration: InputDecoration(hintText: widget.goiY),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.moTa.isNotEmpty) ...[
+            Text(
+              widget.moTa,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.45,
+                color: Mau.chuMo,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          TextField(
+            controller: _o,
+            autofocus: true,
+            keyboardType: widget.kieuNhap,
+            minLines: widget.dongToiDa > 1 ? 2 : 1,
+            maxLines: widget.dongToiDa,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(hintText: widget.goiY),
+          ),
+        ],
       ),
       actions: [
         TextButton(

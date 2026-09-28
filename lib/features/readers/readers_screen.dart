@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/config.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
@@ -258,7 +259,8 @@ class _Anh extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final co = reader.avatar != null && reader.avatar!.isNotEmpty;
+    final anh = AppConfig.anhNguoi(reader.avatar);
+    final co = anh != null;
     return Container(
       height: 46,
       width: 46,
@@ -267,7 +269,7 @@ class _Anh extends StatelessWidget {
         border: Border.all(color: Mau.vien),
         image: co
             ? DecorationImage(
-                image: NetworkImage(reader.avatar!), fit: BoxFit.cover)
+                image: NetworkImage(anh), fit: BoxFit.cover)
             : null,
       ),
       alignment: Alignment.center,
