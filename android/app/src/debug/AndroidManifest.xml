@@ -4,4 +4,24 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Cho phép gọi HTTP thường — CHỈ ở bản debug.
+
+         Từ API 28 Android chặn mọi kết nối không mã hoá, và
+         flutter.targetSdkVersion hiện là 36. Nên khi chạy app trỏ về backend
+         ở máy (dart-define API_BASE_URL thành http://10.0.2.2:8080), app lên
+         được nhưng mọi lời gọi API chết với:
+
+             CLEARTEXT communication to 10.0.2.2 not permitted by
+             network security policy
+
+         Kiểu hỏng này khó lần vì app vẫn mở bình thường, chỉ có dữ liệu là
+         không bao giờ về, và thông báo lỗi nằm trong log chứ không hiện lên
+         màn hình.
+
+         Đặt ở manifest debug chứ không phải manifest chính: bản phát hành
+         không nhận thuộc tính này nên vẫn chặn HTTP thường như cũ. Backend
+         thật chạy https nên bản phát hành không cần tới nó.
+    -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>
