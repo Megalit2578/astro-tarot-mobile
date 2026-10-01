@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../theme.dart';
+import '../../widgets/vong_hoang_dao.dart';
 import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import '../home/home_repository.dart';
@@ -18,10 +19,14 @@ import 'astrology_repository.dart';
 class AstrologyScreen extends ConsumerWidget {
   const AstrologyScreen({super.key});
 
-  Future<void> _moForm(BuildContext context, WidgetRef ref, [HoSoSao? h]) async {
-    final ok = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => HoSoSaoFormScreen(hoSo: h)),
-    );
+  Future<void> _moForm(
+    BuildContext context,
+    WidgetRef ref, [
+    HoSoSao? h,
+  ]) async {
+    final ok = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => HoSoSaoFormScreen(hoSo: h)));
     if (ok == true) {
       ref.invalidate(hoSoSaoProvider);
       ref.invalidate(banDoSaoProvider);
@@ -74,19 +79,39 @@ class AstrologyScreen extends ConsumerWidget {
               ? const KhoiTrong(
                   icon: Icons.auto_awesome,
                   tieuDe: 'Bạn chưa có hồ sơ chiêm tinh nào',
-                  moTa: 'Thêm một hồ sơ ở đây, hoặc để hệ thống tự tạo khi '
+                  moTa:
+                      'Thêm một hồ sơ ở đây, hoặc để hệ thống tự tạo khi '
                       'bạn trải bài lần đầu.',
                 )
               : ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                   children: [
+                    // Vòng hoàng đạo của hồ sơ CHÍNH — đó là hồ sơ AI dùng để
+                    // đọc bài, nên cũng là cung đáng hiện ra trước nhất. Không
+                    // có hồ sơ nào được đánh dấu chính thì lấy hồ sơ đầu.
+                    Center(
+                      child: VongHoangDao(
+                        ngaySinh: DateTime.tryParse(
+                          list
+                              .firstWhere(
+                                (h) => h.chinh,
+                                orElse: () => list.first,
+                              )
+                              .ngaySinh,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     const Text(
                       'Ngày, giờ và nơi sinh quyết định lá số của bạn. AI đọc '
                       'bài dựa trên hồ sơ chính, nên sai một chi tiết ở đây là '
                       'lời giải lệch theo.',
                       style: TextStyle(
-                          fontSize: 12.5, color: Mau.chuMo, height: 1.55),
+                        fontSize: 12.5,
+                        color: Mau.chuMo,
+                        height: 1.55,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     for (final h in list)
@@ -122,13 +147,23 @@ class _TheHoSo extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(h.tieuDe,
-                      style: const TextStyle(fontSize: 16, color: Mau.vangNhat)),
+                  Text(
+                    h.tieuDe,
+                    style: const TextStyle(fontSize: 16, color: Mau.vangNhat),
+                  ),
                   const SizedBox(height: 6),
-                  Wrap(spacing: 6, runSpacing: 4, children: [
-                    if (h.chinh) const NhanTrangThai('Hồ sơ chính', mau: Mau.vang),
-                    NhanTrangThai(tenKieuHoSo[h.kieu] ?? h.kieu, mau: Mau.chuMo),
-                  ]),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (h.chinh)
+                        const NhanTrangThai('Hồ sơ chính', mau: Mau.vang),
+                      NhanTrangThai(
+                        tenKieuHoSo[h.kieu] ?? h.kieu,
+                        mau: Mau.chuMo,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   if (h.tenNguoi != null) _Dong('Người được xem', h.tenNguoi!),
                   _Dong('Ngày sinh', h.ngaySinhVi),
@@ -136,8 +171,10 @@ class _TheHoSo extends StatelessWidget {
                   _Dong('Nơi sinh', h.noiSinh),
                   if (h.muiGio != null) _Dong('Múi giờ', h.muiGio!),
                   if (h.viDo != null && h.kinhDo != null)
-                    _Dong('Toạ độ',
-                        '${h.viDo!.toStringAsFixed(4)}, ${h.kinhDo!.toStringAsFixed(4)}'),
+                    _Dong(
+                      'Toạ độ',
+                      '${h.viDo!.toStringAsFixed(4)}, ${h.kinhDo!.toStringAsFixed(4)}',
+                    ),
                 ],
               ),
             ),
@@ -151,8 +188,11 @@ class _TheHoSo extends StatelessWidget {
                 IconButton(
                   tooltip: 'Xoá hồ sơ ${h.tieuDe}',
                   onPressed: xoa,
-                  icon: const Icon(Icons.delete_outline,
-                      size: 20, color: MauTrangThai.xau),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: MauTrangThai.xau,
+                  ),
                 ),
               ],
             ),
@@ -170,20 +210,21 @@ class _Dong extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 110,
-              child: Text(nhan,
-                  style: const TextStyle(fontSize: 12, color: Mau.chuMo)),
-            ),
-            Expanded(
-                child: Text(giaTri, style: const TextStyle(fontSize: 12.5))),
-          ],
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            nhan,
+            style: const TextStyle(fontSize: 12, color: Mau.chuMo),
+          ),
         ),
-      );
+        Expanded(child: Text(giaTri, style: const TextStyle(fontSize: 12.5))),
+      ],
+    ),
+  );
 }
 
 /// Form khai hoặc sửa một bản đồ sao.
@@ -201,7 +242,8 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
   late final _tenNguoi = TextEditingController(text: widget.hoSo?.tenNguoi);
   late final _noiSinh = TextEditingController(text: widget.hoSo?.noiSinh);
   late final _muiGio = TextEditingController(
-      text: widget.hoSo?.muiGio ?? 'Asia/Ho_Chi_Minh');
+    text: widget.hoSo?.muiGio ?? 'Asia/Ho_Chi_Minh',
+  );
   late String? _ngaySinh = widget.hoSo?.ngaySinh;
   late String? _gioSinh = widget.hoSo?.gioSinhNgan;
   late double? _viDo = widget.hoSo?.viDo;
@@ -264,8 +306,10 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
       helpText: 'Ngày sinh',
     );
     if (d == null) return;
-    setState(() => _ngaySinh =
-        '${d.year.toString().padLeft(4, '0')}-${_hai(d.month)}-${_hai(d.day)}');
+    setState(
+      () => _ngaySinh =
+          '${d.year.toString().padLeft(4, '0')}-${_hai(d.month)}-${_hai(d.day)}',
+    );
   }
 
   Future<void> _chonGio() async {
@@ -292,8 +336,9 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
     // Backend bắt buộc toạ độ. Khi sửa mà không đụng tới nơi sinh thì toạ độ
     // cũ vẫn còn; chỉ chặn khi đã gõ tên mới mà chưa chọn gợi ý.
     if (_viDo == null || _kinhDo == null) {
-      setState(() =>
-          _loi = 'Hãy chọn nơi sinh trong danh sách gợi ý để có toạ độ.');
+      setState(
+        () => _loi = 'Hãy chọn nơi sinh trong danh sách gợi ý để có toạ độ.',
+      );
       return;
     }
     if (!formHopLe) return;
@@ -304,8 +349,9 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
     try {
       await ref.read(astrologyRepositoryProvider).luu(widget.hoSo?.id, {
         'title': _tieuDe.text.trim(),
-        'targetName':
-            _tenNguoi.text.trim().isEmpty ? null : _tenNguoi.text.trim(),
+        'targetName': _tenNguoi.text.trim().isEmpty
+            ? null
+            : _tenNguoi.text.trim(),
         'birthDate': _ngaySinh,
         'birthTime': _gioSinh == null ? null : '$_gioSinh:00',
         'birthPlace': _noiSinh.text.trim(),
@@ -316,8 +362,10 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
         'isPrimary': _chinh,
       });
       if (!mounted) return;
-      baoTin(context,
-          widget.hoSo == null ? 'Đã tạo hồ sơ.' : 'Đã lưu thay đổi.');
+      baoTin(
+        context,
+        widget.hoSo == null ? 'Đã tạo hồ sơ.' : 'Đã lưu thay đổi.',
+      );
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       setState(() => _loi = e.message);
@@ -332,7 +380,8 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.hoSo == null ? 'Thêm hồ sơ' : 'Sửa hồ sơ')),
+        title: Text(widget.hoSo == null ? 'Thêm hồ sơ' : 'Sửa hồ sơ'),
+      ),
       body: Form(
         key: _form,
         child: ListView(
@@ -342,7 +391,9 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
               key: const ValueKey('o-tieu-de'),
               controller: _tieuDe,
               decoration: const InputDecoration(
-                  labelText: 'Tên hồ sơ', hintText: 'Bản đồ sao của tôi'),
+                labelText: 'Tên hồ sơ',
+                hintText: 'Bản đồ sao của tôi',
+              ),
               validator: (v) {
                 final s = v?.trim() ?? '';
                 if (s.isEmpty) return 'Hãy đặt tên hồ sơ';
@@ -366,39 +417,45 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
             TextFormField(
               controller: _tenNguoi,
               decoration: const InputDecoration(
-                  labelText: 'Tên người được xem', hintText: 'Không bắt buộc'),
+                labelText: 'Tên người được xem',
+                hintText: 'Không bắt buộc',
+              ),
               validator: (v) =>
                   (v?.trim().length ?? 0) > 100 ? 'Tối đa 100 ký tự' : null,
             ),
             const SizedBox(height: 12),
-            Row(children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  key: const ValueKey('nut-ngay-sinh'),
-                  onPressed: _chonNgay,
-                  icon: const Icon(Icons.cake_outlined, size: 18),
-                  label: Text(_ngaySinh == null
-                      ? 'Ngày sinh'
-                      : ngayViTuIso(_ngaySinh!)),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('nut-ngay-sinh'),
+                    onPressed: _chonNgay,
+                    icon: const Icon(Icons.cake_outlined, size: 18),
+                    label: Text(
+                      _ngaySinh == null ? 'Ngày sinh' : ngayViTuIso(_ngaySinh!),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  key: const ValueKey('nut-gio-sinh'),
-                  onPressed: _chonGio,
-                  icon: const Icon(Icons.schedule, size: 18),
-                  label: Text(_gioSinh ?? 'Giờ sinh'),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('nut-gio-sinh'),
+                    onPressed: _chonGio,
+                    icon: const Icon(Icons.schedule, size: 18),
+                    label: Text(_gioSinh ?? 'Giờ sinh'),
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
             if (_gioSinh != null)
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () => setState(() => _gioSinh = null),
-                  child: const Text('Không biết giờ sinh',
-                      style: TextStyle(fontSize: 12)),
+                  child: const Text(
+                    'Không biết giờ sinh',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
               ),
             const SizedBox(height: 12),
@@ -413,14 +470,18 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
                     ? const Padding(
                         padding: EdgeInsets.all(14),
                         child: SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2)),
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       )
                     : (_viDo != null
-                        ? const Icon(Icons.check_circle,
-                            color: MauTrangThai.tot, size: 20)
-                        : null),
+                          ? const Icon(
+                              Icons.check_circle,
+                              color: MauTrangThai.tot,
+                              size: 20,
+                            )
+                          : null),
               ),
               validator: (v) {
                 final s = v?.trim() ?? '';
@@ -433,10 +494,12 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.place_outlined, size: 18),
-                title: Text(d.ten,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12.5)),
+                title: Text(
+                  d.ten,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12.5),
+                ),
                 onTap: () => _chonDiaDanh(d),
               ),
             const SizedBox(height: 12),
@@ -450,16 +513,21 @@ class _HoSoSaoFormScreenState extends ConsumerState<HoSoSaoFormScreen> {
               value: _chinh,
               onChanged: (v) => setState(() => _chinh = v),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Đặt làm hồ sơ chính',
-                  style: TextStyle(fontSize: 13.5)),
-              subtitle: const Text('AI đọc bài dựa trên hồ sơ chính.',
-                  style: TextStyle(fontSize: 11.5, color: Mau.chuMo)),
+              title: const Text(
+                'Đặt làm hồ sơ chính',
+                style: TextStyle(fontSize: 13.5),
+              ),
+              subtitle: const Text(
+                'AI đọc bài dựa trên hồ sơ chính.',
+                style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
+              ),
             ),
             if (_loi != null) ...[
               const SizedBox(height: 6),
-              Text(_loi!,
-                  style:
-                      const TextStyle(fontSize: 13, color: MauTrangThai.xau)),
+              Text(
+                _loi!,
+                style: const TextStyle(fontSize: 13, color: MauTrangThai.xau),
+              ),
             ],
             const SizedBox(height: 16),
             FilledButton(
