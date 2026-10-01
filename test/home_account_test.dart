@@ -136,6 +136,14 @@ void main() {
       await m.dung(t, const HomeScreen());
       // Bản cũ sập ở đây (sort trên const []).
       expect(find.text('Chào Anh,'), findsOneWidget);
+      // Vòng bài trang trí ở đầu trang chiếm 252dp, nên khối bản đồ sao nằm
+      // dưới nếp gấp của màn 800x600 trong test. ListView chỉ dựng phần đang
+      // thấy, nên phải cuộn tới thì widget mới tồn tại.
+      await t.scrollUntilVisible(
+        find.text('Bạn chưa khai ngày giờ nơi sinh'),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Bạn chưa khai ngày giờ nơi sinh'), findsOneWidget);
       await bam(t, find.text('Khai ngày giờ nơi sinh'));
       expect(find.text('Bản đồ sao'), findsOneWidget);

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
+import '../../widgets/vong_bai_tarot.dart';
 import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
@@ -69,14 +70,60 @@ class HomeScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
-            Text(
-              'Chào ${tenGoi(u?.fullName)},',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Hôm nay bạn muốn hỏi điều gì?',
-              style: TextStyle(color: Mau.chuMo, fontSize: 13),
+            // Vòng bài xoay làm nền cho lời chào — đây là hình ảnh nhận diện
+            // của web mà app chưa có. Chữ đặt trên nền tối mờ dần ra giữa, để
+            // vành bài không làm khó đọc.
+            SizedBox(
+              height: 252,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Vòng tròn trọn vẹn với chữ nằm GIỮA, như bản web. Bản
+                  // trước cắt mất nửa trên nên nhìn ra cái bát chứ không ra
+                  // vòng bài.
+                  //
+                  // Chu vi vành 252 là ~790, chia cho 22 lá được ~36 mỗi lá.
+                  // Lá rộng 28 thì còn khoảng thở; để 42 như trước là các lá
+                  // chồng lên nhau thành một bức tường kín.
+                  const VongBaiTarot(duongKinh: 252, beRongLa: 28),
+                  // Ô tối ở giữa để chữ đọc được, mờ dần ra ngoài để không cắt
+                  // ngang vành bài bằng một đường viền thấy được.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            radius: 0.5,
+                            colors: [
+                              Mau.nen,
+                              Mau.nen,
+                              Mau.nen.withValues(alpha: 0),
+                            ],
+                            stops: const [0, 0.45, 1],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Chào ${tenGoi(u?.fullName)},',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Hôm nay bạn muốn hỏi điều gì?',
+                        style: TextStyle(color: Mau.chuMo, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
 
             if (u != null &&
