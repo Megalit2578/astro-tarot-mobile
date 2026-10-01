@@ -14,20 +14,45 @@ junction dựng vì lý do này. Đừng chuyển dự án vào thư mục có d
 
 ## Chạy
 
-```bash
+```powershell
 cd C:\src\astrotarot_mobile
-flutter run
+.\tool\chay.ps1
 ```
 
-Mặc định trỏ tới production. Muốn trỏ về backend chạy ở máy:
+Một lệnh, trỏ về backend chạy ở máy. Script tự bật máy ảo nếu chưa có cái nào,
+chờ Android khởi động xong rồi mới cài app — `adb wait-for-device` chỉ chờ tới
+lúc adb nối được, mà cài vào đúng quãng hệ điều hành còn đang lên thì hỏng
+giữa chừng.
+
+Muốn trỏ về production: `.\tool\chay.ps1 -That`
+
+### Nếu gõ tay
 
 ```bash
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
+flutter run --dart-define-from-file=dart_defines/may.json
 ```
 
-`10.0.2.2` chứ **không phải** `localhost`: trong máy ảo Android, `localhost`
-là chính máy ảo, không phải máy tính của bạn. Máy ảo iOS thì `localhost` lại
-đúng.
+Hai biến trong `dart_defines/may.json` đều là `10.0.2.2` chứ **không phải**
+`localhost`: trong máy ảo Android, `localhost` là chính máy ảo, không phải máy
+tính của bạn. Máy ảo iOS thì `localhost` lại đúng. Điện thoại thật cắm dây thì
+phải thay bằng IP của máy tính trong mạng LAN.
+
+Phải có **cả hai** biến. `WEB_BASE_URL` để lấy ảnh sản phẩm — backend trả về
+đường dẫn tương đối (`/products/...`), trên web chúng tự khớp vì cùng tên
+miền, trong app thì phải ghép tay. Thiếu nó thì app lấy dữ liệu ở máy mà lấy
+ảnh ở production.
+
+### "No supported devices connected"
+
+Dự án chỉ có `android/` và `ios/`. Chrome, Edge và Windows có trên máy nhưng
+không có gì để dựng cho chúng, nên Flutter liệt kê rồi nói *not supported by
+this project*. iOS cần máy Mac, nên trên Windows chỉ còn Android — cần một máy
+ảo đang chạy hoặc điện thoại cắm dây.
+
+**Đừng** làm theo gợi ý `flutter create .` của Flutter: nó sinh thêm `web/` và
+`windows/` cho một dự án cố ý chỉ làm di động, mà `flutter_webrtc` và
+`permission_handler` không chạy giống nhau ở đó — dựng được nhưng gọi video và
+xin quyền hỏng theo kiểu khó lần.
 
 ## Hai cái bẫy đã gặp trên máy này
 
