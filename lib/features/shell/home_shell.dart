@@ -7,6 +7,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../account/account_screen.dart';
 import '../bookings/bookings_screen.dart';
+import '../bookings/nut_chat_noi.dart';
 import '../home/home_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../readers/readers_screen.dart';
@@ -50,14 +51,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     // chuông phải cập nhật kể cả khi người dùng đang ở tab khác. Đặt trong
     // màn thông báo thì nó chỉ chạy đúng lúc màn ấy đang mở — tức là đúng lúc
     // không cần nữa.
-    _huyNgheSuKien = ref.read(realtimeProvider).nghe(
-      Endpoints.queueEvents,
-      (_) {
-        if (!mounted) return;
-        ref.invalidate(soChuaDocProvider);
-        ref.read(thucThongBaoProvider.notifier).thuc();
-      },
-    );
+    _huyNgheSuKien = ref.read(realtimeProvider).nghe(Endpoints.queueEvents, (
+      _,
+    ) {
+      if (!mounted) return;
+      ref.invalidate(soChuaDocProvider);
+      ref.read(thucThongBaoProvider.notifier).thuc();
+    });
   }
 
   @override
@@ -88,10 +88,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final chon = _chon.clamp(0, tabs.length - 1);
 
     return Scaffold(
-      body: IndexedStack(
-        index: chon,
-        children: [for (final t in tabs) t.man],
-      ),
+      body: IndexedStack(index: chon, children: [for (final t in tabs) t.man]),
+      // Đặt ở KHUNG chứ không ở từng màn: có người nhắn lúc đang xem Shop hay
+      // Tarot thì vẫn phải với tới được. Nút tự ẩn khi không có buổi nào đang
+      // mở chat, nên màn hình của người chưa đặt lịch không bị che gì.
+      floatingActionButton: const NutChatNoi(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: chon,
         onDestinationSelected: (i) => setState(() => _chon = i),
