@@ -6,6 +6,7 @@ import 'core/auth/auth_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/shell/home_shell.dart';
 import 'theme.dart';
+import 'widgets/troi_sao.dart';
 
 void main() {
   runApp(const ProviderScope(retry: thuLaiKhiNao, child: AstroTarotApp()));
@@ -36,6 +37,9 @@ class AstroTarotApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
       themeMode: ThemeMode.dark,
+      // Nền sao dựng MỘT lần ở đây thay vì từng màn tự thêm: cách sau thì sớm
+      // muộn có màn bị quên, và nền sẽ nhảy mất mỗi lần chuyển trang.
+      builder: (_, man) => NenSao(child: man ?? const SizedBox.shrink()),
       home: const _Cong(),
     );
   }
