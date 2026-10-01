@@ -15,7 +15,9 @@ class Mau {
 ThemeData buildTheme() {
   final base = ThemeData.dark(useMaterial3: true);
   return base.copyWith(
-    scaffoldBackgroundColor: Mau.nen,
+    // Trong suốt để bầu trời sao dựng ở MaterialApp.builder nhìn xuyên qua.
+    // Nền đen thật do NenSao giữ.
+    scaffoldBackgroundColor: Colors.transparent,
     colorScheme: base.colorScheme.copyWith(
       primary: Mau.vang,
       onPrimary: const Color(0xFF1A1206),
@@ -23,10 +25,7 @@ ThemeData buildTheme() {
       onSurface: Mau.chu,
       error: const Color(0xFFE5645E),
     ),
-    textTheme: base.textTheme.apply(
-      bodyColor: Mau.chu,
-      displayColor: Mau.chu,
-    ),
+    textTheme: base.textTheme.apply(bodyColor: Mau.chu, displayColor: Mau.chu),
     appBarTheme: const AppBarTheme(
       backgroundColor: Mau.nen,
       surfaceTintColor: Colors.transparent,
