@@ -1,4 +1,4 @@
-# Chạy app bằng một lệnh.
+﻿# Chạy app bằng một lệnh.
 #
 #   .\tool\chay.ps1          -> trỏ về backend chạy ở máy
 #   .\tool\chay.ps1 -That    -> trỏ về production
@@ -62,8 +62,20 @@ if (CoMay) {
 } else {
     if (-not $MayAo) {
         # Lấy id của máy ảo android đầu tiên trong danh sách.
-        $dong = flutter emulators 2>$null | Where-Object { $_ -match '•\s*android\s*$' } | Select-Object -First 1
-        if ($dong) { $MayAo = ($dong -split '•')[0].Trim() }
+        #
+        # Dò theo chữ 'android' ở cuối dòng chứ KHÔNG theo dấu chấm tròn ngăn
+        # cột. Bản đầu khớp theo ký tự ấy, mà powershell.exe 5.1 đọc file .ps1
+        # không BOM theo bảng mã ANSI nên ký tự ngoài ASCII hỏng — script báo
+        # "chưa có máy ảo" trong khi máy ảo vẫn nằm đó.
+        #
+        # Lỗi không lộ ra lần chạy đầu vì lúc ấy đã có sẵn thiết bị, nên cả
+        # nhánh này chưa từng chạy.
+        #
+        # Dòng tiêu đề kết thúc bằng 'Platform' nên không dính.
+        $dong = flutter emulators 2>$null |
+                Where-Object { $_ -match 'android\s*$' } |
+                Select-Object -First 1
+        if ($dong) { $MayAo = ($dong -split '\s+')[0].Trim() }
     }
     if (-not $MayAo) {
         Write-Host "Chua co may ao nao. Tao mot cai:" -ForegroundColor Red

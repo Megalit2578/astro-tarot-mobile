@@ -7,6 +7,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
 import '../astrology/astrology_screen.dart';
+import '../goiai/goi_ai_screen.dart';
 import '../blog/blog_screen.dart';
 import '../feedback/feedback_screen.dart';
 import '../profile/profile_screen.dart';
@@ -125,6 +126,12 @@ class AccountScreen extends ConsumerWidget {
               nhan: 'Bản đồ sao',
               phu: 'AI đọc bài dựa trên hồ sơ chính',
               onTap: () => _mo(context, const AstrologyScreen()),
+            ),
+            _Muc(
+              icon: Icons.workspace_premium_outlined,
+              nhan: 'Gói AI',
+              phu: 'Hạn mức mỗi ngày, số dư ví, mua gói',
+              onTap: () => _mo(context, const GoiAiScreen()),
             ),
             _Muc(
               icon: Icons.history,
