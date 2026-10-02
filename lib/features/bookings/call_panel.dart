@@ -62,42 +62,71 @@ class _ChuongDen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      color: const Color(0x22D4AF37),
-      child: Row(
-        children: [
-          Icon(c.coVideo ? Icons.videocam : Icons.call,
-              size: 20, color: Mau.vang),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Text(
-              '${c.tenDoiPhuong ?? 'Người kia'} đang gọi'
-              '${c.coVideo ? ' video' : ''}…',
-              style: const TextStyle(fontSize: 13),
+    final ten = c.tenDoiPhuong ?? 'Người kia';
+    return ColoredBox(
+      color: const Color(0xA6000000),
+      child: Center(
+        child: Material(
+          color: const Color(0xFF242526),
+          borderRadius: BorderRadius.circular(28),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 42,
+                  backgroundColor: const Color(0xFF3A3B3C),
+                  child: Text(
+                    ten.isEmpty ? '?' : ten.characters.first.toUpperCase(),
+                    style: const TextStyle(fontSize: 28, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  ten,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Đang gọi ${c.coVideo ? 'video' : 'thoại'} cho bạn',
+                  style: const TextStyle(fontSize: 13, color: Colors.white70),
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton.filled(
+                      onPressed: c.cupMay,
+                      tooltip: 'Từ chối',
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFFE41E3F),
+                        foregroundColor: Colors.white,
+                        fixedSize: const Size(64, 64),
+                      ),
+                      icon: const Icon(Icons.call_end, size: 26),
+                    ),
+                    const SizedBox(width: 48),
+                    IconButton.filled(
+                      onPressed: c.nhan,
+                      tooltip: 'Nhận',
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFF31A24C),
+                        foregroundColor: Colors.white,
+                        fixedSize: const Size(64, 64),
+                      ),
+                      icon: const Icon(Icons.call, size: 26),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          IconButton.filled(
-            onPressed: c.cupMay,
-            tooltip: 'Từ chối',
-            style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFFE5645E),
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.call_end, size: 18),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filled(
-            onPressed: c.nhan,
-            tooltip: 'Nhận',
-            style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF6BBF7B),
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.call, size: 18),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -108,11 +137,11 @@ class _DangGoi extends StatelessWidget {
   final CallController c;
 
   String get _nhan => switch (c.trangThai) {
-        TrangThaiGoi.dangGoi => 'Đang gọi…',
-        TrangThaiGoi.dangNoi => 'Đang kết nối…',
-        TrangThaiGoi.dangChay => 'Đang trong cuộc gọi',
-        _ => '',
-      };
+    TrangThaiGoi.dangGoi => 'Đang gọi…',
+    TrangThaiGoi.dangNoi => 'Đang kết nối…',
+    TrangThaiGoi.dangChay => 'Đang trong cuộc gọi',
+    _ => '',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -161,21 +190,29 @@ class _DangGoi extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(_nhan,
-                    style: const TextStyle(fontSize: 12.5, color: Mau.chuMo)),
+                child: Text(
+                  _nhan,
+                  style: const TextStyle(fontSize: 12.5, color: Mau.chuMo),
+                ),
               ),
               IconButton(
                 onPressed: c.doiMic,
                 tooltip: c.micBat ? 'Tắt tiếng' : 'Bật tiếng',
-                icon: Icon(c.micBat ? Icons.mic : Icons.mic_off,
-                    size: 19, color: c.micBat ? Mau.chu : Mau.chuMo),
+                icon: Icon(
+                  c.micBat ? Icons.mic : Icons.mic_off,
+                  size: 19,
+                  color: c.micBat ? Mau.chu : Mau.chuMo,
+                ),
               ),
               if (c.coVideo)
                 IconButton(
                   onPressed: c.doiCam,
                   tooltip: c.camBat ? 'Tắt camera' : 'Bật camera',
-                  icon: Icon(c.camBat ? Icons.videocam : Icons.videocam_off,
-                      size: 19, color: c.camBat ? Mau.chu : Mau.chuMo),
+                  icon: Icon(
+                    c.camBat ? Icons.videocam : Icons.videocam_off,
+                    size: 19,
+                    color: c.camBat ? Mau.chu : Mau.chuMo,
+                  ),
                 ),
               const SizedBox(width: 4),
               IconButton.filled(
