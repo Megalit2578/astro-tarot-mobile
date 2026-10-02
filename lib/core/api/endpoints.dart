@@ -49,6 +49,22 @@ class Endpoints {
   static const meAvatar = '/api/v1/me/avatar';
   static const meChangePassword = '/api/v1/me/change-password';
 
+  // ---- Ví và gói AI ----
+  //
+  // Các đường gói AI nằm dưới /api/admin/ dù người dùng thường cũng gọi —
+  // đó là cách backend đặt, không phải nhầm lẫn ở đây. Hai đường
+  // subscriptionPurchases/subscriptionUsage chỉ cho xem của CHÍNH MÌNH,
+  // nên luôn truyền id của người đang đăng nhập.
+  static const vi = '/api/v1/wallet/me';
+  static const viNap = '/api/v1/wallet/topup';
+  static const viGiaoDich = '/api/v1/wallet/transactions';
+  static const goiDangBan = '/api/admin/subscriptions/plans/active';
+  static const goiMua = '/api/admin/subscriptions/purchase';
+  static String goiCuaToi(String userId) =>
+      '/api/admin/subscriptions/users/$userId/purchases/active';
+  static String goiLuotDung(String userId) =>
+      '/api/admin/subscriptions/users/$userId/ai-usage';
+
   // ---- Reader ----
   static const readers = '/api/v1/readers';
   static String reader(String id) => '/api/v1/readers/$id';
