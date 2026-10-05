@@ -7,7 +7,20 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Astrotarot Mobile</string>
+	<string>AstroTarot</string>
+	<!-- Mô tả quyền. iOS KHÔNG hỏi người dùng mà kết thúc tiến trình ngay khi
+	     app chạm vào camera hoặc micro mà thiếu khoá tương ứng, và App Store
+	     Connect chặn bản nộp lên. Cả hai quyền này app đều dùng thật: buổi xem
+	     với Reader là gọi video.
+
+	     Câu chữ phải nói rõ DÙNG VÀO VIỆC GÌ. Apple từ chối những câu chung
+	     chung kiểu "ứng dụng cần quyền camera". -->
+	<key>NSCameraUsageDescription</key>
+	<string>AstroTarot dùng camera để bạn gọi video với Reader trong buổi xem bài đã đặt.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AstroTarot dùng micro để bạn nói chuyện với Reader trong buổi xem bài đã đặt.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>AstroTarot cần quyền này để bạn chọn ảnh làm ảnh đại diện.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
