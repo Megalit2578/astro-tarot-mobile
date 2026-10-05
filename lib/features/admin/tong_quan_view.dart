@@ -147,6 +147,24 @@ class TongQuanView extends ConsumerWidget {
           goiY: '${dinhSo(s.so('ai', 'tokensLast30Days'))} trong 30 ngày · '
               '~\$${s.thuc('ai', 'estimatedCostUsd').toStringAsFixed(2)}',
         ),
+      // Ô token ở trên cho biết AI TỐN bao nhiêu. Thiếu ô dưới thì màn Tổng
+      // quan chỉ có chi phí của tính năng mà không có doanh thu của nó —
+      // trước 05/10/2026 đúng là như vậy, máy chủ không trả khối này.
+      if (s.coKhoi('subscriptions'))
+        OSoLieu(
+          icon: Icons.workspace_premium_outlined,
+          nhan: 'Gói AI đã bán',
+          so: dinhSo(s.so('subscriptions', 'purchasesTotal')),
+          goiY: '${dinhSo(s.so('subscriptions', 'purchasesLast30Days'))} trong '
+              '30 ngày · ${Dinh.tien(s.so('subscriptions', 'revenueTotal'))}',
+        ),
+      if (s.coKhoi('subscriptions'))
+        OSoLieu(
+          icon: Icons.verified_outlined,
+          nhan: 'Gói còn hiệu lực',
+          so: dinhSo(s.so('subscriptions', 'activeNow')),
+          goiY: '${dinhSo(s.so('subscriptions', 'plansOnSale'))} gói đang bán',
+        ),
     ];
   }
 

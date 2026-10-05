@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../profile/profile_repository.dart';
+import '../../core/api/api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/auth/app_user.dart';
 import '../../core/config.dart';
@@ -203,8 +206,62 @@ class AccountScreen extends ConsumerWidget {
               ),
             ),
           ),
+
+          const SizedBox(height: 28),
+          // Xoá tài khoản và chính sách riêng tư.
+          //
+          // CH Play và App Store đều BẮT BUỘC có cả hai cho app cho phép đăng
+          // ký (Apple 5.1.1(v), Google "Xoá dữ liệu tài khoản"). Trước đây chỉ
+          // quản trị viên xoá được tài khoản người khác, chính chủ không có
+          // đường nào.
+          //
+          // Đặt tách hẳn xuống cuối, chữ nhỏ, không viền: nó phải TÌM được chứ
+          // không phải nằm ngang hàng với những việc hay dùng — xoá tài khoản
+          // bấm nhầm là không lùi được.
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 6,
+              children: [
+                TextButton(
+                  onPressed: () => _moLienKet('${AppConfig.webBaseUrl}/chinh-sach-rieng-tu'),
+                  style: _nhatNho,
+                  child: const Text('Chính sách riêng tư'),
+                ),
+                const Text('·', style: TextStyle(color: Mau.chuMo)),
+                TextButton(
+                  onPressed: () => _xacNhanXoa(context, ref),
+                  style: _nhatNho,
+                  child: const Text('Xoá tài khoản'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+
+  static final ButtonStyle _nhatNho = TextButton.styleFrom(
+    foregroundColor: Mau.chuMo,
+    textStyle: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+    minimumSize: Size.zero,
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+
+  Future<void> _moLienKet(String duong) async {
+    final u = Uri.parse(duong);
+    if (await canLaunchUrl(u)) {
+      await launchUrl(u, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _xacNhanXoa(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => const _HopXoaTaiKhoan(),
     );
   }
 
@@ -357,6 +414,128 @@ class _HopQuyen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Hộp xác nhận xoá tài khoản.
+///
+/// Ba lớp chắn, vì việc này không lùi được:
+///
+///   1. Nói rõ cái gì mất hẳn và cái gì còn lại — người ta có quyền biết trước
+///      khi bấm, chứ không phải "bạn có chắc không?".
+///   2. Phải nhập mật khẩu. Một chiếc máy để quên không khoá màn hình thì
+///      không xoá được tài khoản chỉ bằng vài cú chạm.
+///   3. Nút xoá chỉ sáng lên khi đã gõ mật khẩu.
+class _HopXoaTaiKhoan extends ConsumerStatefulWidget {
+  const _HopXoaTaiKhoan();
+
+  @override
+  ConsumerState<_HopXoaTaiKhoan> createState() => _HopXoaTaiKhoanState();
+}
+
+class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
+  final _matKhau = TextEditingController();
+  bool _dangChay = false;
+  String? _loi;
+
+  @override
+  void dispose() {
+    _matKhau.dispose();
+    super.dispose();
+  }
+
+  Future<void> _xoa() async {
+    setState(() {
+      _dangChay = true;
+      _loi = null;
+    });
+    try {
+      await ref.read(profileRepositoryProvider).xoaTaiKhoan(_matKhau.text);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      // Phiên đã bị máy chủ thu hồi rồi, nhưng vẫn gọi dangXuat để xoá token
+      // lưu ở máy và đưa về màn đăng nhập.
+      await ref.read(authControllerProvider.notifier).dangXuat();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _dangChay = false;
+        _loi = e is ApiException ? e.message : 'Không xoá được. Thử lại sau.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final goDu = _matKhau.text.isNotEmpty;
+    return AlertDialog(
+      backgroundColor: Mau.the,
+      title: const Text('Xoá tài khoản'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Việc này không hoàn tác được.',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Sẽ xoá hẳn: hồ sơ chiêm tinh của bạn (ngày, giờ, nơi sinh) và '
+            'ảnh đại diện.',
+            style: TextStyle(fontSize: 13, color: Mau.chuMo),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Sẽ giữ lại: lịch sử giao dịch và các buổi xem đã diễn ra — đây là '
+            'lịch sử của cả Reader, và sổ sách phải giữ. Tên bạn sẽ được gỡ '
+            'khỏi chúng.',
+            style: TextStyle(fontSize: 13, color: Mau.chuMo),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _matKhau,
+            obscureText: true,
+            autofocus: true,
+            enabled: !_dangChay,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Nhập mật khẩu để xác nhận',
+            ),
+          ),
+          if (_loi != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _loi!,
+              style: const TextStyle(color: Color(0xFFE5645E), fontSize: 13),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _dangChay ? null : () => Navigator.of(context).pop(),
+          child: const Text('Thôi'),
+        ),
+        FilledButton(
+          onPressed: (_dangChay || !goDu) ? null : _xoa,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFE5645E),
+            foregroundColor: Colors.white,
+          ),
+          child: _dangChay
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Xoá tài khoản'),
+        ),
+      ],
     );
   }
 }

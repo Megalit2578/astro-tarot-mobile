@@ -183,7 +183,13 @@ class ApiClient {
   Future<T> put<T>(String path, {Object? body}) =>
       _goi<T>(() => dio.put(path, data: body));
 
-  Future<T> delete<T>(String path) => _goi<T>(() => dio.delete(path));
+  /// DELETE có thể kèm thân yêu cầu.
+  ///
+  /// Phần lớn lệnh xoá chỉ cần đường dẫn, nhưng xoá tài khoản thì đòi nhập lại
+  /// mật khẩu, mà mật khẩu không được phép nằm trên URL: nó sẽ lọt vào log máy
+  /// chủ, lịch sử trình duyệt và header Referer.
+  Future<T> delete<T>(String path, {Object? body}) =>
+      _goi<T>(() => dio.delete(path, data: body));
 
   /// Bóc bao thư `{success, message, data}` và dựng ApiException khi hỏng.
   Future<T> _goi<T>(Future<Response<dynamic>> Function() chay) async {

@@ -23,6 +23,7 @@ class GiaoDichVi {
     required this.id,
     required this.loai,
     required this.soTien,
+    required this.soDuTruoc,
     required this.soDuSau,
     required this.trangThai,
     this.moTa,
@@ -35,19 +36,34 @@ class GiaoDichVi {
   /// ADMIN_ADJUSTMENT.
   final String loai;
 
-  /// Dương là tiền vào, âm là tiền ra — giữ nguyên dấu của máy chủ.
+  /// Số tiền, LUÔN DƯƠNG kể cả giao dịch trừ ví.
+  ///
+  /// Máy chủ lưu độ lớn chứ không lưu dấu — xem `WalletServiceImpl.debit`, nó
+  /// đặt `.amount(amount)` với amount đã bắt buộc > 0.
   final int soTien;
+
+  final int soDuTruoc;
   final int soDuSau;
   final String trangThai;
   final String? moTa;
   final DateTime? luc;
 
-  bool get tienVao => soTien >= 0;
+  /// Tiền vào hay tiền ra, đọc ở chênh lệch số dư.
+  ///
+  /// Bản trước viết `soTien >= 0`, mà `soTien` không bao giờ âm — nên MỌI giao
+  /// dịch đều hiện là tiền vào, kể cả "Mua gói AI" và "Thanh toán buổi xem".
+  /// Sổ ví cộng lên trông như chỉ có tiền chảy vào.
+  ///
+  /// Chênh lệch số dư là nguồn đáng tin duy nhất: nó đúng cho cả những loại
+  /// giao dịch chưa tồn tại hôm nay, và đúng cả với điều chỉnh của quản trị
+  /// vốn có thể cộng hoặc trừ.
+  bool get tienVao => soDuSau >= soDuTruoc;
 
   factory GiaoDichVi.fromJson(Map<String, dynamic> j) => GiaoDichVi(
     id: (j['id'] ?? '').toString(),
     loai: (j['type'] ?? '') as String,
     soTien: (j['amount'] as num?)?.toInt() ?? 0,
+    soDuTruoc: (j['balanceBefore'] as num?)?.toInt() ?? 0,
     soDuSau: (j['balanceAfter'] as num?)?.toInt() ?? 0,
     trangThai: (j['status'] ?? 'SUCCESS') as String,
     moTa: j['description'] as String?,
