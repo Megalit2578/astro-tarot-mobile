@@ -102,15 +102,26 @@ hạn — để người duyệt thấy được app làm gì thay vì một mà
 
 ## B. Dễ bị trả về, nên sửa trước khi nộp
 
-### B1. Biểu tượng vẫn là icon Flutter mặc định
+### B1. Biểu tượng ứng dụng — ĐÃ LÀM 05/10/2026
 
-`android/app/src/main/res/mipmap-*/ic_launcher.png` nặng 442–1443 byte — đúng
-hình chữ F xanh Flutter sinh ra lúc tạo dự án. Apple từ chối tài nguyên tạm ở
-mục 2.3.8, và CH Play thì nhìn là biết chưa xong.
+`mipmap-*/ic_launcher.png` từng nặng 442–1443 byte: đúng hình chữ F xanh
+Flutter sinh ra lúc tạo dự án. Apple từ chối tài nguyên tạm ở mục 2.3.8, và CH
+Play thì nhìn là biết chưa xong.
 
-Cần bộ icon thật, kèm **icon thích ứng** cho Android 8 trở lên
-(`mipmap-anydpi-v26`). Màn đăng nhập đã có hình bốn cánh sao màu vàng — lấy đó
-làm gốc là hợp.
+Nay có bộ icon thật cho mọi độ phân giải Android và iOS, kèm **icon thích ứng**
+cho Android 8 trở lên (`mipmap-anydpi-v26`). Sinh bằng `flutter_launcher_icons`
+từ một tệp nguồn duy nhất, `assets/icon/app_icon.png` 1024×1024.
+
+Nguồn lấy từ chính logo sẵn có của web (`src/assets/logo-astrotarot.png`) —
+**phần tròn ở tâm**, không phải cả logo. Logo là ảnh ngang 579×334 hình con
+mắt; cắt vuông cả con mắt thì thu xuống 48px không còn nhìn ra gì. Ngôi sao năm
+cánh với vầng mandala quanh nó mới là phần đọc được ở cỡ nhỏ.
+
+Nền icon thích ứng để `#0D0B14` — màu nền của app, không để trắng: hệ thống bo
+tròn hoặc cắt góc theo kiểu máy, và một viền trắng lòi ra quanh hình tối trông
+như lỗi.
+
+Đổi ảnh nguồn thì sinh lại bằng `dart run flutter_launcher_icons`.
 
 ### B2. Tên gói `com.astrotarot.astrotarot_mobile`
 

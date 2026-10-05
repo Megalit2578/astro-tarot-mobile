@@ -54,6 +54,9 @@ dev_dependencies:
   url_launcher_platform_interface: ^2.3.2
   image_picker_platform_interface: ^2.11.1
   plugin_platform_interface: ^2.1.8
+  # Sinh bộ biểu tượng cho mọi độ phân giải Android và iOS từ MỘT tệp nguồn.
+  # Chỉ chạy lúc dựng tài nguyên, không đi vào gói cài đặt.
+  flutter_launcher_icons: ^0.14.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -103,3 +106,28 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# ---------------------------------------------------------------------------
+# Biểu tượng ứng dụng
+# ---------------------------------------------------------------------------
+# Trước 05/10/2026 app vẫn mang biểu tượng Flutter mặc định — hình chữ F xanh,
+# tệp chỉ nặng 442 byte. Apple từ chối tài nguyên tạm ở mục 2.3.8, và CH Play
+# thì nhìn là biết chưa xong.
+#
+# Nguồn là phần tròn ở TÂM logo con mắt (assets/icon/app_icon.png, 1024×1024).
+# Không dùng cả logo: nó là ảnh ngang 579×334, cắt vuông cả con mắt thì thu
+# xuống 48px không còn nhìn ra gì. Ngôi sao năm cánh với vầng mandala quanh nó
+# mới là phần đọc được ở cỡ nhỏ.
+#
+# Sinh lại sau khi đổi ảnh nguồn:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: assets/icon/app_icon.png
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  # Biểu tượng thích ứng cho Android 8 trở lên. Nền để màu nền của app chứ
+  # không để trắng: hệ thống bo tròn hoặc cắt góc theo kiểu máy, và một viền
+  # trắng lòi ra quanh hình tối trông như lỗi.
+  adaptive_icon_background: "#0D0B14"
+  adaptive_icon_foreground: assets/icon/app_icon.png
