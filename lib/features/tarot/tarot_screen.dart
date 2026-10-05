@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../theme.dart';
 import '../astrology/astrology_screen.dart';
 import '../home/home_repository.dart';
+import '../../widgets/hop_thoai.dart';
 import 'hoi_tiep.dart';
 import 'tarot_repository.dart';
 
@@ -331,6 +332,143 @@ class _KetQua extends StatelessWidget {
           'Lời giải do AI viết, mang tính tham khảo và giải trí. Với các quyết '
           'định về sức khoẻ, pháp lý hay tài chính, hãy hỏi người có chuyên môn.',
           style: TextStyle(fontSize: 11, color: Mau.chuMo, height: 1.6),
+        ),
+
+        // Báo cáo nội dung.
+        //
+        // Chính sách AI tạo sinh của CH Play buộc ứng dụng có nội dung do AI
+        // sinh phải cho người dùng báo cáo nội dung không phù hợp NGAY TRONG
+        // ứng dụng. Trước đây không có đường nào.
+        //
+        // Đặt ngay dưới lời miễn trừ: đó là chỗ người ta đang đọc khi nhận ra
+        // lời giải có vấn đề.
+        if (kq.id.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => _HopBaoCao(readingId: kq.id),
+              ),
+              icon: const Icon(Icons.flag_outlined, size: 14),
+              label: const Text('Báo cáo nội dung này'),
+              style: TextButton.styleFrom(
+                foregroundColor: Mau.chuMo,
+                textStyle: const TextStyle(fontSize: 11),
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Hộp báo cáo một lời giải do AI sinh.
+class _HopBaoCao extends ConsumerStatefulWidget {
+  const _HopBaoCao({required this.readingId});
+
+  final String readingId;
+
+  @override
+  ConsumerState<_HopBaoCao> createState() => _HopBaoCaoState();
+}
+
+/// Lý do, khớp đúng ràng buộc CHECK của bảng ai_content_reports.
+const _lyDoBaoCao = <String, String>{
+  'SAI_LECH': 'Thông tin sai lệch',
+  'XUC_PHAM': 'Xúc phạm, thù ghét',
+  'NGUY_HIEM': 'Nguy hiểm, khuyến khích làm hại',
+  'KHAC': 'Lý do khác',
+};
+
+class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
+  String _lyDo = 'SAI_LECH';
+  final _moTa = TextEditingController();
+  bool _dangGui = false;
+
+  @override
+  void dispose() {
+    _moTa.dispose();
+    super.dispose();
+  }
+
+  Future<void> _gui() async {
+    setState(() => _dangGui = true);
+    try {
+      await ref
+          .read(tarotRepositoryProvider)
+          .baoCaoNoiDung(widget.readingId, _lyDo, _moTa.text);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      baoTin(context, 'Đã nhận báo cáo. Cảm ơn bạn.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _dangGui = false);
+      baoTin(context, e is ApiException ? e.message : 'Không gửi được báo cáo.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Mau.the,
+      title: const Text('Báo cáo nội dung'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Giá trị và sự kiện đặt ở RadioGroup chứ không ở từng ô: từ Flutter
+          // 3.32 thì groupValue/onChanged trên RadioListTile đã lỗi thời.
+          RadioGroup<String>(
+            groupValue: _lyDo,
+            // RadioGroup.onChanged không nhận null, nên chặn ngay trong hàm
+            // thay vì tắt bằng cách truyền null như các widget khác.
+            onChanged: (v) {
+              if (_dangGui || v == null) return;
+              setState(() => _lyDo = v);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final e in _lyDoBaoCao.entries)
+                  RadioListTile<String>(
+                    value: e.key,
+                    title: Text(e.value, style: const TextStyle(fontSize: 13)),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _moTa,
+            enabled: !_dangGui,
+            maxLines: 3,
+            maxLength: 2000,
+            decoration: const InputDecoration(
+              labelText: 'Mô tả thêm (không bắt buộc)',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _dangGui ? null : () => Navigator.of(context).pop(),
+          child: const Text('Thôi'),
+        ),
+        FilledButton(
+          onPressed: _dangGui ? null : _gui,
+          child: _dangGui
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Gửi'),
         ),
       ],
     );

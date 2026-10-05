@@ -118,18 +118,32 @@ Lặp chữ và có gạch dưới. Đổi được thì đổi thành `com.astr
 phải đổi TRƯỚC lần phát hành đầu tiên** — sau đó tên gói là khoá định danh vĩnh
 viễn, đổi là thành một ứng dụng khác hoàn toàn.
 
-### B3. Chưa có lời miễn trừ về tính chất giải trí
+### B3. Lời miễn trừ về tính chất giải trí — ĐÃ LÀM 05/10/2026
 
 App đoán vận mệnh. Hai chợ không cấm, nhưng nếu lời lẽ nghe như lời khuyên y
-tế, tài chính hay pháp lý thì dính ngay. Nên có một câu rõ ràng ở màn Tarot và
-trong phần mô tả: nội dung chỉ mang tính tham khảo và giải trí, không thay thế
-tư vấn chuyên môn.
+tế, tài chính hay pháp lý thì dính ngay.
 
-### B4. Chính sách nội dung do AI sinh ra
+App đã có câu này từ trước, web thì chưa — nay đã thêm, ở cùng chỗ với nút báo
+cáo bên dưới. **Còn phải viết câu tương tự vào phần mô tả ứng dụng** trên hai
+chợ; việc đó làm lúc điền hồ sơ, không nằm trong mã.
 
-CH Play yêu cầu app có nội dung AI sinh ra phải cho người dùng **báo cáo nội
-dung không phù hợp ngay trong app**. Lời giải Tarot do Gemini sinh ra thuộc
-diện này. Hiện chưa có nút báo cáo nào ở màn trải bài.
+### B4. Báo cáo nội dung do AI sinh ra — ĐÃ LÀM 05/10/2026
+
+Chính sách AI tạo sinh của CH Play buộc ứng dụng có nội dung do AI sinh phải
+cho người dùng **báo cáo nội dung không phù hợp ngay trong ứng dụng**. Lời giải
+Tarot do Gemini sinh thuộc diện này, và trước đây không có đường nào.
+
+Nay có nút *Báo cáo nội dung này* ngay dưới lời miễn trừ ở màn trải bài, **cả
+web lẫn app**. Bốn lý do — sai lệch, xúc phạm, nguy hiểm, khác — kèm ô mô tả.
+
+Backend: `POST /api/ai-readings/reports`, bảng riêng `ai_content_reports`.
+Không dùng lại bảng `reports` vì bảng ấy để tố cáo **người**: cột
+`reported_user_id` khai NOT NULL, mà nội dung AI thì không có người nào để tố;
+nhét một tài khoản bất kỳ vào cho hợp lệ sẽ sinh ra những bản ghi tố cáo oan.
+
+Số báo cáo chờ xử lý hiện trên màn Tổng quan của quản trị, **tách khỏi** ô báo
+cáo vi phạm — kỷ luật một tài khoản và sửa một lời nhắc của mô hình là hai việc
+rất khác nhau, gộp chung một con số là trộn hai hàng chờ.
 
 ### B5. Khai báo dữ liệu
 

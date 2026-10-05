@@ -105,6 +105,7 @@ class TongQuanView extends ConsumerWidget {
   List<Widget> _kpi(ThongKe s) {
     final choDuyet = s.so('readers', 'pendingApplications');
     final baoCao = s.so('moderation', 'pendingReports');
+    final baoCaoAi = s.so('moderation', 'pendingAiReports');
     return [
       OSoLieu(
         icon: Icons.people_outline,
@@ -132,6 +133,15 @@ class TongQuanView extends ConsumerWidget {
         so: dinhSo(baoCao),
         goiY: baoCao > 0 ? 'Cần xem' : 'Không tồn đọng',
         canChuY: baoCao > 0,
+      ),
+      // Việc khác hẳn ô trên: kỷ luật một tài khoản, với sửa một lời nhắc của
+      // mô hình. Gộp chung một con số là trộn hai hàng chờ chẳng liên quan.
+      OSoLieu(
+        icon: Icons.flag_outlined,
+        nhan: 'Báo cáo nội dung AI',
+        so: dinhSo(baoCaoAi),
+        goiY: baoCaoAi > 0 ? 'Cần xem' : 'Không tồn đọng',
+        canChuY: baoCaoAi > 0,
       ),
       OSoLieu(
         icon: Icons.ads_click,

@@ -109,6 +109,20 @@ class TarotRepository {
     return d is Map ? (d['reply'] ?? '').toString() : '';
   }
 
+  /// Báo một lời giải do AI sinh là không ổn.
+  ///
+  /// Chính sách AI tạo sinh của CH Play buộc ứng dụng có nội dung do AI sinh
+  /// phải cho người dùng báo cáo ngay trong ứng dụng.
+  ///
+  /// Máy chủ trả êm cả khi người dùng bấm lại lần hai — với họ thì lần nào
+  /// cũng là "đã báo rồi".
+  Future<void> baoCaoNoiDung(String readingId, String lyDo, String moTa) =>
+      _api.post('${Endpoints.aiReadings}/reports', body: {
+        'readingId': readingId,
+        'lyDo': lyDo,
+        'moTa': moTa.trim(),
+      });
+
   /// Lịch sử trải bài của chính mình, mới nhất trước. Máy chủ lấy danh tính
   /// từ token — không nhận userId từ ngoài.
   Future<Trang<LanTraiBai>> lichSu({int trang = 0, int co = 20}) async {
