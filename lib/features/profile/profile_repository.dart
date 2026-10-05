@@ -99,6 +99,10 @@ class ProfileRepository {
 
   Future<HoSo> goAnh() async =>
       HoSo.fromJson(await _api.delete<Map<String, dynamic>>(Endpoints.meAvatar));
+
+  /// Tự xoá tài khoản. Đòi mật khẩu vì việc này không lùi được.
+  Future<void> xoaTaiKhoan(String matKhau) =>
+      _api.delete(Endpoints.me, body: {'password': matKhau});
 }
 
 final profileRepositoryProvider =
