@@ -72,6 +72,8 @@ class GoiAiScreen extends ConsumerWidget {
                 for (final g in goi) _TheGoi(goi: g),
               const SizedBox(height: 20),
               const _LuotMuaCuaToi(),
+              const SizedBox(height: 20),
+              const _SoViCuaToi(),
             ],
           ),
         ),
@@ -333,6 +335,75 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Sổ ví — tiền vào, tiền ra.
+///
+/// `giaoDichViProvider` đã có từ trước và được làm mới sau mỗi lần nạp lẫn mỗi
+/// lần mua gói, nhưng KHÔNG màn nào đọc nó: dữ liệu tải về rồi bỏ đó. Người
+/// dùng trên app thấy số dư tụt mà không có chỗ nào xem vì sao, trong khi bản
+/// web có trang ví đầy đủ.
+class _SoViCuaToi extends ConsumerWidget {
+  const _SoViCuaToi();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ds = ref.watch(giaoDichViProvider).asData?.value ?? const [];
+    if (ds.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Sổ ví',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        for (final g in ds)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              g.tienVao ? Icons.south_west : Icons.north_east,
+              size: 20,
+              color: g.tienVao ? const Color(0xFF6BBF7B) : Mau.chuMo,
+            ),
+            title: Text(
+              nhanLoaiGiaoDich(g.loai),
+              style: const TextStyle(fontSize: 14),
+            ),
+            subtitle: Text(
+              g.moTa?.isNotEmpty == true
+                  ? g.moTa!
+                  : Dinh.ngayGio(g.luc),
+              style: const TextStyle(fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Dấu tự đặt ở đây. Máy chủ trả amount LUÔN DƯƠNG kể cả giao
+                // dịch trừ ví, nên chiều tiền phải đọc ở chênh lệch số dư —
+                // xem GiaoDichVi.tienVao.
+                Text(
+                  '${g.tienVao ? '+' : '−'}${Dinh.tien(g.soTien)}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: g.tienVao ? const Color(0xFF6BBF7B) : Mau.chu,
+                  ),
+                ),
+                Text(
+                  'Còn ${Dinh.tien(g.soDuSau)}',
+                  style: const TextStyle(fontSize: 11, color: Mau.chuMo),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
