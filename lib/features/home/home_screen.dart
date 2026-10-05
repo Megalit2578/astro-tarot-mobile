@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
-import '../../widgets/vong_bai_tarot.dart';
+import '../../widgets/quat_bai_tarot.dart';
 import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
@@ -70,61 +70,11 @@ class HomeScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
-            // Vòng bài xoay làm nền cho lời chào — đây là hình ảnh nhận diện
-            // của web mà app chưa có. Chữ đặt trên nền tối mờ dần ra giữa, để
-            // vành bài không làm khó đọc.
-            SizedBox(
-              height: 252,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Vòng tròn trọn vẹn với chữ nằm GIỮA, như bản web. Bản
-                  // trước cắt mất nửa trên nên nhìn ra cái bát chứ không ra
-                  // vòng bài.
-                  //
-                  // Chu vi vành 252 là ~790, chia cho 22 lá được ~36 mỗi lá.
-                  // Lá rộng 28 thì còn khoảng thở; để 42 như trước là các lá
-                  // chồng lên nhau thành một bức tường kín.
-                  const VongBaiTarot(duongKinh: 252, beRongLa: 28),
-                  // Ô tối ở giữa để chữ đọc được, mờ dần ra ngoài để không cắt
-                  // ngang vành bài bằng một đường viền thấy được.
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            radius: 0.5,
-                            colors: [
-                              Mau.nen,
-                              Mau.nen,
-                              Mau.nen.withValues(alpha: 0),
-                            ],
-                            stops: const [0, 0.45, 1],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Chào ${tenGoi(u?.fullName)},',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Hôm nay bạn muốn hỏi điều gì?',
-                        style: TextStyle(color: Mau.chuMo, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            // Quạt bài mở đầu trang chủ. Lời chào nằm TRÊN quạt chứ không nằm
+            // giữa như bản vòng tròn trước: quạt xoè từ dưới lên nên nửa trên
+            // khung vốn đã trống, đặt chữ vào đó là vừa, và không phải phủ một
+            // mảng tối lên chính thứ mình muốn khoe.
+            _MoDau(ten: tenGoi(u?.fullName)),
 
             if (u != null &&
                 u.co('READER_APPLY') &&
@@ -243,6 +193,61 @@ class HomeScreen extends ConsumerWidget {
 
 /// Trạng thái đơn xin làm Reader — chỉ hiện khi có đơn đang chờ hoặc bị từ
 /// chối. Chưa nộp thì im lặng: trang chủ không phải chỗ mời chào.
+/// Lời chào và quạt bài ở đầu trang chủ.
+///
+/// Tách riêng vì cần nhớ lá đang được chạm, mà `HomeScreen` là
+/// `ConsumerWidget` không có trạng thái. Đổi cả màn thành stateful chỉ để giữ
+/// một con số thì cả những phần không liên quan cũng phải dựng lại mỗi lần
+/// chạm vào lá bài.
+class _MoDau extends StatefulWidget {
+  const _MoDau({required this.ten});
+
+  final String ten;
+
+  @override
+  State<_MoDau> createState() => _MoDauState();
+}
+
+class _MoDauState extends State<_MoDau> {
+  LaAnChinh? _chon;
+
+  @override
+  Widget build(BuildContext context) {
+    final la = _chon;
+    return Column(
+      children: [
+        Text(
+          'Chào ${widget.ten},',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        // Dòng phụ đổi theo lá đang chạm. Chuyển bằng AnimatedSwitcher để chữ
+        // không nhảy phắt sang câu khác; và giữ chiều cao cố định để quạt bài
+        // bên dưới không bị đẩy lên xuống mỗi lần chạm.
+        SizedBox(
+          height: 18,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: la == null
+                ? const Text(
+                    'Hôm nay bạn muốn hỏi điều gì?',
+                    key: ValueKey('hoi'),
+                    style: TextStyle(color: Mau.chuMo, fontSize: 13),
+                  )
+                : Text(
+                    '${la.tenVi} · ${la.tuKhoa.first}',
+                    key: ValueKey(la.tep),
+                    style: const TextStyle(color: Mau.vang, fontSize: 13),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        QuatBaiTarot(onChon: (l) => setState(() => _chon = l)),
+      ],
+    );
+  }
+}
+
 class _TrangThaiDonReader extends ConsumerWidget {
   const _TrangThaiDonReader();
 
