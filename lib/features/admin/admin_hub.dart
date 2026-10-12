@@ -5,6 +5,7 @@ import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../../widgets/dai_chon.dart';
+import '../blog/duyet_bai_view.dart';
 import 'admin_repository.dart';
 import 'hang_cho_views.dart';
 import 'nhat_ky_view.dart';
@@ -57,6 +58,11 @@ List<MucQuanTri> mucQuanTri(AppUser u) {
       MucQuanTri('Rút tiền', () => const RutTienView()),
     if (u.co('REPORT_REVIEW'))
       MucQuanTri('Báo cáo vi phạm', () => const BaoCaoView()),
+    // Chỉ hàng chờ DUYỆT ở đây. Viết bài nằm ở Bàn làm việc, và cả Quản lý
+    // lẫn Quản trị viên đều vào được bàn ấy, nên bày thêm một mục "Bài của
+    // tôi" ở đây là hai lối tới cùng một màn.
+    if (u.co('BLOG_REVIEW'))
+      MucQuanTri('Duyệt bài', () => const DuyetBaiView()),
     if (u.co('AUDIT_VIEW'))
       MucQuanTri('Nhật ký', () => const NhatKyView()),
     if (quanTriVien)

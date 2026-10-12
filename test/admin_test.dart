@@ -147,14 +147,15 @@ Future<void> moTab(WidgetTester t, String nhan) async {
 
 void main() {
   group('Khu quản trị', () {
-    testWidgets('Quản trị viên thấy đủ chín mục', (t) async {
+    testWidgets('Quản trị viên thấy đủ mười mục', (t) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'ADMIN'));
       khaiQuanTri(m.mayChu);
       await m.dung(t, const AdminHub());
       expect(find.text('Quản trị'), findsOneWidget);
       expect(mucQuanTri(nguoiDung(vaiTro: 'ADMIN')).map((e) => e.nhan), [
         'Tổng quan', 'Tài khoản', 'Hồ sơ Reader', 'Thanh toán', 'Rút tiền',
-        'Báo cáo vi phạm', 'Nhật ký', 'Phân quyền', 'Sản phẩm liên kết',
+        'Báo cáo vi phạm', 'Duyệt bài', 'Nhật ký', 'Phân quyền',
+        'Sản phẩm liên kết',
       ]);
       // Tổng quan: KPI + biểu đồ.
       expect(find.text('Hồ sơ Reader chờ duyệt'), findsOneWidget);

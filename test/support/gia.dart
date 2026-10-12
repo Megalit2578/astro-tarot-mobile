@@ -188,24 +188,29 @@ AppUser nguoiDung({
   Set<String>? quyen,
   String ten = 'Minh Anh',
 }) {
+  // Bảng này phải khớp CustomUserDetails.ROLE_PERMISSIONS bên backend. Lệch
+  // đi thì test vẫn xanh trong khi app thật nhận 403 — kiểu hỏng mà bộ test
+  // không những không bắt được, mà còn che đi.
+  //
+  // CUSTOMER_ACTIONS và BLOG_CREATE từng thiếu ở đây.
   const bang = {
-    'USER': ['USER_BASIC', 'READER_APPLY'],
+    'USER': ['USER_BASIC', 'CUSTOMER_ACTIONS', 'READER_APPLY'],
     'STAFF': [
       'USER_BASIC', 'READER_APPLY', 'READER_MANAGE_PROFILE', 'SUPPORT_VIEW',
       'SUPPORT_RESPOND', 'PAYOUT_REQUEST', 'ADMIN_READERS_VIEW',
-      'ADMIN_READERS_REVIEW',
+      'ADMIN_READERS_REVIEW', 'BLOG_CREATE',
     ],
     'MANAGER': [
       'USER_BASIC', 'SUPPORT_VIEW', 'STAFF_VIEW', 'STAFF_MANAGE',
       'ADMIN_READERS_VIEW', 'ADMIN_READERS_REVIEW', 'REPORT_REVIEW',
-      'CATALOG_MANAGE',
+      'BLOG_CREATE', 'BLOG_REVIEW', 'CATALOG_MANAGE',
     ],
     'ADMIN': [
       'USER_BASIC', 'READER_MANAGE_PROFILE', 'SUPPORT_VIEW', 'SUPPORT_RESPOND',
       'STAFF_VIEW', 'STAFF_MANAGE', 'ADMIN_READERS_VIEW',
-      'ADMIN_READERS_REVIEW', 'CATALOG_MANAGE', 'ORDERS_MANAGE',
-      'USERS_MANAGE', 'AUDIT_VIEW', 'PAYMENTS_MANAGE', 'PAYOUT_REVIEW',
-      'REPORT_REVIEW',
+      'ADMIN_READERS_REVIEW', 'BLOG_CREATE', 'BLOG_REVIEW', 'CATALOG_MANAGE',
+      'ORDERS_MANAGE', 'USERS_MANAGE', 'AUDIT_VIEW', 'PAYMENTS_MANAGE',
+      'PAYOUT_REVIEW', 'REPORT_REVIEW',
     ],
   };
   return AppUser.fromJson({

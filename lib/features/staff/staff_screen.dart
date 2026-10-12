@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../../widgets/dai_chon.dart';
+import '../blog/bai_viet_cua_toi_view.dart';
 import '../money/earnings_screen.dart';
 import '../readerprofile/reader_profile_view.dart';
 import 'staff_bookings_view.dart';
@@ -55,6 +56,11 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
         (khoa: 'profile', nhan: 'Hồ sơ', man: const ReaderProfileView()),
       if (u.co('PAYOUT_REQUEST'))
         (khoa: 'earnings', nhan: 'Thu nhập', man: const EarningsScreen()),
+      // Tab "Bài viết" ở thanh dưới chỉ có bài ĐÃ XUẤT BẢN, nên trước mục này
+      // tác giả không có đường nào nhìn thấy bản nháp hay bài bị từ chối của
+      // chính mình — viết bài trên điện thoại là việc không làm được.
+      if (u.co('BLOG_CREATE'))
+        (khoa: 'blog', nhan: 'Bài viết', man: const BaiVietCuaToiView()),
     ];
 
     if (muc.isEmpty) {

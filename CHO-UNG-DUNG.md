@@ -1,7 +1,24 @@
-# Điều kiện lên CH Play và App Store
+# Điều kiện lên CH Play
 
 Rà soát ngày 05/10/2026 trên chính mã nguồn, không phải chép danh sách chung.
 Mỗi mục ghi rõ: đã sửa, hay còn phải làm, và làm thì ai làm được.
+Cập nhật 12/10/2026 sau khi chốt **chỉ phát hành Android**.
+
+## Chốt ngày 12/10/2026: chỉ CH Play, không nộp App Store
+
+Quyết định này **xoá hoặc làm nhẹ bốn mục** bên dưới, nên đọc nó trước khi đọc
+danh sách:
+
+| Mục | Đổi thành |
+|---|---|
+| A2 iOS thiếu mô tả quyền | Không còn liên quan. Giữ nguyên `Info.plist` đã sửa, không mất gì, và nếu sau này đổi ý thì khỏi làm lại. |
+| A5 bán gói AI ngoài IAP | **Nhẹ hẳn.** Phần khắt khe nhất là của Apple. Google cho phép thanh toán thay thế ở Việt Nam, và điều cấm *dẫn người dùng ra web* cũng là của Apple. |
+| A6 tài khoản thử | Vẫn cần, nhưng CH Play chỉ hỏi trong phần ghi chú cho người duyệt, không trả hồ sơ về ngay như Apple. |
+| B5 khai báo dữ liệu | Chỉ còn biểu mẫu **Data safety** của Google. |
+
+Những mục còn lại — A1 khoá ký, A3 xoá tài khoản, A4 chính sách riêng tư, B1
+icon, B3 miễn trừ, B4 báo cáo nội dung AI — **Google cũng bắt buộc y hệt**, nên
+không mục nào biến mất vì bỏ iOS.
 
 ---
 
@@ -33,29 +50,24 @@ camera thiếu khoá ấy, và App Store Connect chặn ngay từ lúc nộp. Đ
 (camera, micro, thư viện ảnh) với câu nói rõ dùng vào việc gì — Apple từ chối
 những câu chung chung kiểu "ứng dụng cần quyền camera".
 
-### A3. Người dùng không tự xoá được tài khoản — CÒN PHẢI LÀM
+### A3. Người dùng không tự xoá được tài khoản — ĐÃ LÀM
 
-Cả hai chợ đều **bắt buộc**: Apple ở hướng dẫn 5.1.1(v), Google ở chính sách
-Xoá dữ liệu tài khoản. App cho đăng ký thì phải cho xoá.
+Google bắt buộc ở chính sách Xoá dữ liệu tài khoản: app cho đăng ký thì phải
+cho xoá. Trước đây trong mã chỉ có `USER_DELETE` ở màn quản trị — tức admin xoá
+tài khoản *người khác*, không có đường nào cho chính chủ.
 
-Trong mã hiện chỉ có `USER_DELETE` ở màn quản trị — tức admin xoá tài khoản
-người khác. Không có đường nào cho chính chủ.
-
-Cần ba phần:
+Nay đủ ba phần:
 
 | | |
 |---|---|
-| Backend | `DELETE /api/v1/users/me` — xoá hoặc ẩn danh dữ liệu cá nhân, giữ lại hoá đơn theo nghĩa vụ kế toán |
-| App | Nút trong `lib/features/account/account_screen.dart`, cạnh "Đăng xuất", có bước xác nhận |
-| Web | Một trang công khai để yêu cầu xoá **mà không cần cài app** — Google bắt buộc có đường dẫn này |
+| Backend | `DELETE /api/v1/users/me`. Xoá mềm hồ sơ và ẩn danh dữ liệu cá nhân, **giữ lại hoá đơn** theo nghĩa vụ kế toán — xoá cứng cả bảng giao dịch là tự xoá sổ sách của chính mình. |
+| App | `_HopXoaTaiKhoan` trong `lib/features/account/account_screen.dart`, cạnh "Đăng xuất", có bước xác nhận. |
+| Web | `src/routes/xoa-tai-khoan.tsx` — trang công khai, yêu cầu xoá được **mà không cần cài app**, đúng như Google đòi. |
 
-### A4. Không có chính sách riêng tư — CÒN PHẢI LÀM
+### A4. Chính sách riêng tư — ĐÃ LÀM
 
-Không có trang nào trong web (`src/routes/` không có `privacy` hay
-`chinh-sach`), cũng không có đường dẫn nào trong app.
-
-Bắt buộc ở cả hai chợ, và phải là **đường dẫn công khai mở được mà không cần
-đăng nhập**. Nội dung phải khớp dữ liệu app thật sự thu thập:
+`src/routes/chinh-sach-rieng-tu.tsx`, mở được **không cần đăng nhập** như
+Google đòi. Nội dung khớp đúng dữ liệu app thật sự thu thập:
 
 - Tài khoản: email, họ tên, ảnh đại diện
 - **Ngày, giờ và nơi sinh** — đây là dữ liệu nhạy cảm, phải nói riêng
@@ -63,37 +75,39 @@ Bắt buộc ở cả hai chợ, và phải là **đường dẫn công khai m�
 - Lịch sử giao dịch và số dư ví
 - Camera và micro khi gọi video
 
-### A5. Bán gói AI không qua cổng thanh toán của chợ — RỦI RO LỚN NHẤT
+### A5. Bán gói AI không qua cổng thanh toán của chợ — NHẸ ĐI, nhưng phải quyết
 
-Đây là mục tôi lo nhất, và nó không sửa được bằng mã.
+Đây từng là mục đáng lo nhất, và nó không sửa được bằng mã. Bỏ iOS làm nó nhẹ
+hẳn, chứ **không xoá hẳn**.
 
 Gói AI là **nội dung số tiêu thụ ngay trong ứng dụng**. Apple (hướng dẫn 3.1.1)
-và Google (chính sách Thanh toán) đều bắt loại này phải đi qua IAP của họ, và
-đều ăn hoa hồng. App đang nạp ví bằng chuyển khoản rồi trừ ví để mua gói
-(`goi_ai_repository.dart`, `purchaseType: 'WALLET'`) — đúng cái mẫu cả hai chợ
-từ chối.
+và Google (chính sách Thanh toán) đều bắt loại này đi qua IAP của họ. App đang
+nạp ví bằng chuyển khoản rồi trừ ví để mua gói (`goi_ai_repository.dart`,
+`purchaseType: 'WALLET'`).
 
 Buổi xem với Reader thì **không** dính: đó là dịch vụ do người thật thực hiện
-theo thời gian thực, cả hai chợ đều cho phép thanh toán ngoài.
+theo thời gian thực, Google cho phép thanh toán ngoài.
 
-Ba đường đi, chọn một:
+Chỉ còn Google thì hai đường, chọn một:
 
-1. **Bỏ bán gói AI trong app.** App chỉ còn đặt lịch với Reader. Gói AI vẫn bán
-   trên web. Nhưng cũng không được *dẫn* người dùng sang web mua — Apple cấm cả
-   việc đặt đường dẫn ra ngoài để tránh IAP.
-2. **Dựng IAP thật** cho riêng gói AI, ở cả hai chợ. Tốn công nhất, và mất
+1. **Dùng cơ chế thanh toán thay thế** Google mở cho nhà phát triển ở Việt Nam.
+   Giữ nguyên luồng ví hiện tại, chỉ phải đăng ký và khai báo. Điều cấm *dẫn
+   người dùng ra web mua* là của Apple, Google không cấm — nên đường này không
+   còn vướng như lúc còn tính nộp App Store.
+2. **Dựng Play Billing** cho riêng gói AI. Chắc chắn qua, nhưng tốn công và mất
    15–30% doanh thu gói.
-3. **Chỉ phát hành trên CH Play trước.** Google nới hơn Apple ở vài thị trường
-   và có cơ chế thanh toán thay thế; Apple thì gần như không.
 
-Với một đồ án một kỳ, hướng 1 là nhanh và chắc nhất.
+**Chưa quyết.** Quyết sớm vì nó đổi cả luồng mua.
 
 ### A6. Tài khoản thử cho người duyệt — CÒN PHẢI LÀM
 
-Gần như mọi thứ nằm sau màn đăng nhập. Người duyệt của Apple không tự đăng ký
-mà **trả hồ sơ về** nếu không vào được. Phải điền sẵn email và mật khẩu một tài
-khoản thử vào ô "Sign-in information" của App Store Connect, và phần ghi chú
-của CH Play.
+Gần như mọi thứ nằm sau màn đăng nhập. Điền sẵn email và mật khẩu một tài khoản
+thử vào phần ghi chú cho người duyệt của CH Play.
+
+Lưu ý: mật khẩu các tài khoản demo đã bị khoá ở migration
+`V2_32__khoa_mat_khau_tai_khoan_demo.sql` (chúng từng nằm công khai trên
+GitHub), nên tài khoản thử phải **lập mới** và đặt mật khẩu riêng, đừng lấy lại
+tài khoản cũ trong tài liệu.
 
 Tài khoản ấy nên có sẵn: một lượt đặt lịch, một đoạn trò chuyện, một gói AI còn
 hạn — để người duyệt thấy được app làm gì thay vì một màn hình trống.
@@ -158,16 +172,15 @@ rất khác nhau, gộp chung một con số là trộn hai hàng chờ.
 
 ### B5. Khai báo dữ liệu
 
-- CH Play: biểu mẫu **Data safety**
-- Apple: **Privacy nutrition labels**
+Biểu mẫu **Data safety** của CH Play.
 
-Khai sai nguy hiểm hơn khai thiếu: hai chợ có đối chiếu với hành vi thật của
+Khai sai nguy hiểm hơn khai thiếu: Google có đối chiếu với hành vi thật của
 app, lệch là gỡ ứng dụng. Khai theo đúng danh sách ở mục A4.
 
 ### B6. Tài nguyên cho trang giới thiệu
 
 Ảnh chụp màn hình theo từng cỡ máy, mô tả ngắn và dài, phân loại độ tuổi, và
-với CH Play là ảnh nổi bật 1024×500.
+ảnh nổi bật 1024×500.
 
 ---
 
@@ -185,11 +198,22 @@ với CH Play là ảnh nổi bật 1024×500.
 
 ---
 
-## Thứ tự nên làm
+## Còn lại gì — tính đến 12/10/2026
 
-1. A3 xoá tài khoản và A4 chính sách riêng tư — hai thứ này chắc chắn bị hỏi,
-   và đều cần cả web lẫn app nên làm lâu nhất.
-2. A5 quyết định hướng đi cho gói AI. Quyết sớm vì nó đổi cả luồng mua.
-3. A1 tạo khoá ký, B1 bộ icon.
-4. A6 tài khoản thử, B5 khai báo dữ liệu, B6 ảnh chụp màn hình.
-5. B3, B4 những câu chữ và nút báo cáo.
+Đã xong: A2 (không còn liên quan), A3, A4, B1, B3, B4, và cả C.
+
+Còn bốn việc, xếp theo thứ tự nên làm:
+
+1. **A5 — quyết hướng đi cho gói AI.** Quyết đầu tiên vì nếu chọn Play Billing
+   thì cả luồng mua phải viết lại, và mọi ảnh chụp màn hình chụp trước đó đều
+   phải chụp lại.
+2. **A1 — tạo kho khoá ký.** Chỉ bạn làm được: đó là khoá bí mật kèm mật khẩu,
+   và mất nó là mất vĩnh viễn khả năng cập nhật ứng dụng đã phát hành. Xem
+   [`android/KHOA-KY.md`](android/KHOA-KY.md).
+3. **B2 — đổi tên gói** thành `com.astrotarot.app`, nếu còn muốn đổi. Phải đổi
+   **trước lần nộp đầu tiên**; sau đó tên gói là khoá định danh vĩnh viễn.
+4. **A6 tài khoản thử, B5 Data safety, B6 ảnh chụp màn hình** — việc điền hồ
+   sơ, làm cuối cùng khi mọi thứ trong app đã chốt.
+
+Không còn khoảng trống nào giữa app và web về tính năng: phần cuối cùng còn
+thiếu là viết bài và duyệt bài, đã bổ sung ngày 12/10/2026.
