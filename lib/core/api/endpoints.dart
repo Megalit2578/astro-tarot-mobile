@@ -180,6 +180,20 @@ class Endpoints {
   static const blogs = '/api/v1/blogs';
   static String blog(String slug) => '/api/v1/blogs/$slug';
 
+  // Viết bài: tác giả thao tác trên bài CỦA MÌNH, theo id.
+  static const blogsCuaToi = '/api/v1/staff/blogs/me';
+  static const blogSoan = '/api/v1/staff/blogs';
+  static String blogSua(String id) => '/api/v1/staff/blogs/$id';
+  static String blogGuiDuyet(String id) => '/api/v1/staff/blogs/$id/submit';
+
+  // Duyệt bài: người duyệt thao tác trên MỌI bài, cũng theo id. Hai nhóm
+  // đường dẫn khác hẳn nhau vì backend gác chúng bằng hai quyền khác nhau
+  // (BLOG_CREATE với BLOG_REVIEW) — đừng gộp lại cho gọn.
+  static const blogsTatCa = '/api/v1/blogs/all';
+  static String blogDuyet(String id) => '/api/v1/blogs/$id/review';
+  static String blogXuatBan(String id) => '/api/v1/blogs/$id/publish';
+  static String blogXoa(String id) => '/api/v1/blogs/$id';
+
   // ---- WebRTC ----
   static const iceConfig = '/api/v1/rtc/ice';
 
