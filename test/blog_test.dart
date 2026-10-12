@@ -72,7 +72,7 @@ void main() {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
       m.mayChu.tra('GET /api/v1/staff/blogs/me', trang([mauBai()]));
       m.mayChu.tra('PATCH /api/v1/staff/blogs/b1/submit', mauBai(trangThai: 'PENDING'));
-      await m.dung(t, const BaiVietCuaToiView());
+      await m.dung(t, const Scaffold(body: BaiVietCuaToiView()));
 
       expect(find.text('Bản nháp'), findsOneWidget);
       expect(find.text('Sửa'), findsOneWidget);
@@ -90,7 +90,7 @@ void main() {
           trang([
             mauBai(trangThai: 'REJECTED', lyDo: 'Phần mở còn lan man.'),
           ]));
-      await m.dung(t, const BaiVietCuaToiView());
+      await m.dung(t, const Scaffold(body: BaiVietCuaToiView()));
 
       expect(find.text('Phần mở còn lan man.'), findsOneWidget);
       expect(find.text('Gửi lại'), findsOneWidget);
@@ -102,7 +102,7 @@ void main() {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
       m.mayChu.tra('GET /api/v1/staff/blogs/me',
           trang([mauBai(trangThai: 'PUBLISHED')]));
-      await m.dung(t, const BaiVietCuaToiView());
+      await m.dung(t, const Scaffold(body: BaiVietCuaToiView()));
 
       expect(find.text('Đã xuất bản'), findsOneWidget);
       expect(find.text('Sửa'), findsNothing);
@@ -115,7 +115,7 @@ void main() {
       m.mayChu.tra('GET /api/v1/staff/blogs/me', trang([mauBai()]));
       m.mayChu.loi('PATCH /api/v1/staff/blogs/b1/submit',
           'Bài viết chưa đủ 300 từ.');
-      await m.dung(t, const BaiVietCuaToiView());
+      await m.dung(t, const Scaffold(body: BaiVietCuaToiView()));
 
       await bam(t, find.text('Gửi duyệt'));
       expect(find.text('Bài viết chưa đủ 300 từ.'), findsOneWidget);

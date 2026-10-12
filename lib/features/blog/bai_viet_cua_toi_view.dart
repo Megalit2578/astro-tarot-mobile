@@ -35,51 +35,59 @@ class _BaiVietCuaToiViewState extends ConsumerState<BaiVietCuaToiView> {
   @override
   Widget build(BuildContext context) {
     final repo = ref.watch(blogRepositoryProvider);
-    return Scaffold(
-      body: DanhSachPhanTrang<BaiVietQuanTri>(
-        key: ValueKey('bai-toi-$_loc'),
-        dieuKhien: _dk,
-        tai: (t) => repo.cuaToi(trangThai: _loc, trang: t),
-        loiDuPhong: 'Không tải được bài viết của bạn.',
-        dau: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: DropdownButtonFormField<String>(
-              key: const ValueKey('loc-bai-cua-toi'),
-              initialValue: _loc,
-              isExpanded: true,
-              dropdownColor: Mau.the,
-              decoration: const InputDecoration(
-                isDense: true,
-                prefixIcon: Icon(Icons.filter_list, size: 18),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-              items: [
-                const DropdownMenuItem(value: '', child: Text('Tất cả')),
-                for (final e in tenTrangThaiBai.entries)
-                  DropdownMenuItem(value: e.key, child: Text(e.value)),
-              ],
-              onChanged: (v) => setState(() => _loc = v ?? ''),
-            ),
+    // Nút "Viết bài" nằm ĐẦU DANH SÁCH, không phải nút nổi góc dưới.
+    //
+    // Khung chính đã có một nút nổi ở đúng chỗ ấy — cục trò chuyện — và nó
+    // hiện lên bất cứ lúc nào Reader có một buổi đang mở chat. Hai nút nổi
+    // chồng lên nhau, mà cái bị che lại là cái quan trọng hơn: khách đang chờ
+    // trả lời.
+    return DanhSachPhanTrang<BaiVietQuanTri>(
+      key: ValueKey('bai-toi-$_loc'),
+      dieuKhien: _dk,
+      tai: (t) => repo.cuaToi(trangThai: _loc, trang: t),
+      loiDuPhong: 'Không tải được bài viết của bạn.',
+      dau: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: FilledButton.icon(
+            onPressed: () => _moSoan(),
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 46)),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Viết bài'),
           ),
-        ],
-        trong: KhoiTrong(
-          icon: Icons.edit_note_outlined,
-          tieuDe: _loc.isEmpty
-              ? 'Bạn chưa viết bài nào'
-              : 'Không có bài nào ở trạng thái này',
-          moTa: _loc.isEmpty
-              ? 'Bấm nút bên dưới để viết bài đầu tiên.'
-              : 'Đổi bộ lọc để xem các bài khác của bạn.',
         ),
-        dong: (_, b) => _TheBaiCuaToi(b: b, dk: _dk, sua: () => _moSoan(b)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: DropdownButtonFormField<String>(
+            key: const ValueKey('loc-bai-cua-toi'),
+            initialValue: _loc,
+            isExpanded: true,
+            dropdownColor: Mau.the,
+            decoration: const InputDecoration(
+              isDense: true,
+              prefixIcon: Icon(Icons.filter_list, size: 18),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+            items: [
+              const DropdownMenuItem(value: '', child: Text('Tất cả')),
+              for (final e in tenTrangThaiBai.entries)
+                DropdownMenuItem(value: e.key, child: Text(e.value)),
+            ],
+            onChanged: (v) => setState(() => _loc = v ?? ''),
+          ),
+        ),
+      ],
+      trong: KhoiTrong(
+        icon: Icons.edit_note_outlined,
+        tieuDe: _loc.isEmpty
+            ? 'Bạn chưa viết bài nào'
+            : 'Không có bài nào ở trạng thái này',
+        moTa: _loc.isEmpty
+            ? 'Bấm "Viết bài" ở trên để bắt đầu bài đầu tiên.'
+            : 'Đổi bộ lọc để xem các bài khác của bạn.',
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _moSoan(),
-        icon: const Icon(Icons.add),
-        label: const Text('Viết bài'),
-      ),
+      dong: (_, b) => _TheBaiCuaToi(b: b, dk: _dk, sua: () => _moSoan(b)),
     );
   }
 }
