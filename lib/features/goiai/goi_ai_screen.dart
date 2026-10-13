@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
@@ -28,9 +29,22 @@ class GoiAiScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ds = ref.watch(goiDangBanProvider);
+    // Màn này gộp hai thứ: VÍ của người dùng, và GÓI AI đang bán.
+    //
+    // Chỉ phần gói là việc của khách — mua gói và nạp ví đều đòi
+    // CUSTOMER_ACTIONS. Còn ví thì backend cố ý để `isAuthenticated()`: người
+    // từng là khách rồi được cất lên Nhân viên vẫn phải nhìn thấy tiền cũ của
+    // mình.
+    //
+    // Bản trước tôi gác cả màn, nên Nhân viên mất luôn đường tới ví — chặt
+    // hơn backend, và ngược với chính lý do đã viết ra khi mở backend.
+    final laKhach = ref.watch(authControllerProvider).user?.co(
+              'CUSTOMER_ACTIONS',
+            ) ??
+        false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Gói AI')),
+      appBar: AppBar(title: Text(laKhach ? 'Gói AI' : 'Ví ASTROTAROT')),
       body: RefreshIndicator(
         color: Mau.vang,
         backgroundColor: Mau.the,
@@ -54,23 +68,26 @@ class GoiAiScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
-              const _TheVi(),
-              const SizedBox(height: 12),
-              const _HanMucHomNay(),
+              _TheVi(napDuoc: laKhach),
+              if (laKhach) ...[
+                const SizedBox(height: 12),
+                const _HanMucHomNay(),
+                const SizedBox(height: 20),
+                const Text(
+                  'Chọn gói',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                if (goi.isEmpty)
+                  const KhoiTrong(
+                    icon: Icons.auto_awesome,
+                    tieuDe: 'Chưa có gói nào đang bán',
+                  )
+                else
+                  for (final g in goi) _TheGoi(goi: g),
+              ],
               const SizedBox(height: 20),
-              const Text(
-                'Chọn gói',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              if (goi.isEmpty)
-                const KhoiTrong(
-                  icon: Icons.auto_awesome,
-                  tieuDe: 'Chưa có gói nào đang bán',
-                )
-              else
-                for (final g in goi) _TheGoi(goi: g),
-              const SizedBox(height: 20),
+              // Hai khối này là LỊCH SỬ của chính họ, giữ cho mọi vai trò.
               const _LuotMuaCuaToi(),
               const SizedBox(height: 20),
               const _SoViCuaToi(),
@@ -84,7 +101,12 @@ class GoiAiScreen extends ConsumerWidget {
 
 /// Số dư ví, kèm lối nạp thêm.
 class _TheVi extends ConsumerWidget {
-  const _TheVi();
+  const _TheVi({required this.napDuoc});
+
+  /// Nạp ví đòi CUSTOMER_ACTIONS ở backend. Bày nút cho người không có quyền
+  /// là hứa một việc máy chủ sẽ từ chối — số dư thì vẫn hiện, vì đó là tiền
+  /// của họ.
+  final bool napDuoc;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -124,10 +146,11 @@ class _TheVi extends ConsumerWidget {
               ],
             ),
           ),
-          OutlinedButton(
-            onPressed: () => _moNap(context, ref),
-            child: const Text('Nạp tiền'),
-          ),
+          if (napDuoc)
+            OutlinedButton(
+              onPressed: () => _moNap(context, ref),
+              child: const Text('Nạp tiền'),
+            ),
         ],
       ),
     );

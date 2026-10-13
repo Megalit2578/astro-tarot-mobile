@@ -82,12 +82,17 @@ class HomeScreen extends ConsumerWidget {
               const _TrangThaiDonReader(),
 
             const SizedBox(height: 18),
-            // Tarot AI là một trong hai trụ cột của sản phẩm, nhưng KHÔNG đưa
-            // lên thanh tab: thêm vào là sáu mục, và trên máy 360dp thì mỗi
-            // mục còn khoảng sáu mươi pixel, nhãn bị cắt. Đặt ở đây hợp hơn —
-            // trang chủ vừa hỏi xong "hôm nay bạn muốn hỏi điều gì".
-            _TheTarot(),
-            const SizedBox(height: 12),
+            // Thẻ dẫn vào Tarot AI. Chỉ bày cho khách: trải bài đòi
+            // CUSTOMER_ACTIONS, nên với Nhân viên đây là một cái thẻ to đẹp
+            // dẫn thẳng tới 403.
+            //
+            // Thanh tab nay đã có mục Tarot AI riêng (13/10/2026), nhưng giữ
+            // thẻ này: trang chủ vừa hỏi xong "hôm nay bạn muốn hỏi điều gì",
+            // và câu trả lời phải nằm ngay dưới câu hỏi.
+            if (u != null && u.co('CUSTOMER_ACTIONS')) ...[
+              _TheTarot(),
+              const SizedBox(height: 12),
+            ],
             // Web có khối "Lối tắt" sáu ô. Trên điện thoại gom thành một hàng
             // bốn ô nhỏ — đủ để tới gian hàng, bài viết mà không phải vào tab
             // Tài khoản, và không đẩy lịch hẹn sắp tới xuống quá sâu.
@@ -123,8 +128,13 @@ class HomeScreen extends ConsumerWidget {
               for (final b in sapToi.take(2)) _TheSapToi(booking: b),
             ],
 
-            const SizedBox(height: 18),
-            const RutBaiHangNgay(),
+            // Rút thử một lá: bản thân nó rút ở máy, không gọi API nào. Nhưng
+            // cả khối tồn tại để dẫn sang Tarot AI ("muốn hiểu sâu hơn thì
+            // trải bài"), mà đó là chỗ Nhân viên nhận 403.
+            if (u != null && u.co('CUSTOMER_ACTIONS')) ...[
+              const SizedBox(height: 18),
+              const RutBaiHangNgay(),
+            ],
 
             ...switch (readings.asData?.value) {
               final ds? when ds.isNotEmpty => [

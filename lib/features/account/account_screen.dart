@@ -130,16 +130,22 @@ class AccountScreen extends ConsumerWidget {
               phu: 'AI đọc bài dựa trên hồ sơ chính',
               onTap: () => _mo(context, const AstrologyScreen()),
             ),
-            // Mua gói và nạp ví đều đòi CUSTOMER_ACTIONS, và hạn mức AI mỗi
-            // ngày cũng chỉ có nghĩa với người được dùng Tarot AI. Với Nhân
-            // viên thì cả màn này là một màn không làm được gì.
-            if (u.co('CUSTOMER_ACTIONS'))
-              _Muc(
-                icon: Icons.workspace_premium_outlined,
-                nhan: 'Gói AI',
-                phu: 'Hạn mức mỗi ngày, số dư ví, mua gói',
-                onTap: () => _mo(context, const GoiAiScreen()),
-              ),
+            // Màn này gộp VÍ với GÓI AI. Chỉ phần gói là việc của khách; ví
+            // thì backend cố ý mở cho mọi vai trò, vì người từng là khách rồi
+            // được cất lên Nhân viên vẫn phải nhìn thấy tiền cũ của mình.
+            //
+            // Nên không gác cả mục, chỉ đổi nhãn cho khỏi hứa nhầm: Nhân viên
+            // mở ra thấy ví và lịch sử, không thấy phần bán gói.
+            _Muc(
+              icon: u.co('CUSTOMER_ACTIONS')
+                  ? Icons.workspace_premium_outlined
+                  : Icons.account_balance_wallet_outlined,
+              nhan: u.co('CUSTOMER_ACTIONS') ? 'Gói AI' : 'Ví ASTROTAROT',
+              phu: u.co('CUSTOMER_ACTIONS')
+                  ? 'Hạn mức mỗi ngày, số dư ví, mua gói'
+                  : 'Số dư và lịch sử giao dịch của bạn',
+              onTap: () => _mo(context, const GoiAiScreen()),
+            ),
             _Muc(
               icon: Icons.history,
               nhan: 'Lịch sử trải bài',
@@ -231,6 +237,18 @@ class AccountScreen extends ConsumerWidget {
                   onPressed: () => _moLienKet('${AppConfig.webBaseUrl}/chinh-sach-rieng-tu'),
                   style: _nhatNho,
                   child: const Text('Chính sách riêng tư'),
+                ),
+                const Text('·', style: TextStyle(color: Mau.chuMo)),
+                // Ghi công ảnh minh hoạ. App hiện ĐÚNG những ảnh ấy trong
+                // gian hàng, mà năm trong số chúng dùng CC BY / CC BY-SA —
+                // hai giấy phép bắt buộc ghi tên tác giả ở nơi người xem thấy
+                // được. Web đã có trang này; app bày ảnh mà không có đường
+                // dẫn tới nó thì phần nghĩa vụ của app vẫn còn nợ.
+                TextButton(
+                  onPressed: () =>
+                      _moLienKet('${AppConfig.webBaseUrl}/ghi-cong'),
+                  style: _nhatNho,
+                  child: const Text('Nguồn ảnh'),
                 ),
                 const Text('·', style: TextStyle(color: Mau.chuMo)),
                 TextButton(

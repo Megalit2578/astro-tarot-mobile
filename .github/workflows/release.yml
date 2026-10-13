@@ -68,6 +68,38 @@ jobs:
           flutter build apk --release --split-per-abi \
             --dart-define=API_BASE_URL=https://api.astrotarot.date
 
+      # App Bundle, thứ DUY NHẤT nộp lên CH Play được.
+      #
+      # Google bắt ứng dụng mới phát hành bằng .aab từ tháng 8/2021; trang tải
+      # lên từ chối thẳng tệp .apk. Trước bước này repo chỉ dựng APK, nghĩa là
+      # không có tệp nào nộp được — và chuyện đó chỉ lộ ra ở đúng phút ngồi
+      # điền hồ sơ.
+      #
+      # APK ở trên vẫn giữ: nó dùng để cài tay lúc thử, và để gửi cho người
+      # khác xem mà không cần Play.
+      #
+      # Google tự cắt .aab thành bản riêng cho từng loại máy, nên KHÔNG dùng
+      # --split-per-abi ở đây; cờ ấy chỉ có nghĩa với APK.
+      - name: Dựng App Bundle cho CH Play
+        run: |
+          flutter build appbundle --release \
+            --dart-define=API_BASE_URL=https://api.astrotarot.date
+          ls -lh build/app/outputs/bundle/release/
+
+      # Bản ký bằng khoá gỡ lỗi thì CH Play từ chối, mà build.gradle.kts cố ý
+      # KHÔNG làm hỏng bản dựng khi thiếu key.properties — nó chỉ in cảnh báo
+      # rồi ký bằng khoá gỡ lỗi để người mới clone về vẫn chạy được.
+      #
+      # Ở đây thì ngược lại: một .aab ký bằng khoá gỡ lỗi là tệp vô dụng, và
+      # phát hiện ra lúc đã đứng trước trang tải lên thì mất cả buổi. Nên dừng
+      # sớm và nói rõ.
+      - name: Kiểm bundle có ký bằng khoá thật không
+        run: |
+          if [ ! -f android/key.properties ]; then
+            echo "::error::Thiếu android/key.properties — .aab vừa dựng bị ký bằng khoá gỡ lỗi, CH Play sẽ từ chối. Xem android/KHOA-KY.md."
+            exit 1
+          fi
+
       - name: Đổi tên cho dễ nhận
         run: |
           cd build/app/outputs/flutter-apk
@@ -76,8 +108,11 @@ jobs:
             [ -f "$f" ] && mv "$f" "astrotarot-${f#app-}"
           done
           ls -lh
+          cd "$GITHUB_WORKSPACE/build/app/outputs/bundle/release"
+          mv app-release.aab astrotarot-release.aab
+          ls -lh
 
-      - name: Tạo Release và đính kèm APK
+      - name: Tạo Release, đính kèm AAB và APK
         uses: softprops/action-gh-release@v2
         with:
           # Bấm tay thì chưa có thẻ, nên đặt tên theo số lần chạy.
@@ -86,7 +121,13 @@ jobs:
           draft: false
           prerelease: ${{ github.ref_type != 'tag' }}
           body: |
-            Bản cài cho Android. Tải file phù hợp với máy rồi mở để cài:
+            **Nộp lên CH Play**: dùng `astrotarot-release.aab`. Google chỉ nhận
+            App Bundle, không nhận `.apk`.
+
+            Mấy file `.apk` dưới đây là để **cài tay** — thử trên máy mình hoặc
+            gửi cho người khác xem, không nộp lên Play được.
+
+            Tải file phù hợp với máy rồi mở để cài:
 
             - **astrotarot-arm64-v8a-release.apk** — hầu hết điện thoại từ 2017 tới nay. Không rõ thì tải file này.
             - **astrotarot-armeabi-v7a-release.apk** — máy cũ, 32-bit.
@@ -100,4 +141,6 @@ jobs:
             App nối tới API tại `https://api.astrotarot.date`. Máy chủ chạy gói
             free của Render nên ngủ sau một quãng không ai dùng: lần mở đầu tiên
             có thể chờ khoảng một phút, sau đó nhanh bình thường.
-          files: build/app/outputs/flutter-apk/astrotarot-*.apk
+          files: |
+            build/app/outputs/flutter-apk/astrotarot-*.apk
+            build/app/outputs/bundle/release/astrotarot-release.aab

@@ -125,6 +125,35 @@ void main() {
       expect(find.text('Bàn làm việc'), findsOneWidget);
     });
 
+    testWidgets('trang chủ không dẫn Nhân viên vào Tarot AI', (t) async {
+      // Gác thanh tab thôi chưa đủ. Trang chủ còn HAI lối nữa dẫn vào cùng
+      // màn ấy: thẻ "Trải bài Tarot ngay" và khối "Rút thử một lá" (khối này
+      // tự rút ở máy, nhưng tồn tại để mời sang Tarot AI).
+      //
+      // Phát hiện bằng cách chụp màn máy ảo chạy thật, không phải đọc mã:
+      // bản vá trước đã bỏ tab nhưng để nguyên hai thẻ này.
+      // Khung cao bất thường là có chủ ý: trang chủ là một ListView, mục nằm
+      // ngoài vùng nhìn thì KHÔNG được dựng. Với khung cao bình thường thì
+      // "không tìm thấy" có hai nghĩa — bị gác, hoặc chỉ là chưa cuộn tới —
+      // và phép kiểm không phân biệt được, nên nó sẽ xanh cả khi bản vá hỏng.
+      const cao = Size(420, 2600);
+
+      final khach = MoiTruong(user: nguoiDung());
+      khaiTrangChu(khach.mayChu);
+      await khach.dung(t, const HomeScreen(), co: cao);
+      expect(find.text('Trải bài Tarot ngay'), findsOneWidget);
+      expect(find.text('RÚT THỬ MỘT LÁ'), findsOneWidget);
+
+      final nhanSu = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
+      khaiTrangChu(nhanSu.mayChu);
+      await nhanSu.dung(t, const HomeScreen(), co: cao);
+      expect(find.text('Trải bài Tarot ngay'), findsNothing);
+      expect(find.text('RÚT THỬ MỘT LÁ'), findsNothing);
+      // Lịch sử trải bài thì GIỮ: `GET /api/ai-readings` không đòi quyền nào,
+      // và người từng là khách phải đọc lại được lời giải cũ của mình.
+      expect(find.text('Lịch sử bài'), findsOneWidget);
+    });
+
     testWidgets('thanh dưới chỉ bày tab mà vai trò ấy gọi được', (t) async {
       // Hai tab này gọi endpoint đòi CUSTOMER_ACTIONS — quyền chỉ Thành viên
       // có kể từ 12/10/2026:
@@ -550,6 +579,44 @@ void main() {
       expect(find.text('Khởi đầu mới'), findsOneWidget);
       await bam(t, find.text('Ý nghĩa lá The Fool'));
       expect(find.text('Nội dung đầy đủ.'), findsOneWidget);
+    });
+
+    testWidgets('tìm bài viết gửi từ khoá xuống máy chủ', (t) async {
+      // Web có ô tìm từ lâu, app thì chưa. Danh sách bài chỉ dài thêm theo
+      // thời gian, nên không có ô tìm thì bài cũ coi như mất.
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra('GET /api/v1/blogs', trang([
+        {
+          'id': 'bv1',
+          'title': 'Ý nghĩa lá The Fool',
+          'slug': 'the-fool',
+          'summary': 'Khởi đầu mới',
+          'content': 'Một hai ba bốn năm.',
+          'createdAt': iso(homNay),
+        }
+      ]));
+      await m.dung(t, const BlogScreen());
+
+      await t.enterText(find.byKey(const ValueKey('o-tim-bai-viet')), 'the fool');
+      // Gõ xong phải CHỜ: ô tìm hoãn 350ms rồi mới gọi, để mỗi phím không
+      // thành một lượt gọi.
+      await t.pump(const Duration(milliseconds: 400));
+      await xong(t);
+
+      expect(m.mayChu.lanCuoi('GET /api/v1/blogs')!.query['keyword'],
+          'the fool');
+      expect(m.mayChu.lanCuoi('GET /api/v1/blogs')!.query['page'], '0');
+    });
+
+    test('thời gian đọc tính giống web', () {
+      // Cùng công thức với `estimateReadTime` bên web: 200 từ một phút, tối
+      // thiểu một phút. Hai bên ra số khác nhau cho cùng một bài là một mâu
+      // thuẫn người đọc kiểm được trong mười giây.
+      expect(phutDoc(null), 1);
+      expect(phutDoc('   '), 1);
+      expect(phutDoc(List.filled(200, 'tu').join(' ')), 1);
+      expect(phutDoc(List.filled(201, 'tu').join(' ')), 2);
+      expect(phutDoc(List.filled(600, 'tu').join(' ')), 3);
     });
 
     testWidgets('bài viết rỗng và lỗi', (t) async {

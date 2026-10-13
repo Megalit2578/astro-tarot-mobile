@@ -198,9 +198,41 @@ app, lệch là gỡ ứng dụng. Khai theo đúng danh sách ở mục A4.
 
 ---
 
-## Còn lại gì — tính đến 12/10/2026
+### A7. Không có tệp nào nộp lên CH Play được — ĐÃ SỬA 13/10/2026
 
-Đã xong: A2 (không còn liên quan), A3, A4, B1, B3, B4, và cả C.
+Mục này trước đây không có trong danh sách, và đó là thiếu sót: nó chặn cứng
+hơn mọi mục khác.
+
+`release.yml` chỉ dựng **APK**. Google bắt ứng dụng mới phát hành bằng **App
+Bundle (`.aab`)** từ tháng 8/2021; trang tải lên từ chối thẳng tệp `.apk`.
+Nghĩa là trước hôm nay, repo không sinh ra tệp nào nộp được — và chuyện đó chỉ
+lộ ra ở đúng phút ngồi điền hồ sơ.
+
+Nay workflow dựng thêm `flutter build appbundle --release` và đính
+`astrotarot-release.aab` vào bản phát hành. APK vẫn giữ: nó để cài tay lúc
+thử và gửi cho người khác xem mà không cần Play.
+
+Không dùng `--split-per-abi` cho bundle: Google tự cắt `.aab` thành bản riêng
+cho từng loại máy, cờ ấy chỉ có nghĩa với APK.
+
+**Kèm một chốt chặn**: `build.gradle.kts` cố ý KHÔNG làm hỏng bản dựng khi
+thiếu `key.properties` — nó in cảnh báo rồi ký bằng khoá gỡ lỗi, để người mới
+clone về vẫn chạy được. Nhưng một `.aab` ký bằng khoá gỡ lỗi là tệp vô dụng,
+nên trong workflow phát hành thì ngược lại: thiếu `key.properties` là dừng
+ngay với thông báo rõ, thay vì để phát hiện lúc đã đứng trước trang tải lên.
+
+Đo thật ở máy: bundle **72,3MB**. Lọt giới hạn 150MB của CH Play. Nặng vì thư
+viện gọi video gói mã máy cho mọi loại chip; Google cắt ra nên máy người dùng
+tải về nhẹ hơn nhiều. Assets chỉ 1,6MB.
+
+---
+
+## Còn lại gì — tính đến 13/10/2026
+
+Đã xong: A2 (không còn liên quan), A3, A4, **A7**, B1, B3, B4, và cả C.
+
+Từ đây trở đi **không còn việc nào nằm trong mã nguồn**. Bốn mục dưới đây đều
+cần bạn quyết hoặc tự làm.
 
 Còn bốn việc, xếp theo thứ tự nên làm:
 
@@ -215,5 +247,26 @@ Còn bốn việc, xếp theo thứ tự nên làm:
 4. **A6 tài khoản thử, B5 Data safety, B6 ảnh chụp màn hình** — việc điền hồ
    sơ, làm cuối cùng khi mọi thứ trong app đã chốt.
 
-Không còn khoảng trống nào giữa app và web về tính năng: phần cuối cùng còn
-thiếu là viết bài và duyệt bài, đã bổ sung ngày 12/10/2026.
+## Rà app so với web — 13/10/2026
+
+Lần này đối chiếu **từng endpoint web gọi** với từng endpoint app gọi, chứ
+không đọc lướt màn hình. Cách ấy có bẫy riêng: bốn đường dẫn trông như thiếu
+(`/availability`, `/me/escrow`, `/me/payouts`) hoá ra app vẫn gọi, chỉ là khai
+làm hằng riêng trong repository thay vì ở `endpoints.dart`.
+
+Thiếu thật và đã bổ sung:
+
+| | |
+|---|---|
+| Tìm bài viết | web có ô tìm, app thì không — danh sách bài chỉ dài thêm, nên bài cũ coi như mất |
+| Bài liên quan | đọc xong một bài là hết đường đi tiếp, phải bấm quay lại rồi tự dò |
+| Thời gian đọc | trả lời đúng câu người ta hỏi trước khi bấm vào |
+| Chép liên kết bài | bài nằm trên web nên thứ muốn gửi đi là cái địa chỉ |
+| Đường dẫn trang ghi công ảnh | app hiện đúng những ảnh CC BY ấy, nên phần nghĩa vụ của app trước đó vẫn còn nợ |
+
+`/cart` và `/orders` bên web là mã chết — giỏ hàng đã bỏ từ lúc chuyển sang
+mô hình liên kết tiếp thị. Không phải khoảng trống.
+
+Còn **sản phẩm nổi bật** ở trang chủ: web có, app chưa. Chưa làm vì gian hàng
+đang là 12 món chưa có liên kết tiếp thị thật — thêm một chỗ đẩy chúng ra
+trước mặt người dùng lúc này là khuếch đại một thứ chưa sẵn sàng.
