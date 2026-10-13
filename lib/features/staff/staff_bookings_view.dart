@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../theme.dart';
-import '../../widgets/dai_chon.dart';
+import '../../widgets/loc_trang_thai.dart';
 import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
@@ -26,14 +26,22 @@ class StaffBookingsView extends ConsumerStatefulWidget {
 }
 
 class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
-  static const _loc = <(String, TrangThaiBuoi?)>[
-    ('Tất cả', null),
-    ('Chờ nhận', TrangThaiBuoi.pending),
-    ('Đã nhận', TrangThaiBuoi.confirmed),
-    ('Hoàn tất', TrangThaiBuoi.completed),
-    ('Đã huỷ', TrangThaiBuoi.cancelled),
-  ];
-  int _chon = 0;
+  /// Khoá → chữ hiện ra. Khoá rỗng là "tất cả", nên nó không nằm trong bảng.
+  static const _nhanLoc = {
+    'PENDING': 'Chờ nhận',
+    'CONFIRMED': 'Đã nhận',
+    'COMPLETED': 'Hoàn tất',
+    'CANCELLED': 'Đã huỷ',
+  };
+
+  static const _theoKhoa = {
+    'PENDING': TrangThaiBuoi.pending,
+    'CONFIRMED': TrangThaiBuoi.confirmed,
+    'COMPLETED': TrangThaiBuoi.completed,
+    'CANCELLED': TrangThaiBuoi.cancelled,
+  };
+
+  String _khoaLoc = '';
 
   /// Để các thẻ con bắt danh sách tải lại sau khi nhận / hoàn tất / huỷ.
   final _dieuKhien = DieuKhienDanhSach();
@@ -41,9 +49,9 @@ class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
   @override
   Widget build(BuildContext context) {
     final repo = ref.watch(bookingsRepositoryProvider);
-    final loc = _loc[_chon].$2;
+    final loc = _theoKhoa[_khoaLoc];
 
-    // Material trong suốt: DaiChon có ô bấm nên cần một Material phía trên.
+    // Material trong suốt: ô chọn lọc cần một Material phía trên.
     // Màn này nhúng trong Bàn làm việc nên KHÔNG tự dựng Scaffold — mà dựa
     // vào Scaffold của cha là một ràng buộc ngầm, và nó vỡ ngay lúc ai đó
     // nhúng màn này ở chỗ khác.
@@ -51,17 +59,16 @@ class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
       type: MaterialType.transparency,
       child: Column(
         children: [
-          DaiChon(
-            cuon: true,
-            nhan: [for (final l in _loc) l.$1],
-            chon: _chon,
-            khiChon: (i) => setState(() => _chon = i),
+          LocTrangThai(
+            giaTri: _khoaLoc,
+            nhan: _nhanLoc,
+            doi: (v) => setState(() => _khoaLoc = v),
           ),
           const LichHenThang(cuaReader: true),
           Expanded(
             child: DanhSachPhanTrang<Booking>(
               // Đổi bộ lọc thì dựng lại từ trang đầu.
-              key: ValueKey(_chon),
+              key: ValueKey(_khoaLoc),
               dieuKhien: _dieuKhien,
               tai: (t) => repo.cuaReader(trang: t, loc: loc),
               loiDuPhong: 'Không tải được lịch hẹn của bạn.',
@@ -75,7 +82,7 @@ class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
                     )
                   : KhoiTrong(
                       icon: Icons.filter_alt_off_outlined,
-                      tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
+                      tieuDe: 'Không có buổi nào "${_nhanLoc[_khoaLoc]}"',
                       moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
                     ),
               dong: (_, b) => _TheViec(booking: b, taiLai: _dieuKhien.taiLai),

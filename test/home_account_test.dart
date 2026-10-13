@@ -125,6 +125,33 @@ void main() {
       expect(find.text('Bàn làm việc'), findsOneWidget);
     });
 
+    testWidgets('thanh dưới chỉ bày tab mà vai trò ấy gọi được', (t) async {
+      // Hai tab này gọi endpoint đòi CUSTOMER_ACTIONS — quyền chỉ Thành viên
+      // có kể từ 12/10/2026:
+      //
+      //   Lịch hẹn  -> GET  /api/v1/bookings/me
+      //   Tarot AI  -> POST /api/ai-readings/stream
+      //
+      // Khi backend siết quyền mà thanh dưới không siết theo, Nhân viên bấm
+      // "Lịch hẹn" nhận đúng một dòng "Bạn không có quyền thực hiện thao tác
+      // này" giữa màn trống. Lỗi ấy đã xảy ra thật.
+      final khach = MoiTruong(user: nguoiDung());
+      khaiTrangChu(khach.mayChu);
+      khach.mayChu.tra('GET /api/v1/readers', [mauReader()]);
+      await khach.dung(t, const HomeShell());
+      expect(find.text('Lịch hẹn'), findsOneWidget);
+      expect(find.text('Tarot AI'), findsOneWidget);
+
+      final nhanSu = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
+      khaiTrangChu(nhanSu.mayChu);
+      await nhanSu.dung(t, const HomeShell());
+      expect(find.text('Lịch hẹn'), findsNothing);
+      expect(find.text('Tarot AI'), findsNothing);
+      // Reader KHÔNG mất lịch của mình: nó nằm ở Bàn làm việc, lấy từ
+      // /bookings/reader — endpoint khác, quyền khác.
+      expect(find.text('Bàn làm việc'), findsOneWidget);
+    });
+
     testWidgets('trang chủ khi lịch hẹn lỗi vẫn hiện, chưa có bản đồ sao',
         (t) async {
       final m = MoiTruong(user: nguoiDung());

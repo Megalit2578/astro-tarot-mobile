@@ -130,12 +130,16 @@ class AccountScreen extends ConsumerWidget {
               phu: 'AI đọc bài dựa trên hồ sơ chính',
               onTap: () => _mo(context, const AstrologyScreen()),
             ),
-            _Muc(
-              icon: Icons.workspace_premium_outlined,
-              nhan: 'Gói AI',
-              phu: 'Hạn mức mỗi ngày, số dư ví, mua gói',
-              onTap: () => _mo(context, const GoiAiScreen()),
-            ),
+            // Mua gói và nạp ví đều đòi CUSTOMER_ACTIONS, và hạn mức AI mỗi
+            // ngày cũng chỉ có nghĩa với người được dùng Tarot AI. Với Nhân
+            // viên thì cả màn này là một màn không làm được gì.
+            if (u.co('CUSTOMER_ACTIONS'))
+              _Muc(
+                icon: Icons.workspace_premium_outlined,
+                nhan: 'Gói AI',
+                phu: 'Hạn mức mỗi ngày, số dư ví, mua gói',
+                onTap: () => _mo(context, const GoiAiScreen()),
+              ),
             _Muc(
               icon: Icons.history,
               nhan: 'Lịch sử trải bài',

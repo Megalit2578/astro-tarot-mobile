@@ -6,51 +6,18 @@ import '../../core/api/api_client.dart';
 import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/danh_sach_phan_trang.dart';
+import '../../widgets/loc_trang_thai.dart';
 import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 import 'admin_repository.dart';
 
-/// Ô chọn lọc trạng thái đứng đầu mỗi hàng chờ.
+/// Lề cho ô lọc khi nó nằm trong `dau` của danh sách phân trang: danh sách đã
+/// chừa lề ngang sẵn, nên ở đây chỉ cần chừa phía dưới.
 ///
-/// Mặc định lọc "đang chờ" như web: người trực mở hàng chờ là để xử lý việc
-/// tồn đọng, không phải để cuộn qua hàng trăm giao dịch đã xong. Bản đầu của
-/// app không lọc gì — việc cần làm chìm giữa việc đã làm.
-class LocTrangThai extends StatelessWidget {
-  const LocTrangThai({
-    super.key,
-    required this.giaTri,
-    required this.nhan,
-    required this.doi,
-  });
-
-  final String giaTri;
-  final Map<String, String> nhan;
-  final ValueChanged<String> doi;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: DropdownButtonFormField<String>(
-        key: const ValueKey('loc-trang-thai'),
-        initialValue: giaTri,
-        isExpanded: true,
-        dropdownColor: Mau.the,
-        decoration: const InputDecoration(
-          isDense: true,
-          prefixIcon: Icon(Icons.filter_list, size: 18),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        ),
-        items: [
-          const DropdownMenuItem(value: '', child: Text('Tất cả')),
-          for (final e in nhan.entries)
-            DropdownMenuItem(value: e.key, child: Text(e.value)),
-        ],
-        onChanged: (v) => doi(v ?? ''),
-      ),
-    );
-  }
-}
+/// Mặc định các hàng chờ lọc "đang chờ" như web: người trực mở hàng chờ là để
+/// xử lý việc tồn đọng, không phải để cuộn qua hàng trăm giao dịch đã xong.
+/// Bản đầu của app không lọc gì — việc cần làm chìm giữa việc đã làm.
+const _leLoc = EdgeInsets.only(bottom: 10);
 
 /// Hàng nút thao tác dưới mỗi thẻ.
 class _HangNut extends StatelessWidget {
@@ -135,6 +102,7 @@ class _ThanhToanViewState extends ConsumerState<ThanhToanView> {
       loiDuPhong: 'Không tải được giao dịch.',
       dau: [
         LocTrangThai(
+            padding: _leLoc,
             giaTri: _loc,
             nhan: tenTrangThaiGiaoDich,
             doi: (v) => setState(() => _loc = v)),
@@ -320,6 +288,7 @@ class _RutTienViewState extends ConsumerState<RutTienView> {
       loiDuPhong: 'Không tải được yêu cầu rút tiền.',
       dau: [
         LocTrangThai(
+            padding: _leLoc,
             giaTri: _loc,
             nhan: tenTrangThaiLenhRut,
             doi: (v) => setState(() => _loc = v)),
@@ -641,6 +610,7 @@ class _BaoCaoViewState extends ConsumerState<BaoCaoView> {
       loiDuPhong: 'Không tải được báo cáo vi phạm.',
       dau: [
         LocTrangThai(
+            padding: _leLoc,
             giaTri: _loc,
             nhan: tenTrangThaiBaoCao,
             doi: (v) => setState(() => _loc = v)),

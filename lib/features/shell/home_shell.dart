@@ -12,6 +12,7 @@ import '../home/home_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../readers/readers_screen.dart';
 import '../staff/staff_screen.dart';
+import '../tarot/tarot_screen.dart';
 
 /// Một mục trên thanh điều hướng.
 class _Tab {
@@ -69,8 +70,22 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   List<_Tab> _tabs(AppUser u) {
     return [
       const _Tab('Trang chủ', Icons.home_outlined, HomeScreen()),
+      // Tarot AI là trụ cột số một của sản phẩm, và trên web nó nằm ngay
+      // thanh điều hướng chính. Trên app nó từng chỉ là MỘT THẺ giữa trang
+      // chủ, phải cuộn qua lời chào và bản đồ sao mới thấy — thứ người ta mở
+      // app để làm lại là thứ khó với tới nhất.
+      if (u.co('CUSTOMER_ACTIONS'))
+        const _Tab('Tarot AI', Icons.auto_awesome_outlined, TarotScreen()),
       const _Tab('Reader', Icons.people_outline, ReadersScreen()),
-      const _Tab('Lịch hẹn', Icons.event_outlined, BookingsScreen()),
+      // Tab này gọi /bookings/me, mà endpoint ấy đòi CUSTOMER_ACTIONS — quyền
+      // chỉ Thành viên có kể từ 12/10/2026. Trước khi gác lại, Nhân viên bấm
+      // vào đây nhận đúng một dòng "Bạn không có quyền thực hiện thao tác
+      // này" giữa màn trống.
+      //
+      // Reader KHÔNG mất gì: lịch của họ nằm ở Bàn làm việc → Lịch hẹn, lấy
+      // từ /bookings/reader, một endpoint khác với một quyền khác.
+      if (u.co('CUSTOMER_ACTIONS'))
+        const _Tab('Lịch hẹn', Icons.event_outlined, BookingsScreen()),
       if (u.laNhanSu)
         const _Tab('Bàn làm việc', Icons.work_outline, StaffScreen()),
       const _Tab('Tài khoản', Icons.person_outline, AccountScreen()),
