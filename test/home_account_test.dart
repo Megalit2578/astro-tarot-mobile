@@ -552,6 +552,44 @@ void main() {
       expect(find.text('Nội dung đầy đủ.'), findsOneWidget);
     });
 
+    testWidgets('tìm bài viết gửi từ khoá xuống máy chủ', (t) async {
+      // Web có ô tìm từ lâu, app thì chưa. Danh sách bài chỉ dài thêm theo
+      // thời gian, nên không có ô tìm thì bài cũ coi như mất.
+      final m = MoiTruong(user: nguoiDung());
+      m.mayChu.tra('GET /api/v1/blogs', trang([
+        {
+          'id': 'bv1',
+          'title': 'Ý nghĩa lá The Fool',
+          'slug': 'the-fool',
+          'summary': 'Khởi đầu mới',
+          'content': 'Một hai ba bốn năm.',
+          'createdAt': iso(homNay),
+        }
+      ]));
+      await m.dung(t, const BlogScreen());
+
+      await t.enterText(find.byKey(const ValueKey('o-tim-bai-viet')), 'the fool');
+      // Gõ xong phải CHỜ: ô tìm hoãn 350ms rồi mới gọi, để mỗi phím không
+      // thành một lượt gọi.
+      await t.pump(const Duration(milliseconds: 400));
+      await xong(t);
+
+      expect(m.mayChu.lanCuoi('GET /api/v1/blogs')!.query['keyword'],
+          'the fool');
+      expect(m.mayChu.lanCuoi('GET /api/v1/blogs')!.query['page'], '0');
+    });
+
+    test('thời gian đọc tính giống web', () {
+      // Cùng công thức với `estimateReadTime` bên web: 200 từ một phút, tối
+      // thiểu một phút. Hai bên ra số khác nhau cho cùng một bài là một mâu
+      // thuẫn người đọc kiểm được trong mười giây.
+      expect(phutDoc(null), 1);
+      expect(phutDoc('   '), 1);
+      expect(phutDoc(List.filled(200, 'tu').join(' ')), 1);
+      expect(phutDoc(List.filled(201, 'tu').join(' ')), 2);
+      expect(phutDoc(List.filled(600, 'tu').join(' ')), 3);
+    });
+
     testWidgets('bài viết rỗng và lỗi', (t) async {
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/blogs', trang([]));

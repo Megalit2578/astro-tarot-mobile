@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
@@ -9,6 +12,7 @@ import '../../core/format.dart';
 import '../../theme.dart';
 import '../../core/api/trang.dart';
 import '../../widgets/danh_sach_phan_trang.dart';
+import '../../widgets/hop_thoai.dart';
 import '../../widgets/trang_thai.dart';
 
 class BaiViet {
@@ -54,12 +58,41 @@ class BaiViet {
 /// Danh sách bài viết chỉ dài thêm theo thời gian, nên một con số cứng ở đây
 /// là một hạn mức sẽ âm thầm chạm tới — và lúc ấy những bài cũ nhất biến mất
 /// mà không ai biết là chúng từng ở đó.
-Future<Trang<BaiViet>> _taiTrangBaiViet(WidgetRef ref, int trang) async {
+Future<Trang<BaiViet>> _taiTrangBaiViet(
+  WidgetRef ref,
+  int trang, {
+  String tuKhoa = '',
+}) async {
   final api = ref.read(apiClientProvider);
-  final d = await api
-      .get<dynamic>(Endpoints.blogs, query: {'page': trang, 'size': 20});
+  final d = await api.get<dynamic>(Endpoints.blogs, query: {
+    'page': trang,
+    'size': 20,
+    if (tuKhoa.isNotEmpty) 'keyword': tuKhoa,
+  });
   return Trang.tu(d, BaiViet.fromJson);
 }
+
+/// Ước lượng thời gian đọc, theo phút.
+///
+/// Giữ đúng công thức của web (`estimateReadTime`): 200 từ một phút, tối
+/// thiểu một phút. Hai bên ra số khác nhau cho cùng một bài thì người đọc
+/// thấy app và web mâu thuẫn nhau ở một chi tiết rất dễ kiểm.
+int phutDoc(String? noiDung) {
+  if (noiDung == null || noiDung.trim().isEmpty) return 1;
+  final soTu = noiDung.trim().split(RegExp(r'\s+')).length;
+  return (soTu / 200).ceil().clamp(1, 1 << 30);
+}
+
+/// Trang đầu danh sách công khai, dùng cho khối "Đọc tiếp".
+///
+/// Riêng một provider để nó được chia sẻ và lưu đệm giữa các bài: đọc liền
+/// năm bài thì chỉ tốn một lượt gọi, không phải năm.
+final baiVietTrangDauProvider = FutureProvider<List<BaiViet>>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  final d = await api.get<dynamic>(Endpoints.blogs,
+      query: {'page': 0, 'size': 6});
+  return Trang.tu(d, BaiViet.fromJson).muc;
+});
 
 final baiVietChiTietProvider =
     FutureProvider.family<BaiViet, String>((ref, slug) async {
@@ -68,21 +101,70 @@ final baiVietChiTietProvider =
       await api.get<Map<String, dynamic>>(Endpoints.blog(slug)));
 });
 
-class BlogScreen extends ConsumerWidget {
+class BlogScreen extends ConsumerStatefulWidget {
   const BlogScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BlogScreen> createState() => _BlogScreenState();
+}
+
+class _BlogScreenState extends ConsumerState<BlogScreen> {
+  final _tim = TextEditingController();
+  Timer? _hen;
+  String _tuKhoa = '';
+
+  @override
+  void dispose() {
+    _hen?.cancel();
+    _tim.dispose();
+    super.dispose();
+  }
+
+  /// Chờ người dùng ngừng gõ một chút rồi mới tìm — mỗi phím một lượt gọi là
+  /// dồn tải cho máy chủ gói free vô ích. Cùng nhịp 350ms với gian hàng.
+  void _khiGo(String v) {
+    _hen?.cancel();
+    _hen = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) setState(() => _tuKhoa = v.trim());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Bài viết')),
       body: DanhSachPhanTrang<BaiViet>(
-        tai: (t) => _taiTrangBaiViet(ref, t),
+        // Đổi từ khoá thì dựng lại từ trang đầu.
+        key: ValueKey('blog-$_tuKhoa'),
+        tai: (t) => _taiTrangBaiViet(ref, t, tuKhoa: _tuKhoa),
         loiDuPhong: 'Không tải được bài viết.',
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-        trong: const KhoiTrong(
-          icon: Icons.article_outlined,
-          tieuDe: 'Chưa có bài viết nào',
-          moTa: 'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.',
+        dau: [
+          // Web có ô tìm từ lâu, app thì chưa. Danh sách bài chỉ dài thêm
+          // theo thời gian, nên không có ô tìm thì bài cũ coi như mất.
+          TextField(
+            key: const ValueKey('o-tim-bai-viet'),
+            controller: _tim,
+            onChanged: _khiGo,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Tìm bài viết, tác giả...',
+              prefixIcon: Icon(Icons.search, size: 20),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        trong: KhoiTrong(
+          icon: _tuKhoa.isEmpty
+              ? Icons.article_outlined
+              : Icons.search_off_outlined,
+          tieuDe: _tuKhoa.isEmpty
+              ? 'Chưa có bài viết nào'
+              : 'Không tìm thấy bài nào',
+          moTa: _tuKhoa.isEmpty
+              ? 'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.'
+              : 'Thử một từ khoá khác, hoặc xoá ô tìm để xem tất cả.',
         ),
         dong: (_, b) => _The(b: b),
       ),
@@ -175,6 +257,21 @@ class BlogDetailScreen extends ConsumerWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 15)),
+        actions: [
+          // Chép liên kết thay vì mở khay chia sẻ của hệ điều hành: khay ấy
+          // cần thêm một phụ thuộc, mà bài viết nằm trên web nên thứ người ta
+          // thật sự muốn gửi đi là cái địa chỉ.
+          IconButton(
+            tooltip: 'Chép liên kết bài viết',
+            icon: const Icon(Icons.link, size: 20),
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: '${AppConfig.webBaseUrl}/blog/${bai.slug}'),
+              );
+              if (context.mounted) baoTin(context, 'Đã chép liên kết bài viết.');
+            },
+          ),
+        ],
       ),
       body: ct.when(
         loading: () =>
@@ -195,6 +292,9 @@ class BlogDetailScreen extends ConsumerWidget {
               [
                 if (b.tacGia != null) b.tacGia!,
                 if (b.luc != null) Dinh.ngay(b.luc),
+                // Thời gian đọc: web có từ lâu. Nó trả lời đúng câu người ta
+                // hỏi trước khi bấm vào — "dài bao nhiêu".
+                '${phutDoc(b.noiDung ?? b.tomTat)} phút đọc',
               ].join(' · '),
               style: const TextStyle(fontSize: 11.5, color: Mau.chuMo),
             ),
@@ -216,9 +316,87 @@ class BlogDetailScreen extends ConsumerWidget {
                   : (b.noiDung ?? b.tomTat)!,
               style: const TextStyle(fontSize: 14, height: 1.8),
             ),
+            _BaiLienQuan(slugDangDoc: b.slug),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Mấy bài khác dưới chân bài đang đọc.
+///
+/// Web có khối này, app thì chưa: đọc xong một bài là hết đường đi tiếp, phải
+/// bấm quay lại rồi tự dò trong danh sách. Người đọc hết một bài là người sẵn
+/// sàng đọc bài thứ hai nhất.
+///
+/// Lấy ngay trang đầu của danh sách công khai chứ không gọi thêm endpoint
+/// nào: backend chưa có "bài liên quan", và bịa ra một lượt gọi nữa chỉ để
+/// lọc ở máy khách thì không đáng.
+class _BaiLienQuan extends ConsumerWidget {
+  const _BaiLienQuan({required this.slugDangDoc});
+  final String slugDangDoc;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ds = ref.watch(baiVietTrangDauProvider).asData?.value ?? const [];
+    final khac = ds.where((b) => b.slug != slugDangDoc).take(3).toList();
+    if (khac.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 28),
+        const Divider(height: 1, color: Mau.vien),
+        const SizedBox(height: 18),
+        Text(
+          'ĐỌC TIẾP',
+          style: TextStyle(
+            fontSize: 10.5,
+            letterSpacing: 1.4,
+            color: Mau.vang.withValues(alpha: 0.75),
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final b in khac)
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            // pushReplacement chứ không push: đọc lần lượt năm bài rồi bấm
+            // quay lại phải về danh sách, không phải lần ngược từng bài một.
+            onTap: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => BlogDetailScreen(bai: b)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(b.tieuDe,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w500,
+                                height: 1.45)),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${phutDoc(b.noiDung ?? b.tomTat)} phút đọc',
+                          style: const TextStyle(
+                              fontSize: 11, color: Mau.chuMo),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right,
+                      size: 18, color: Mau.chuMo),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
