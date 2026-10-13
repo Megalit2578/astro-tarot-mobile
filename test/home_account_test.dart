@@ -125,6 +125,35 @@ void main() {
       expect(find.text('Bàn làm việc'), findsOneWidget);
     });
 
+    testWidgets('trang chủ không dẫn Nhân viên vào Tarot AI', (t) async {
+      // Gác thanh tab thôi chưa đủ. Trang chủ còn HAI lối nữa dẫn vào cùng
+      // màn ấy: thẻ "Trải bài Tarot ngay" và khối "Rút thử một lá" (khối này
+      // tự rút ở máy, nhưng tồn tại để mời sang Tarot AI).
+      //
+      // Phát hiện bằng cách chụp màn máy ảo chạy thật, không phải đọc mã:
+      // bản vá trước đã bỏ tab nhưng để nguyên hai thẻ này.
+      // Khung cao bất thường là có chủ ý: trang chủ là một ListView, mục nằm
+      // ngoài vùng nhìn thì KHÔNG được dựng. Với khung cao bình thường thì
+      // "không tìm thấy" có hai nghĩa — bị gác, hoặc chỉ là chưa cuộn tới —
+      // và phép kiểm không phân biệt được, nên nó sẽ xanh cả khi bản vá hỏng.
+      const cao = Size(420, 2600);
+
+      final khach = MoiTruong(user: nguoiDung());
+      khaiTrangChu(khach.mayChu);
+      await khach.dung(t, const HomeScreen(), co: cao);
+      expect(find.text('Trải bài Tarot ngay'), findsOneWidget);
+      expect(find.text('RÚT THỬ MỘT LÁ'), findsOneWidget);
+
+      final nhanSu = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
+      khaiTrangChu(nhanSu.mayChu);
+      await nhanSu.dung(t, const HomeScreen(), co: cao);
+      expect(find.text('Trải bài Tarot ngay'), findsNothing);
+      expect(find.text('RÚT THỬ MỘT LÁ'), findsNothing);
+      // Lịch sử trải bài thì GIỮ: `GET /api/ai-readings` không đòi quyền nào,
+      // và người từng là khách phải đọc lại được lời giải cũ của mình.
+      expect(find.text('Lịch sử bài'), findsOneWidget);
+    });
+
     testWidgets('thanh dưới chỉ bày tab mà vai trò ấy gọi được', (t) async {
       // Hai tab này gọi endpoint đòi CUSTOMER_ACTIONS — quyền chỉ Thành viên
       // có kể từ 12/10/2026:
