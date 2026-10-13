@@ -6,7 +6,7 @@ import '../../theme.dart';
 import '../../widgets/danh_sach_phan_trang.dart';
 import '../../widgets/trang_thai.dart';
 import 'admin_repository.dart';
-import 'hang_cho_views.dart';
+import '../../widgets/loc_trang_thai.dart';
 
 /// Nhật ký hệ thống: ai làm gì, lúc nào, đổi từ gì sang gì.
 class NhatKyView extends ConsumerStatefulWidget {
@@ -28,6 +28,7 @@ class _NhatKyViewState extends ConsumerState<NhatKyView> {
       loiDuPhong: 'Không tải được nhật ký hệ thống.',
       dau: [
         LocTrangThai(
+          padding: const EdgeInsets.only(bottom: 10),
           giaTri: _hanhDong,
           nhan: tenHanhDong,
           doi: (v) => setState(() => _hanhDong = v),

@@ -429,3 +429,19 @@ Map<String, dynamic> trang(List<Map<String, dynamic>> muc,
       'totalPages': tongTrang,
       'totalElements': tong ?? muc.length,
     };
+
+/// Chọn một mục trong ô lọc trạng thái (`LocTrangThai`).
+///
+/// Ô chọn của Material dựng trình đơn ở một route đè lên trên, nên phải mở nó
+/// rồi mới chạm được vào mục. Chạm thẳng vào chữ khi trình đơn chưa mở thì
+/// finder không tìm thấy gì — lỗi hiện ra là `Bad state: No element`, không
+/// hề nói rằng vấn đề là trình đơn chưa mở.
+///
+/// Dùng `.last`: chữ của mục đang chọn còn xuất hiện một lần nữa ngay trên
+/// mặt ô, và cái đó nằm TRƯỚC trong cây.
+Future<void> chonLoc(WidgetTester tester, String nhan) async {
+  await tester.tap(find.byKey(const ValueKey('loc-trang-thai')));
+  await xong(tester);
+  await tester.tap(find.text(nhan).last);
+  await xong(tester);
+}

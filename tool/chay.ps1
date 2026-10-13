@@ -25,7 +25,19 @@ param(
     [switch]$That,
 
     # Dùng máy ảo khác thay vì cái đầu tiên tìm thấy.
-    [string]$MayAo = ""
+    [string]$MayAo = "",
+
+    # Cài lên MỌI máy ảo đang bật, để đăng nhập mỗi máy một vai trò.
+    #
+    # Token nằm trong Keystore của Android, khoá theo package name, nên một
+    # bản cài chỉ giữ được một phiên — đăng nhập vai trò khác là đè mất phiên
+    # cũ. Muốn thấy khách đặt lịch rồi Reader nhận ở màn bên cạnh thì phải có
+    # hai bản cài, tức hai máy.
+    #
+    # Dựng MỘT lần rồi cài bản apk ấy lên từng máy, thay vì `flutter run` ba
+    # lần — mỗi lần chạy là một lượt dựng lại từ đầu, và mỗi lượt giữ một cửa
+    # sổ terminal.
+    [switch]$MoiMay
 )
 
 $ErrorActionPreference = 'Stop'
@@ -102,6 +114,44 @@ if (CoMay) {
         Write-Host "May ao qua 3 phut van chua khoi dong xong. Thu chay lai." -ForegroundColor Red
         exit 1
     }
+}
+
+# ---------------------------------------------------------------------------
+# Nhiều máy: dựng một lần, cài lên tất cả
+# ---------------------------------------------------------------------------
+if ($MoiMay) {
+    # Chỉ lấy máy ở trạng thái 'device'. Máy vừa bật còn 'offline' — cài vào
+    # đúng quãng ấy thì hỏng giữa chừng, và thông báo lỗi của adb không nói
+    # ra là vì máy chưa boot xong.
+    $may = & $adb devices 2>$null |
+           Select-Object -Skip 1 |
+           Where-Object { $_ -match '\sdevice\s*$' } |
+           ForEach-Object { ($_ -split '\s+')[0] }
+
+    if (-not $may) {
+        Write-Host "Khong co may nao san sang. Bat may ao roi cho no boot xong da." -ForegroundColor Red
+        exit 1
+    }
+
+    $dinhNghia = if ($That) { @() } else { @('--dart-define-from-file=dart_defines/may.json') }
+    $dich = if ($That) { 'production' } else { '10.0.2.2:8080' }
+    Write-Host "Dung apk mot lan (tro ve $dich)..." -ForegroundColor Cyan
+    flutter build apk --debug @dinhNghia
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    $apk = 'build/app/outputs/flutter-apk/app-debug.apk'
+    foreach ($m in $may) {
+        Write-Host "Cai len $m ..." -ForegroundColor Cyan
+        & $adb -s $m install -r $apk | Select-Object -Last 1
+        # Mở luôn, đỡ phải tự tìm icon trên từng máy.
+        & $adb -s $m shell monkey -p com.astrotarot.astrotarot_mobile `
+            -c android.intent.category.LAUNCHER 1 2>$null | Out-Null
+    }
+
+    Write-Host ""
+    Write-Host "Xong $($may.Count) may. Moi may dang nhap mot vai tro khac nhau." -ForegroundColor Green
+    Write-Host "Doi role trong DB xong phai DANG XUAT roi dang nhap lai: quyen nam trong token." -ForegroundColor Yellow
+    exit 0
 }
 
 # ---------------------------------------------------------------------------

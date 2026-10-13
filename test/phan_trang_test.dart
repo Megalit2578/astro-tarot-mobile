@@ -91,7 +91,7 @@ void main() {
 
       expect(find.text('Tải thêm'), findsOneWidget);
 
-      await bam(t, find.text('Chờ nhận'));
+      await chonLoc(t, 'Chờ nhận');
       // Reader làm lâu sẽ có hàng trăm buổi. Lọc ở máy khách chỉ lọc được
       // trong hai mươi buổi gần nhất.
       expect(m.mayChu.lanCuoi('GET /api/v1/bookings/reader')!.query['status'],
