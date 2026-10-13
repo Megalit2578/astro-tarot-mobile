@@ -6,6 +6,12 @@ App Flutter cho nền tảng AstroTarot, dùng chung backend với web:
 Đã dựng xong bề mặt chính cho cả ba vai trò. Không còn chỗ trống nào ở các
 tab chính.
 
+**Đưa lên CH Play**: làm theo [`LEN-CHPLAY.md`](LEN-CHPLAY.md). Đọc phần đầu
+trước — lần phát hành đầu tiên trên tài khoản cá nhân mất khoảng ba tuần vì
+Google bắt chạy closed testing 12 người × 14 ngày liên tục, và chuyện đó dễ
+làm vỡ kế hoạch nếu chỉ biết vào phút cuối. Hiện trạng từng mục ở
+[`CHO-UNG-DUNG.md`](CHO-UNG-DUNG.md).
+
 ## Vì sao đặt ở `C:\src\`
 
 `flutter analyze` chết khi dự án nằm trong `OneDrive\Máy tính` — analysis
