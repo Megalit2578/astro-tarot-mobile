@@ -648,7 +648,7 @@ class _OGio extends StatelessWidget {
         splashColor: Mau.vang.withValues(alpha: 0.2),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: chon
                 ? Mau.vang.withValues(alpha: 0.18)
@@ -667,10 +667,13 @@ class _OGio extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Hiện cả giờ kết thúc. Một cột toàn giờ bắt đầu khiến người
+              // dùng lấy khoảng cách giữa hai ô làm độ dài buổi xem, rồi
+              // tưởng mình đặt hụt thời lượng đã chọn.
               Text(
-                Dinh.gio(slot.batDau),
+                '${Dinh.gio(slot.batDau)} – ${Dinh.gio(slot.ketThuc)}',
                 style: TextStyle(
-                  fontSize: 13.5,
+                  fontSize: 12.5,
                   fontWeight: chon ? FontWeight.w600 : FontWeight.w400,
                   color: chon
                       ? Mau.vang
