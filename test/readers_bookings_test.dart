@@ -123,7 +123,7 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       final oGio = find.byWidgetPredicate(
-        (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+        (w) => w is Text && RegExp(r'^\d\d:\d\d – \d\d:\d\d$').hasMatch(w.data ?? ''),
       );
       await bam(t, oGio.first);
       await bam(t, find.widgetWithText(FilledButton, 'Đặt lịch'));
@@ -142,7 +142,7 @@ void main() {
       m.mayChu.loi('POST /api/v1/bookings', 'Khung giờ vừa có người đặt');
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
       final oGio = find.byWidgetPredicate(
-        (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+        (w) => w is Text && RegExp(r'^\d\d:\d\d – \d\d:\d\d$').hasMatch(w.data ?? ''),
       );
       await bam(t, oGio.first);
       await bam(t, find.widgetWithText(FilledButton, 'Đặt lịch'));
@@ -154,7 +154,7 @@ void main() {
       khaiReader(m.mayChu);
       await m.dung(t, const ReaderDetailScreen(readerId: 'r1'));
       final oGio = find.byWidgetPredicate(
-        (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+        (w) => w is Text && RegExp(r'^\d\d:\d\d – \d\d:\d\d$').hasMatch(w.data ?? ''),
       );
       await bam(t, oGio.first);
       expect(find.text('Quay lại đăng nhập'), findsOneWidget);
@@ -170,7 +170,7 @@ void main() {
       await bam(t, find.text('Thử lại'));
       expect(
         find.byWidgetPredicate(
-          (w) => w is Text && RegExp(r'^\d\d:\d\d$').hasMatch(w.data ?? ''),
+          (w) => w is Text && RegExp(r'^\d\d:\d\d – \d\d:\d\d$').hasMatch(w.data ?? ''),
         ),
         findsNothing,
       );
