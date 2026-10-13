@@ -7,6 +7,9 @@ Viết ngày 13/10/2026. Mỗi bước ghi rõ **ai làm được**: có bước
 
 ## Đọc cái này trước: lịch trình thật là ~3 tuần, không phải một buổi
 
+**Tài khoản đã mở ngày 13/10/2026 là loại cá nhân** (Personal), id nhà phát
+triển `5909859073290519896`. Nên luật dưới đây áp dụng, không phải "có thể":
+
 Tài khoản **cá nhân** mở sau 13/11/2023 phải chạy **closed testing với ít
 nhất 12 người thử, giữ liên tục 14 ngày**, rồi mới được xin quyền phát hành
 công khai. Mức này từng là 20 người, Google hạ xuống 12 từ 11/12/2024; còn mốc
