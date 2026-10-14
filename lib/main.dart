@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/api/api_client.dart';
 import 'core/auth/auth_controller.dart';
+import 'core/ngon_ngu.dart';
 import 'features/auth/login_screen.dart';
 import 'features/shell/home_shell.dart';
 import 'theme.dart';
 import 'widgets/troi_sao.dart';
 
-void main() {
+void main() async {
+  // Đọc ngôn ngữ đã lưu TRƯỚC khi dựng cây: nạp sau thì khung hình đầu tiên
+  // ra tiếng Việt rồi mới nháy sang tiếng Anh.
+  WidgetsFlutterBinding.ensureInitialized();
+  await Ngu.nap();
   runApp(const ProviderScope(retry: thuLaiKhiNao, child: AstroTarotApp()));
 }
 
@@ -32,15 +37,19 @@ class AstroTarotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AstroTarot',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
-      themeMode: ThemeMode.dark,
-      // Nền sao dựng MỘT lần ở đây thay vì từng màn tự thêm: cách sau thì sớm
-      // muộn có màn bị quên, và nền sẽ nhảy mất mỗi lần chuyển trang.
-      builder: (_, man) => NenSao(child: man ?? const SizedBox.shrink()),
-      home: const _Cong(),
+    // Bọc NguNghe ngoài MaterialApp: đổi ngôn ngữ thì dựng lại toàn bộ, kể cả
+    // tiêu đề màn và hộp thoại đang mở.
+    return NguNghe(
+      con: (_) => MaterialApp(
+        title: 'AstroTarot',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(),
+        themeMode: ThemeMode.dark,
+        // Nền sao dựng MỘT lần ở đây thay vì từng màn tự thêm: cách sau thì sớm
+        // muộn có màn bị quên, và nền sẽ nhảy mất mỗi lần chuyển trang.
+        builder: (_, man) => NenSao(child: man ?? const SizedBox.shrink()),
+        home: const _Cong(),
+      ),
     );
   }
 }

@@ -7,6 +7,7 @@ import '../readers/readers_screen.dart';
 import 'email_link_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
+import '../../core/ngon_ngu.dart';
 import '../../theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -82,16 +83,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text(
                       'ASTROTAROT',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             letterSpacing: 4,
                             fontWeight: FontWeight.w300,
                           ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Đăng nhập để đặt lịch và trò chuyện với Reader',
+                    Text(
+                      Ngu.d('Đăng nhập để đặt lịch và trò chuyện với Reader'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Mau.chuMo, fontSize: 13),
+                      style: const TextStyle(color: Mau.chuMo, fontSize: 13),
                     ),
                     const SizedBox(height: 32),
                     TextFormField(
@@ -115,7 +117,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _gui(),
                       decoration: InputDecoration(
-                        hintText: 'Mật khẩu',
+                        hintText: Ngu.d('Mật khẩu'),
                         prefixIcon: const Icon(Icons.lock_outline, size: 20),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -123,16 +125,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             size: 20,
                           ),
                           onPressed: () => setState(() => _hien = !_hien),
-                          tooltip: _hien ? 'Ẩn mật khẩu' : 'Hiện mật khẩu',
+                          tooltip: _hien
+                              ? 'Ẩn mật khẩu'
+                              : Ngu.d('Hiện mật khẩu'),
                         ),
                       ),
                       // KHÔNG kiểm độ dài ở màn đăng nhập. Luật 8 ký tự chỉ
                       // áp cho mật khẩu MỚI; tài khoản tạo từ trước có thể
                       // ngắn hơn, và chặn ở đây là khoá họ ra khỏi chính tài
                       // khoản của mình. Để máy chủ phán quyết.
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'Hãy nhập mật khẩu'
-                          : null,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Hãy nhập mật khẩu' : null,
                     ),
                     if (auth.loi != null) ...[
                       const SizedBox(height: 14),
@@ -145,8 +148,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline,
-                                size: 18, color: Color(0xFFE5645E)),
+                            const Icon(
+                              Icons.error_outline,
+                              size: 18,
+                              color: Color(0xFFE5645E),
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -162,11 +168,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       if (_chuaXacMinh(auth.loi))
                         TextButton.icon(
                           onPressed: _dangGuiLai ? null : _guiLaiXacMinh,
-                          icon: const Icon(Icons.mark_email_read_outlined,
-                              size: 18),
-                          label: const Text('Gửi lại thư xác minh'),
-                          style:
-                              TextButton.styleFrom(foregroundColor: Mau.vang),
+                          icon: const Icon(
+                            Icons.mark_email_read_outlined,
+                            size: 18,
+                          ),
+                          label: Text(Ngu.d('Gửi lại thư xác minh')),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Mau.vang,
+                          ),
                         ),
                     ],
                     const SizedBox(height: 22),
@@ -178,7 +187,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Đăng nhập'),
+                          : Text(Ngu.d('Đăng nhập')),
                     ),
                     const SizedBox(height: 14),
                     // Xem Reader không cần đăng nhập — endpoint /api/v1/readers
@@ -192,7 +201,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       icon: const Icon(Icons.people_outline, size: 18),
-                      label: const Text('Xem Reader trước khi đăng nhập'),
+                      label: Text(Ngu.d('Xem Reader trước khi đăng nhập')),
                       style: TextButton.styleFrom(foregroundColor: Mau.vang),
                     ),
                     const SizedBox(height: 4),
@@ -209,21 +218,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               builder: (_) => const RegisterScreen(),
                             ),
                           ),
-                          style:
-                              TextButton.styleFrom(foregroundColor: Mau.chu),
-                          child: const Text('Tạo tài khoản'),
+                          style: TextButton.styleFrom(foregroundColor: Mau.chu),
+                          child: Text(Ngu.d('Tạo tài khoản')),
                         ),
-                        const Text('·',
-                            style: TextStyle(color: Mau.chuMo)),
+                        const Text('·', style: TextStyle(color: Mau.chuMo)),
                         TextButton(
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => const ForgotPasswordScreen(),
                             ),
                           ),
-                          style:
-                              TextButton.styleFrom(foregroundColor: Mau.chuMo),
-                          child: const Text('Quên mật khẩu'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Mau.chuMo,
+                          ),
+                          child: Text(Ngu.d('Quên mật khẩu')),
                         ),
                       ],
                     ),
@@ -237,15 +245,65 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       style: TextButton.styleFrom(foregroundColor: Mau.chuMo),
-                      child: const Text('Tôi có liên kết trong email',
-                          style: TextStyle(fontSize: 12.5)),
+                      child: Text(
+                        Ngu.d('Tôi có liên kết trong email'),
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
                     ),
+                    // Đổi ngôn ngữ ngay ở màn đăng nhập, không chỉ trong màn
+                    // Tài khoản: người muốn dùng tiếng Anh phải đổi được
+                    // TRƯỚC khi có tài khoản, chứ không phải đăng ký xong
+                    // bằng thứ tiếng mình không đọc được rồi mới đổi.
+                    const SizedBox(height: 10),
+                    const _DoiNguGon(),
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Hai chữ VI / EN ở chân màn đăng nhập.
+class _DoiNguGon extends StatelessWidget {
+  const _DoiNguGon();
+
+  // Tự nghe `Ngu.hien` thay vì trông chờ cây cha dựng lại.
+  //
+  // Widget này khai `const` và không nhận tham số nào, nên mỗi lần `NguNghe`
+  // dựng lại thì Flutter thấy đúng một thực thể widget y hệt và BỎ QUA không
+  // dựng lại nó. Hậu quả: chữ xung quanh đã sang tiếng Anh mà chỉ báo vẫn
+  // sáng ở "Tiếng Việt". Thấy khi chạy tay trên máy ảo, test không bắt được.
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: Ngu.hien,
+      builder: (context, hien, _) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (final m in const [('vi', 'Tiếng Việt'), ('en', 'English')]) ...[
+            TextButton(
+              onPressed: () => Ngu.doi(m.$1),
+              style: TextButton.styleFrom(
+                foregroundColor: m.$1 == hien ? Mau.vang : Mau.chuMo,
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+              ),
+              child: Text(
+                m.$2,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: m.$1 == hien ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (m.$1 == 'vi')
+              const Text('·', style: TextStyle(color: Mau.chuMo)),
+          ],
+        ],
       ),
     );
   }
