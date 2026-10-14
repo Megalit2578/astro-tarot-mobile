@@ -313,8 +313,10 @@ class _Noi extends ConsumerWidget {
 
 /// "Ngày trống gần nhất: …" — bấm để nhảy tới ngày đó.
 ///
-/// Chỉ hiện khi ngày đang chọn KHÁC ngày ấy; đang ở đúng ngày rồi mà vẫn mời
-/// "chọn ngày này" thì thừa.
+/// Chỉ hiện khi ngày đang xem KHÔNG đặt được. Trước đây điều kiện duy nhất là
+/// "khác ngày gợi ý", nên đang xem một ngày đầy khung trống vẫn hiện dòng mời
+/// nhảy sang ngày khác — mà ngày ấy còn có thể ở QUÁ KHỨ so với ngày đang xem,
+/// đọc lên vô lý. Dòng này chỉ có ích khi ngày đang xem rỗng.
 class _GoiYNgayTrong extends ConsumerWidget {
   const _GoiYNgayTrong({
     required this.readerId,
@@ -337,6 +339,25 @@ class _GoiYNgayTrong extends ConsumerWidget {
     if (g == null) return const SizedBox.shrink();
     final gn = DateTime(g.year, g.month, g.day);
     if (gn == ngay) return const SizedBox.shrink();
+
+    // Ngày đang xem còn đặt được thì im lặng.
+    final hom = ref
+        .watch(
+          lichThangProvider(
+            LichQuery(
+              readerId: readerId,
+              nam: ngay.year,
+              thang: ngay.month,
+              phut: phut,
+            ),
+          ),
+        )
+        .asData
+        ?.value
+        .cua(ngay);
+    if (hom != null && hom.o.any((s) => s.datDuoc)) {
+      return const SizedBox.shrink();
+    }
     return Align(
       alignment: Alignment.centerLeft,
       child: TextButton.icon(
