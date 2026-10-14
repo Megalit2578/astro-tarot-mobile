@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,13 +19,13 @@ class SupportScreen extends ConsumerWidget {
     final ds = ref.watch(ticketsCuaToiProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Hỗ trợ')),
+      appBar: AppBar(title: Text(Ngu.d('Hỗ trợ'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _moTao(context, ref),
         backgroundColor: Mau.vang,
         foregroundColor: const Color(0xFF1A1206),
         icon: const Icon(Icons.add, size: 20),
-        label: const Text('Gửi yêu cầu'),
+        label: Text(Ngu.d('Gửi yêu cầu')),
       ),
       body: RefreshIndicator(
         color: Mau.vang,
@@ -35,15 +37,16 @@ class SupportScreen extends ConsumerWidget {
           error: (e, _) => KhoiLoi(
             thongDiep: e is ApiException
                 ? e.message
-                : 'Không tải được yêu cầu hỗ trợ.',
+                : Ngu.d('Không tải được yêu cầu hỗ trợ.'),
             thuLai: () => ref.invalidate(ticketsCuaToiProvider),
           ),
           data: (list) => list.isEmpty
-              ? const KhoiTrong(
+              ? KhoiTrong(
                   icon: Icons.support_agent_outlined,
-                  tieuDe: 'Chưa có yêu cầu nào',
-                  moTa: 'Gặp trục trặc gì thì gửi cho chúng tôi một yêu cầu. '
-                      'Nhân viên sẽ trả lời ngay trong phiếu.',
+                  tieuDe: Ngu.d('Chưa có yêu cầu nào'),
+                  moTa: Ngu.d(
+                    'Gặp trục trặc gì thì gửi cho chúng tôi một yêu cầu. Nhân viên sẽ trả lời ngay trong phiếu.',
+                  ),
                 )
               : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -57,9 +60,9 @@ class SupportScreen extends ConsumerWidget {
   }
 
   Future<void> _moTao(BuildContext context, WidgetRef ref) async {
-    final ok = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const _TaoTicketScreen()),
-    );
+    final ok = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const _TaoTicketScreen()));
     if (ok == true) ref.invalidate(ticketsCuaToiProvider);
   }
 }
@@ -76,12 +79,13 @@ class _TheTicket extends StatelessWidget {
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => TicketDetailScreen(ticket: t)),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        title: Text(t.tieuDe,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14, height: 1.4)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        title: Text(
+          t.tieuDe,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 14, height: 1.4),
+        ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 5),
           child: Text(
@@ -142,7 +146,7 @@ class _TaoTicketScreenState extends ConsumerState<_TaoTicketScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gửi yêu cầu hỗ trợ')),
+      appBar: AppBar(title: Text(Ngu.d('Gửi yêu cầu hỗ trợ'))),
       body: Form(
         key: _form,
         child: ListView(
@@ -152,13 +156,13 @@ class _TaoTicketScreenState extends ConsumerState<_TaoTicketScreen> {
               controller: _tieuDe,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                hintText: 'Tiêu đề — vấn đề của bạn là gì?',
+              decoration: InputDecoration(
+                hintText: Ngu.d('Tiêu đề — vấn đề của bạn là gì?'),
               ),
               validator: (v) {
                 final t = (v ?? '').trim();
-                if (t.isEmpty) return 'Vui lòng nhập tiêu đề';
-                if (t.length > 200) return 'Tiêu đề tối đa 200 ký tự';
+                if (t.isEmpty) return Ngu.d('Vui lòng nhập tiêu đề');
+                if (t.length > 200) return Ngu.d('Tiêu đề tối đa 200 ký tự');
                 return null;
               },
             ),
@@ -168,14 +172,15 @@ class _TaoTicketScreenState extends ConsumerState<_TaoTicketScreen> {
               minLines: 6,
               maxLines: 12,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                hintText: 'Mô tả cụ thể: bạn đang làm gì, thấy gì, và mong '
-                    'điều gì xảy ra.',
+              decoration: InputDecoration(
+                hintText: Ngu.d(
+                  'Mô tả cụ thể: bạn đang làm gì, thấy gì, và mong điều gì xảy ra.',
+                ),
               ),
               validator: (v) {
                 final t = (v ?? '').trim();
-                if (t.isEmpty) return 'Vui lòng nhập nội dung';
-                if (t.length > 5000) return 'Nội dung tối đa 5000 ký tự';
+                if (t.isEmpty) return Ngu.d('Vui lòng nhập nội dung');
+                if (t.length > 5000) return Ngu.d('Nội dung tối đa 5000 ký tự');
                 return null;
               },
             ),
@@ -186,8 +191,9 @@ class _TaoTicketScreenState extends ConsumerState<_TaoTicketScreen> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Gửi'),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(Ngu.d('Gửi')),
             ),
           ],
         ),
@@ -208,8 +214,7 @@ class TicketDetailScreen extends ConsumerStatefulWidget {
   final bool nhanVien;
 
   @override
-  ConsumerState<TicketDetailScreen> createState() =>
-      _TicketDetailScreenState();
+  ConsumerState<TicketDetailScreen> createState() => _TicketDetailScreenState();
 }
 
 class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
@@ -227,9 +232,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     if (t.isEmpty || _dangGui) return;
     setState(() => _dangGui = true);
     try {
-      await ref
-          .read(supportRepositoryProvider)
-          .traLoi(widget.ticket.id, t);
+      await ref.read(supportRepositoryProvider).traLoi(widget.ticket.id, t);
       _o.clear();
       ref.invalidate(ticketChiTietProvider(widget.ticket.id));
       ref.invalidate(ticketsCuaToiProvider);
@@ -250,11 +253,13 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           .doiTrangThai(widget.ticket.id, moi);
       ref.invalidate(ticketChiTietProvider(widget.ticket.id));
       if (mounted) {
-        baoTin(context,
-            'Đã chuyển sang "${nhanTrangThaiTicket(moi, nhanVien: true)}".');
+        baoTin(
+          context,
+          'Đã chuyển sang "${nhanTrangThaiTicket(moi, nhanVien: true)}".',
+        );
       }
     } catch (e) {
-      if (mounted) baoLoi(context, e, 'Không đổi được trạng thái.');
+      if (mounted) baoLoi(context, e, Ngu.d('Không đổi được trạng thái.'));
     }
   }
 
@@ -263,8 +268,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     final ct = ref.watch(ticketChiTietProvider(widget.ticket.id));
     // Đọc trạng thái từ bản chi tiết mới nhất, không từ dòng trong danh sách
     // lúc bấm vào: nhân viên vừa đóng phiếu thì ô trả lời phải khoá ngay.
-    final trangThai =
-        (ct.asData?.value['status'] ?? widget.ticket.trangThai).toString();
+    final trangThai = (ct.asData?.value['status'] ?? widget.ticket.trangThai)
+        .toString();
     final dong = trangThai.toUpperCase() == 'CLOSED';
     final u = ref.watch(authControllerProvider).user;
     // Quản lý có SUPPORT_VIEW nhưng KHÔNG có SUPPORT_RESPOND: họ giám sát hàng
@@ -273,14 +278,16 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.ticket.tieuDe,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 15)),
+        title: Text(
+          widget.ticket.tieuDe,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15),
+        ),
         actions: [
           if (widget.nhanVien && traLoiDuoc)
             PopupMenuButton<String>(
-              tooltip: 'Đổi trạng thái',
+              tooltip: Ngu.d('Đổi trạng thái'),
               color: Mau.the,
               icon: const Icon(Icons.flag_outlined),
               onSelected: _doiTrangThai,
@@ -300,11 +307,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           Expanded(
             child: ct.when(
               loading: () => const Center(
-                  child: CircularProgressIndicator(color: Mau.vang)),
+                child: CircularProgressIndicator(color: Mau.vang),
+              ),
               error: (e, _) => KhoiLoi(
                 thongDiep: e is ApiException
                     ? e.message
-                    : 'Không tải được nội dung phiếu.',
+                    : Ngu.d('Không tải được nội dung phiếu.'),
                 thuLai: () =>
                     ref.invalidate(ticketChiTietProvider(widget.ticket.id)),
               ),
@@ -312,16 +320,18 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 final raw = d['messages'];
                 final ds = raw is List
                     ? raw
-                        .whereType<Map<String, dynamic>>()
-                        .map(TinHoTro.fromJson)
-                        .toList()
+                          .whereType<Map<String, dynamic>>()
+                          .map(TinHoTro.fromJson)
+                          .toList()
                     : <TinHoTro>[];
                 if (ds.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(30),
-                      child: Text('Phiếu này chưa có nội dung nào.',
-                          style: TextStyle(color: Mau.chuMo, fontSize: 13)),
+                      child: Text(
+                        Ngu.d('Phiếu này chưa có nội dung nào.'),
+                        style: TextStyle(color: Mau.chuMo, fontSize: 13),
+                      ),
                     ),
                   );
                 }
@@ -338,9 +348,10 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               color: Mau.the,
-              child: const Text(
-                'Bạn đang xem ở chế độ giám sát — tài khoản này không trả lời '
-                'khách.',
+              child: Text(
+                Ngu.d(
+                  'Bạn đang xem ở chế độ giám sát — tài khoản này không trả lời khách.',
+                ),
                 style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
               ),
             )
@@ -349,15 +360,21 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               color: const Color(0x18E0B341),
-              child: const Text(
-                'Phiếu đã đóng. Cần thêm trợ giúp thì gửi một yêu cầu mới.',
+              child: Text(
+                Ngu.d(
+                  'Phiếu đã đóng. Cần thêm trợ giúp thì gửi một yêu cầu mới.',
+                ),
                 style: TextStyle(fontSize: 11.5, height: 1.5),
               ),
             )
           else
             Container(
               padding: EdgeInsets.fromLTRB(
-                  12, 10, 12, 10 + MediaQuery.of(context).padding.bottom),
+                12,
+                10,
+                12,
+                10 + MediaQuery.of(context).padding.bottom,
+              ),
               decoration: const BoxDecoration(
                 color: Mau.the,
                 border: Border(top: BorderSide(color: Mau.vien)),
@@ -371,11 +388,13 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       minLines: 1,
                       maxLines: 4,
                       textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Trả lời…',
+                      decoration: InputDecoration(
+                        hintText: Ngu.d('Trả lời…'),
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -393,8 +412,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                           ? const SizedBox(
                               height: 16,
                               width: 16,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Icon(Icons.send, size: 18),
                     ),
                   ),
@@ -422,28 +441,35 @@ class _BongTin extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.78),
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
         decoration: BoxDecoration(
           color: trai ? const Color(0xFF241F33) : const Color(0xFF3A3218),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
-          crossAxisAlignment:
-              trai ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          crossAxisAlignment: trai
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
           children: [
             if (trai && tin.nguoiGui.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(tin.nguoiGui,
-                    style:
-                        const TextStyle(fontSize: 10.5, color: Mau.vang)),
+                child: Text(
+                  tin.nguoiGui,
+                  style: const TextStyle(fontSize: 10.5, color: Mau.vang),
+                ),
               ),
-            Text(tin.noiDung,
-                style: const TextStyle(fontSize: 13.5, height: 1.5)),
+            Text(
+              tin.noiDung,
+              style: const TextStyle(fontSize: 13.5, height: 1.5),
+            ),
             if (tin.luc != null) ...[
               const SizedBox(height: 4),
-              Text(Dinh.ngayGio(tin.luc),
-                  style: const TextStyle(fontSize: 9.5, color: Mau.chuMo)),
+              Text(
+                Dinh.ngayGio(tin.luc),
+                style: const TextStyle(fontSize: 9.5, color: Mau.chuMo),
+              ),
             ],
           ],
         ),
