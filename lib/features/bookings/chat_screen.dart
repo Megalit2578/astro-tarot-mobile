@@ -471,10 +471,14 @@ class _BongBong extends StatelessWidget {
         if (!cuaToi) ...[
           CircleAvatar(
             radius: 13,
-            backgroundColor: const Color(0xFF3A3B3C),
+            backgroundColor: Mau.vang.withValues(alpha: 0.16),
             child: Text(
               (tin.senderName.isEmpty ? '?' : tin.senderName[0]).toUpperCase(),
-              style: const TextStyle(fontSize: 12, color: Colors.white),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Mau.vang,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(width: 6),
@@ -485,14 +489,20 @@ class _BongBong extends StatelessWidget {
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width * 0.76,
             ),
+            // Màu theo bảng màu của app, không phải xanh Messenger.
+            //
+            // Trước đây hai bong bóng là #0084FF và #3A3B3C — đúng tông
+            // Messenger, lạc hẳn giữa một ứng dụng vàng trên nền tối, nhìn
+            // như màn hình của app khác lắp nhầm vào.
             decoration: BoxDecoration(
-              color: cuaToi ? const Color(0xFF0084FF) : const Color(0xFF3A3B3C),
+              color: cuaToi ? Mau.vang : Mau.the,
               borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(14),
-                topRight: const Radius.circular(14),
-                bottomLeft: Radius.circular(cuaToi ? 14 : 4),
-                bottomRight: Radius.circular(cuaToi ? 4 : 14),
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(cuaToi ? 16 : 5),
+                bottomRight: Radius.circular(cuaToi ? 5 : 16),
               ),
+              border: cuaToi ? null : Border.all(color: Mau.vien),
             ),
             child: Column(
               crossAxisAlignment: cuaToi
@@ -501,10 +511,12 @@ class _BongBong extends StatelessWidget {
               children: [
                 Text(
                   tin.body,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     height: 1.45,
-                    color: Colors.white,
+                    // Nền vàng đặc thì chữ phải tối mới đọc được; dùng đúng
+                    // màu chữ-trên-vàng của nút chính trong theme.
+                    color: cuaToi ? const Color(0xFF1A1206) : Mau.chu,
                   ),
                 ),
                 // Dấu thời gian chỉ hiện khi CÓ. Rỗng nghĩa là gói đẩy thiếu
@@ -513,9 +525,11 @@ class _BongBong extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     cuaToi && tin.daDoc ? '$gio · đã xem' : gio,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9.5,
-                      color: Colors.white70,
+                      color: cuaToi
+                          ? const Color(0xFF1A1206).withValues(alpha: 0.6)
+                          : Mau.chuMo,
                     ),
                   ),
                 ],

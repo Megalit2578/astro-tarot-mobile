@@ -226,7 +226,7 @@ class _Noi extends ConsumerWidget {
               ],
 
               const SizedBox(height: 24),
-              const _Nhan('Thời lượng'),
+              const _Buoc(1, 'Chọn thời lượng'),
               const SizedBox(height: 10),
               // Reader chưa đặt giá nào thì không có mốc nào để hiện.
               //
@@ -360,6 +360,52 @@ class _Nhan extends StatelessWidget {
   );
 }
 
+/// Nhãn một bước của luồng đặt lịch, có đánh số.
+///
+/// Ba mục Thời lượng – Ngày – Giờ trước đây chỉ là ba nhãn xám giống hệt nhau
+/// và giống cả nhãn "Đánh giá" ở dưới, nên nhìn vào không thấy đây là một
+/// trình tự phải làm theo thứ tự. Đánh số thì rõ ngay còn mấy bước nữa.
+class _Buoc extends StatelessWidget {
+  const _Buoc(this.so, this.text);
+  final int so;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          height: 20,
+          width: 20,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Mau.vang.withValues(alpha: 0.14),
+            shape: BoxShape.circle,
+            border: Border.all(color: Mau.vien),
+          ),
+          child: Text(
+            '$so',
+            style: const TextStyle(
+              fontSize: 11,
+              color: Mau.vang,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Mau.chu,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _Dau extends StatelessWidget {
   const _Dau({required this.reader});
   final Reader reader;
@@ -441,6 +487,23 @@ class _Dau extends StatelessWidget {
 ///
 /// Khung đã có người đặt vẫn hiện, mờ, không bấm được. Hai người cùng mở lịch
 /// này thấy cùng một Reader, nên ô vừa kín thì người kia thấy ngay lần tải sau.
+/// Một buổi trong ngày, dùng để chia nhỏ danh sách khung giờ.
+///
+/// Mốc giống bên web để hai nơi đọc ra cùng một cách: sáng tới trước 12 giờ,
+/// chiều tới trước 18 giờ, còn lại là tối.
+class _Buoi {
+  const _Buoi(this.ten, this.tu, this.den);
+  final String ten;
+  final int tu;
+  final int den;
+}
+
+const _buoi = [
+  _Buoi('Sáng', 0, 12),
+  _Buoi('Chiều', 12, 18),
+  _Buoi('Tối', 18, 24),
+];
+
 class _LichDat extends ConsumerWidget {
   const _LichDat({
     required this.readerId,
@@ -517,6 +580,8 @@ class _LichDat extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const _Buoc(2, 'Chọn ngày'),
+            const SizedBox(height: 10),
             LuoiThang(
               thang: ngay,
               chon: ngay,
@@ -546,7 +611,7 @@ class _LichDat extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const _Nhan('Khung giờ'),
+            const _Buoc(3, 'Chọn giờ'),
             const SizedBox(height: 4),
             const Text(
               'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. '
@@ -566,20 +631,56 @@ class _LichDat extends ConsumerWidget {
                 ),
               )
             else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final s in (hom?.o ?? const <Slot>[]).where(
-                    (s) => s.trang != TrangO.past,
-                  ))
-                    _OGio(
-                      slot: s,
-                      chon: chon != null && chon!.batDau == s.batDau,
-                      onTap: s.datDuoc ? () => doiChon(s) : null,
-                    ),
-                ],
-              ),
+              // Chia theo buổi thay vì đổ một khối.
+              //
+              // Reader làm 09:00–18:00 thì một ngày ra khoảng ba mươi ô; dồn
+              // hết vào một Wrap là người dùng phải tự dò xem chỗ nào sang
+              // chiều. Web vốn đã chia Sáng/Chiều/Tối, app thì chưa — nay
+              // theo cho khớp.
+              for (final b in _buoi)
+                Builder(
+                  builder: (_) {
+                    final cua = (hom?.o ?? const <Slot>[])
+                        .where((s) => s.trang != TrangO.past)
+                        .where((s) {
+                          final g = s.batDau.toLocal().hour;
+                          return g >= b.tu && g < b.den;
+                        })
+                        .toList();
+                    if (cua.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8, top: 4),
+                          child: Text(
+                            b.ten.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              color: Mau.chuMo,
+                              letterSpacing: 1.1,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final s in cua)
+                              _OGio(
+                                slot: s,
+                                chon:
+                                    chon != null && chon!.batDau == s.batDau,
+                                onTap: s.datDuoc ? () => doiChon(s) : null,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                    );
+                  },
+                ),
           ],
         );
       },
