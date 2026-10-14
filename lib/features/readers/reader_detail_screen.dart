@@ -473,7 +473,7 @@ class _Dau extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 reader.yearsExperience != null
-                    ? '${reader.yearsExperience} năm kinh nghiệm'
+                    ? '${reader.yearsExperience} ${Ngu.d('năm kinh nghiệm')}'
                     : 'Reader mới',
                 style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
               ),
@@ -482,15 +482,20 @@ class _Dau extends StatelessWidget {
                 children: [
                   const Icon(Icons.star, size: 14, color: Mau.vang),
                   const SizedBox(width: 4),
-                  Text(
-                    Dinh.diem(reader.rating, reader.totalReviews),
-                    style: const TextStyle(color: Mau.vang, fontSize: 12.5),
-                  ),
-                  const SizedBox(width: 5),
+                  // Chưa ai đánh giá thì gộp thành MỘT câu — xem ghi chú ở
+                  // readers_screen.dart: tách đôi ra thì bản tiếng Anh hiện
+                  // "Chưa có reviews", lẫn hai thứ tiếng giữa câu.
+                  if (reader.totalReviews > 0) ...[
+                    Text(
+                      Dinh.diem(reader.rating, reader.totalReviews),
+                      style: const TextStyle(color: Mau.vang, fontSize: 12.5),
+                    ),
+                    const SizedBox(width: 5),
+                  ],
                   Text(
                     reader.totalReviews > 0
-                        ? '(${reader.totalReviews} đánh giá)'
-                        : 'đánh giá',
+                        ? '(${reader.totalReviews} ${danhGiaSoNhieu(reader.totalReviews)})'
+                        : Ngu.d('Chưa có đánh giá'),
                     style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
                   ),
                 ],

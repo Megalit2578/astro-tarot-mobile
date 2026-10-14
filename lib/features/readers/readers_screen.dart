@@ -153,7 +153,7 @@ class _TheReader extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           reader.yearsExperience != null
-                              ? '${reader.yearsExperience} năm kinh nghiệm'
+                              ? '${reader.yearsExperience} ${Ngu.d('năm kinh nghiệm')}'
                               : Ngu.d('Reader mới'),
                           style: const TextStyle(
                             color: Mau.chuMo,
@@ -165,21 +165,31 @@ class _TheReader extends StatelessWidget {
                           children: [
                             const Icon(Icons.star, size: 13, color: Mau.vang),
                             const SizedBox(width: 4),
-                            Text(
-                              Dinh.diem(reader.rating, reader.totalReviews),
-                              style: const TextStyle(
-                                color: Mau.vang,
-                                fontSize: 12,
+                            // Khi chưa ai đánh giá thì gộp thành MỘT câu, không
+                            // tách "Chưa có" + "đánh giá" thành hai Text.
+                            //
+                            // Tách ra thì nửa trước đi qua Dinh.diem (không
+                            // dịch) còn nửa sau có dịch, nên bản tiếng Anh ra
+                            // "Chưa có reviews" — lẫn hai thứ tiếng giữa câu,
+                            // tệ hơn cả để nguyên tiếng Việt. Thấy khi xem
+                            // danh sách Reader trên máy ảo.
+                            if (reader.totalReviews > 0)
+                              Text(
+                                Dinh.diem(reader.rating, reader.totalReviews),
+                                style: const TextStyle(
+                                  color: Mau.vang,
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
+                            if (reader.totalReviews > 0)
+                              const SizedBox(width: 4),
                             // Flexible: với cỡ chữ lớn của máy, dòng này
                             // tràn khỏi thẻ nếu không được phép co lại.
                             Flexible(
                               child: Text(
                                 reader.totalReviews > 0
-                                    ? '(${reader.totalReviews} đánh giá)'
-                                    : Ngu.d('đánh giá'),
+                                    ? '(${reader.totalReviews} ${danhGiaSoNhieu(reader.totalReviews)})'
+                                    : Ngu.d('Chưa có đánh giá'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
