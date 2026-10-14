@@ -74,12 +74,18 @@ class _ChuongDen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Cùng tông với bong bóng chat, không để lại mảng xám
+                // Messenger giữa một app vàng trên nền tối.
                 CircleAvatar(
                   radius: 42,
-                  backgroundColor: const Color(0xFF3A3B3C),
+                  backgroundColor: Mau.vang.withValues(alpha: 0.16),
                   child: Text(
                     ten.isEmpty ? '?' : ten.characters.first.toUpperCase(),
-                    style: const TextStyle(fontSize: 28, color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      color: Mau.vang,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
