@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,12 +45,12 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lịch hẹn của tôi'),
+        title: Text(Ngu.d('Lịch hẹn của tôi')),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(46),
           child: DaiChon(
             cuon: true,
-            nhan: [for (final l in _loc) l.$1],
+            nhan: [for (final l in _loc) Ngu.d(l.$1)],
             chon: _chon,
             khiChon: (i) => setState(() => _chon = i),
           ),
@@ -61,19 +63,19 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
             child: DanhSachPhanTrang<Booking>(
               key: ValueKey(_chon),
               tai: (t) => repo.cuaToi(trang: t, loc: loc),
-              loiDuPhong: 'Không tải được lịch hẹn.',
+              loiDuPhong: Ngu.d('Không tải được lịch hẹn.'),
               trong: loc == null
-                  ? const KhoiTrong(
+                  ? KhoiTrong(
                       icon: Icons.event_available,
-                      tieuDe: 'Chưa có lịch hẹn nào',
-                      moTa:
-                          'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt '
-                          'một khung giờ.',
+                      tieuDe: Ngu.d('Chưa có lịch hẹn nào'),
+                      moTa: Ngu.d(
+                        'Vào tab Reader, chọn người bạn muốn xem cùng rồi đặt một khung giờ.',
+                      ),
                     )
                   : KhoiTrong(
                       icon: Icons.filter_alt_off_outlined,
                       tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
-                      moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
+                      moTa: Ngu.d('Chọn "Tất cả" để xem toàn bộ lịch hẹn.'),
                     ),
               dong: (_, b) => _TheBuoi(booking: b),
             ),
@@ -109,7 +111,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
       if (!mounted) return;
       await moHuongDanThanhToan(context, h);
     } catch (e) {
-      if (mounted) baoLoi(context, e, 'Không tạo được thanh toán.');
+      if (mounted) baoLoi(context, e, Ngu.d('Không tạo được thanh toán.'));
     } finally {
       if (mounted) setState(() => _phaseDangTra = null);
     }
@@ -126,7 +128,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
   String get _chinhSachHuy {
     final da = _daTra;
     if (da == 0) {
-      return 'Buổi này chưa đặt cọc. Huỷ lúc này không mất tiền.';
+      return Ngu.d('Buổi này chưa đặt cọc. Huỷ lúc này không mất tiền.');
     }
     final moc = b.hanTraNot ?? b.batDau.subtract(const Duration(hours: 12));
     if (moc.isAfter(DateTime.now())) {
@@ -142,10 +144,10 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
   Future<void> _huy() async {
     final lyDo = await hoiNoiDung(
       context,
-      tieuDe: 'Huỷ lịch hẹn?',
+      tieuDe: Ngu.d('Huỷ lịch hẹn?'),
       moTa: _chinhSachHuy,
-      goiY: 'Ví dụ: mình có việc đột xuất...',
-      gui: 'Xác nhận huỷ',
+      goiY: Ngu.d('Ví dụ: mình có việc đột xuất...'),
+      gui: Ngu.d('Xác nhận huỷ'),
     );
     // null = bấm Thoát, giữ lịch. Chuỗi rỗng = huỷ mà không ghi lý do.
     if (lyDo == null || !mounted) return;
@@ -155,9 +157,9 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
           .read(bookingsRepositoryProvider)
           .huy(b.id, lyDo.trim().isEmpty ? null : lyDo.trim());
       ref.invalidate(myBookingsProvider);
-      if (mounted) baoTin(context, 'Đã huỷ lịch hẹn');
+      if (mounted) baoTin(context, Ngu.d('Đã huỷ lịch hẹn'));
     } catch (e) {
-      if (mounted) baoLoi(context, e, 'Không huỷ được lịch hẹn.');
+      if (mounted) baoLoi(context, e, Ngu.d('Không huỷ được lịch hẹn.'));
     } finally {
       if (mounted) setState(() => _phaseDangTra = null);
     }
@@ -208,7 +210,10 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
               style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
             ),
             const SizedBox(height: 8),
-            Align(alignment: Alignment.centerLeft, child: _Nhan(b: b)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _Nhan(b: b),
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -224,8 +229,8 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                   ),
                 ),
                 if (b.chuaTra)
-                  const Text(
-                    'Chưa thanh toán',
+                  Text(
+                    Ngu.d('Chưa thanh toán'),
                     style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
                   )
                 else if (b.daCoc)
@@ -237,8 +242,8 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     ),
                   )
                 else
-                  const Text(
-                    'Đã thanh toán',
+                  Text(
+                    Ngu.d('Đã thanh toán'),
                     style: TextStyle(fontSize: 11.5, color: Color(0xFF6BBF7B)),
                   ),
               ],
@@ -274,8 +279,8 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Ghi chú của Reader',
+                    Text(
+                      Ngu.d('Ghi chú của Reader'),
                       style: TextStyle(fontSize: 10.5, color: Mau.chuMo),
                     ),
                     const SizedBox(height: 5),
@@ -300,7 +305,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     style: _kieuNut(),
                     child: Text(
                       _phaseDangTra == 'DEPOSIT'
-                          ? 'Đang mở thanh toán…'
+                          ? Ngu.d('Đang mở thanh toán…')
                           : 'Đặt cọc 50% (${Dinh.tien(b.tienCoc ?? 0)})',
                     ),
                   ),
@@ -311,7 +316,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     style: _kieuNut(vien: true),
                     child: Text(
                       _phaseDangTra == 'FULL'
-                          ? 'Đang mở thanh toán…'
+                          ? Ngu.d('Đang mở thanh toán…')
                           : 'Thanh toán hết (${Dinh.tien(b.tongTien)})',
                     ),
                   ),
@@ -322,7 +327,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                     style: _kieuNut(),
                     child: Text(
                       _phaseDangTra == 'REMAINING'
-                          ? 'Đang mở thanh toán…'
+                          ? Ngu.d('Đang mở thanh toán…')
                           : 'Thanh toán nốt (${Dinh.tien(b.tienConLai ?? 0)})',
                     ),
                   ),
@@ -337,14 +342,14 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                   FilledButton.icon(
                     onPressed: () => moDanhGia(context, b),
                     icon: const Icon(Icons.star_border, size: 16),
-                    label: const Text('Đánh giá'),
+                    label: Text(Ngu.d('Đánh giá')),
                     style: _kieuNut(),
                   ),
                 if (b.trangThai == TrangThaiBuoi.completed && b.daDanhGia)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 9),
                     child: Text(
-                      'Bạn đã đánh giá buổi này',
+                      Ngu.d('Bạn đã đánh giá buổi này'),
                       style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
                     ),
                   ),
@@ -359,7 +364,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                       bookingId: b.id,
                     ),
                     icon: const Icon(Icons.flag_outlined, size: 16),
-                    label: const Text('Báo cáo'),
+                    label: Text(Ngu.d('Báo cáo')),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE5645E),
                       minimumSize: const Size(0, 36),
@@ -372,7 +377,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                   TextButton.icon(
                     onPressed: _dangTra ? null : _huy,
                     icon: const Icon(Icons.close, size: 16),
-                    label: const Text('Huỷ lịch'),
+                    label: Text(Ngu.d('Huỷ lịch')),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE5645E),
                       minimumSize: const Size(0, 36),
@@ -387,7 +392,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                       MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
                     ),
                     icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                    label: const Text('Nhắn tin / Gọi'),
+                    label: Text(Ngu.d('Nhắn tin / Gọi')),
                     style: _kieuNut(vien: true),
                   ),
               ],
