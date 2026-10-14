@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/endpoints.dart';
 import '../../core/auth/app_user.dart';
+import '../../core/ngon_ngu.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../account/account_screen.dart';
@@ -116,7 +117,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             NavigationDestination(
               icon: Icon(t.icon, color: Mau.chuMo),
               selectedIcon: Icon(t.icon, color: Mau.vang),
-              label: t.nhan,
+              label: Ngu.d(t.nhan),
             ),
         ],
       ),

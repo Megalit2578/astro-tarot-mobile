@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../profile/profile_repository.dart';
 import '../../core/api/api_client.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/auth/app_user.dart';
 import '../../core/config.dart';
+import '../../core/ngon_ngu.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../theme.dart';
 import '../admin/admin_hub.dart';
@@ -80,7 +83,9 @@ class AccountScreen extends ConsumerWidget {
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 3),
+                        horizontal: 9,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Mau.vang.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(999),
@@ -100,16 +105,19 @@ class AccountScreen extends ConsumerWidget {
           // Khu quản trị đứng riêng một thẻ viền vàng: với nhân sự đây là
           // lối vào dùng nhiều nhất, không để lẫn giữa các mục cá nhân.
           if (u.laQuanTri) ...[
-            _Nhom(noiBat: true, muc: [
-              _Muc(
-                icon: Icons.shield_outlined,
-                nhan: u.co('USERS_MANAGE') ? 'Khu quản trị' : 'Khu quản lý',
-                phu: u.co('USERS_MANAGE')
-                    ? 'Tổng quan, tài khoản, tiền, nhật ký, sản phẩm'
-                    : 'Nhân sự, hồ sơ Reader, báo cáo, gian hàng',
-                onTap: () => _mo(context, const AdminHub()),
-              ),
-            ]),
+            _Nhom(
+              noiBat: true,
+              muc: [
+                _Muc(
+                  icon: Icons.shield_outlined,
+                  nhan: u.co('USERS_MANAGE') ? 'Khu quản trị' : 'Khu quản lý',
+                  phu: u.co('USERS_MANAGE')
+                      ? 'Tổng quan, tài khoản, tiền, nhật ký, sản phẩm'
+                      : 'Nhân sự, hồ sơ Reader, báo cáo, gian hàng',
+                  onTap: () => _mo(context, const AdminHub()),
+                ),
+              ],
+            ),
             const SizedBox(height: 18),
           ],
 
@@ -117,86 +125,95 @@ class AccountScreen extends ConsumerWidget {
           // Cài đặt trên điện thoại. Mỗi mục một thẻ riêng như trước thì
           // chín mục đã dài hơn hai màn hình.
           const _TieuDeNhom('Của tôi'),
-          _Nhom(muc: [
-            _Muc(
-              icon: Icons.person_outline,
-              nhan: 'Hồ sơ cá nhân',
-              phu: 'Tên, ảnh đại diện, ngày sinh',
-              onTap: () => _mo(context, const ProfileScreen()),
-            ),
-            _Muc(
-              icon: Icons.auto_awesome_outlined,
-              nhan: 'Bản đồ sao',
-              phu: 'AI đọc bài dựa trên hồ sơ chính',
-              onTap: () => _mo(context, const AstrologyScreen()),
-            ),
-            // Màn này gộp VÍ với GÓI AI. Chỉ phần gói là việc của khách; ví
-            // thì backend cố ý mở cho mọi vai trò, vì người từng là khách rồi
-            // được cất lên Nhân viên vẫn phải nhìn thấy tiền cũ của mình.
-            //
-            // Nên không gác cả mục, chỉ đổi nhãn cho khỏi hứa nhầm: Nhân viên
-            // mở ra thấy ví và lịch sử, không thấy phần bán gói.
-            _Muc(
-              icon: u.co('CUSTOMER_ACTIONS')
-                  ? Icons.workspace_premium_outlined
-                  : Icons.account_balance_wallet_outlined,
-              nhan: u.co('CUSTOMER_ACTIONS') ? 'Gói AI' : 'Ví ASTROTAROT',
-              phu: u.co('CUSTOMER_ACTIONS')
-                  ? 'Hạn mức mỗi ngày, số dư ví, mua gói'
-                  : 'Số dư và lịch sử giao dịch của bạn',
-              onTap: () => _mo(context, const GoiAiScreen()),
-            ),
-            _Muc(
-              icon: Icons.history,
-              nhan: 'Lịch sử trải bài',
-              phu: 'Xem lại lời giải AI đã lưu',
-              onTap: () => _mo(context, const TarotHistoryScreen()),
-            ),
-            // Nhân sự đã có hồ sơ Reader thì mục này thừa; người dùng thường
-            // thì đây là cửa duy nhất để trở thành Reader trên điện thoại.
-            if (u.co('READER_APPLY') && !u.co('READER_MANAGE_PROFILE'))
+          _Nhom(
+            muc: [
               _Muc(
-                icon: Icons.workspace_premium_outlined,
-                nhan: 'Đăng ký làm Reader',
-                phu: 'Nộp đơn hoặc xem trạng thái đơn',
-                onTap: () => _mo(context, const ReaderApplyScreen()),
+                icon: Icons.person_outline,
+                nhan: Ngu.d('Hồ sơ cá nhân'),
+                phu: 'Tên, ảnh đại diện, ngày sinh',
+                onTap: () => _mo(context, const ProfileScreen()),
               ),
-          ]),
+              _Muc(
+                icon: Icons.auto_awesome_outlined,
+                nhan: Ngu.d('Bản đồ sao'),
+                phu: 'AI đọc bài dựa trên hồ sơ chính',
+                onTap: () => _mo(context, const AstrologyScreen()),
+              ),
+              // Màn này gộp VÍ với GÓI AI. Chỉ phần gói là việc của khách; ví
+              // thì backend cố ý mở cho mọi vai trò, vì người từng là khách rồi
+              // được cất lên Nhân viên vẫn phải nhìn thấy tiền cũ của mình.
+              //
+              // Nên không gác cả mục, chỉ đổi nhãn cho khỏi hứa nhầm: Nhân viên
+              // mở ra thấy ví và lịch sử, không thấy phần bán gói.
+              _Muc(
+                icon: u.co('CUSTOMER_ACTIONS')
+                    ? Icons.workspace_premium_outlined
+                    : Icons.account_balance_wallet_outlined,
+                nhan: u.co('CUSTOMER_ACTIONS') ? 'Gói AI' : 'Ví ASTROTAROT',
+                phu: u.co('CUSTOMER_ACTIONS')
+                    ? 'Hạn mức mỗi ngày, số dư ví, mua gói'
+                    : 'Số dư và lịch sử giao dịch của bạn',
+                onTap: () => _mo(context, const GoiAiScreen()),
+              ),
+              _Muc(
+                icon: Icons.history,
+                nhan: Ngu.d('Lịch sử trải bài'),
+                phu: 'Xem lại lời giải AI đã lưu',
+                onTap: () => _mo(context, const TarotHistoryScreen()),
+              ),
+              // Nhân sự đã có hồ sơ Reader thì mục này thừa; người dùng thường
+              // thì đây là cửa duy nhất để trở thành Reader trên điện thoại.
+              if (u.co('READER_APPLY') && !u.co('READER_MANAGE_PROFILE'))
+                _Muc(
+                  icon: Icons.workspace_premium_outlined,
+                  nhan: Ngu.d('Đăng ký làm Reader'),
+                  phu: 'Nộp đơn hoặc xem trạng thái đơn',
+                  onTap: () => _mo(context, const ReaderApplyScreen()),
+                ),
+            ],
+          ),
 
           const SizedBox(height: 18),
           const _TieuDeNhom('Khám phá'),
-          _Nhom(muc: [
-            _Muc(
-              icon: Icons.article_outlined,
-              nhan: 'Bài viết',
-              phu: 'Kiến thức Tarot và chiêm tinh',
-              onTap: () => _mo(context, const BlogScreen()),
-            ),
-            _Muc(
-              icon: Icons.storefront_outlined,
-              nhan: 'Gian hàng',
-              phu: 'Bài Tarot, đá, phụ kiện chọn lọc',
-              onTap: () => _mo(context, const ShopScreen()),
-            ),
-          ]),
+          _Nhom(
+            muc: [
+              _Muc(
+                icon: Icons.article_outlined,
+                nhan: Ngu.d('Bài viết'),
+                phu: 'Kiến thức Tarot và chiêm tinh',
+                onTap: () => _mo(context, const BlogScreen()),
+              ),
+              _Muc(
+                icon: Icons.storefront_outlined,
+                nhan: Ngu.d('Gian hàng'),
+                phu: 'Bài Tarot, đá, phụ kiện chọn lọc',
+                onTap: () => _mo(context, const ShopScreen()),
+              ),
+            ],
+          ),
 
           const SizedBox(height: 18),
           const _TieuDeNhom('Trợ giúp'),
-          _Nhom(muc: [
-            _Muc(
-              icon: Icons.support_agent_outlined,
-              nhan: 'Hỗ trợ',
-              phu: 'Gửi yêu cầu và xem phản hồi',
-              onTap: () => _mo(context, const SupportScreen()),
-            ),
-            if (ref.watch(tinhTrangGopYProvider).asData?.value?.daGui != true)
+          _Nhom(
+            muc: [
               _Muc(
-                icon: Icons.rate_review_outlined,
-                nhan: 'Góp ý',
-                phu: 'Khảo sát ngắn — ASTROTAROT có giúp bạn không?',
-                onTap: () => _mo(context, const FeedbackScreen()),
+                icon: Icons.support_agent_outlined,
+                nhan: Ngu.d('Hỗ trợ'),
+                phu: 'Gửi yêu cầu và xem phản hồi',
+                onTap: () => _mo(context, const SupportScreen()),
               ),
-          ]),
+              if (ref.watch(tinhTrangGopYProvider).asData?.value?.daGui != true)
+                _Muc(
+                  icon: Icons.rate_review_outlined,
+                  nhan: Ngu.d('Góp ý'),
+                  phu: 'Khảo sát ngắn — ASTROTAROT có giúp bạn không?',
+                  onTap: () => _mo(context, const FeedbackScreen()),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 22),
+          const _DoiNgonNgu(),
 
           const SizedBox(height: 22),
           _HopQuyen(quyen: u.permissions),
@@ -234,7 +251,8 @@ class AccountScreen extends ConsumerWidget {
               spacing: 6,
               children: [
                 TextButton(
-                  onPressed: () => _moLienKet('${AppConfig.webBaseUrl}/chinh-sach-rieng-tu'),
+                  onPressed: () =>
+                      _moLienKet('${AppConfig.webBaseUrl}/chinh-sach-rieng-tu'),
                   style: _nhatNho,
                   child: const Text('Chính sách riêng tư'),
                 ),
@@ -267,7 +285,10 @@ class AccountScreen extends ConsumerWidget {
 
   static final ButtonStyle _nhatNho = TextButton.styleFrom(
     foregroundColor: Mau.chuMo,
-    textStyle: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+    textStyle: const TextStyle(
+      fontSize: 12,
+      decoration: TextDecoration.underline,
+    ),
     minimumSize: Size.zero,
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -281,10 +302,7 @@ class AccountScreen extends ConsumerWidget {
   }
 
   void _xacNhanXoa(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => const _HopXoaTaiKhoan(),
-    );
+    showDialog<void>(context: context, builder: (_) => const _HopXoaTaiKhoan());
   }
 
   void _mo(BuildContext context, Widget man) {
@@ -298,13 +316,16 @@ class _TieuDeNhom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 8),
-        child: Text(
-          text.toUpperCase(),
-          style: const TextStyle(
-              fontSize: 11, letterSpacing: 1.2, color: Mau.chuMo),
-        ),
-      );
+    padding: const EdgeInsets.only(left: 4, bottom: 8),
+    child: Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        letterSpacing: 1.2,
+        color: Mau.chuMo,
+      ),
+    ),
+  );
 }
 
 /// Một thẻ chứa nhiều mục, ngăn bằng vạch mảnh.
@@ -320,14 +341,19 @@ class _Nhom extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-            color: noiBat ? Mau.vang.withValues(alpha: 0.5) : Mau.vien),
+          color: noiBat ? Mau.vang.withValues(alpha: 0.5) : Mau.vien,
+        ),
       ),
       child: Column(
         children: [
           for (var i = 0; i < muc.length; i++) ...[
             if (i > 0)
-              const Divider(height: 1, thickness: 1, indent: 52,
-                  color: Color(0x1FD4AF37)),
+              const Divider(
+                height: 1,
+                thickness: 1,
+                indent: 52,
+                color: Color(0x1FD4AF37),
+              ),
             muc[i],
           ],
         ],
@@ -417,7 +443,9 @@ class _HopQuyen extends StatelessWidget {
                 for (final q in ds)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(color: const Color(0x33D4AF37)),
@@ -558,6 +586,55 @@ class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
               : const Text('Xoá tài khoản'),
         ),
       ],
+    );
+  }
+}
+
+/// Đổi tiếng Việt ↔ tiếng Anh.
+///
+/// Hai chữ VI / EN cạnh nhau chứ không phải ô chọn thả xuống: chỉ có hai lựa
+/// chọn, mà ô thả xuống bắt bấm hai lần để đổi một thứ nhìn phát biết ngay.
+/// Không dùng cờ quốc gia — tiếng Anh không thuộc nước nào, và người dùng
+/// Việt hay hiểu nhầm cờ là đổi quốc gia giao hàng.
+class _DoiNgonNgu extends StatelessWidget {
+  const _DoiNgonNgu();
+
+  // Tự nghe `Ngu.hien`: widget khai `const` và không nhận tham số, nên khi
+  // cây cha dựng lại Flutter bỏ qua nó và chỉ báo đứng yên trong lúc chữ
+  // xung quanh đã đổi. Xem ghi chú dài hơn ở `_DoiNguGon` trong login_screen.
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: Ngu.hien,
+      builder: (context, hien, _) => Row(
+        children: [
+          const Icon(Icons.translate, size: 18, color: Mau.chuMo),
+          const SizedBox(width: 10),
+          Text(
+            Ngu.d('Ngôn ngữ'),
+            style: const TextStyle(fontSize: 13.5, color: Mau.chu),
+          ),
+          const Spacer(),
+          for (final m in const [('vi', 'VI'), ('en', 'EN')])
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: ChoiceChip(
+                selected: m.$1 == hien,
+                onSelected: (_) => Ngu.doi(m.$1),
+                label: Text(m.$2),
+                labelStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: m.$1 == hien ? Mau.vang : Mau.chuMo,
+                ),
+                backgroundColor: Mau.the,
+                selectedColor: Mau.vang.withValues(alpha: 0.16),
+                side: BorderSide(color: m.$1 == hien ? Mau.vang : Mau.vien),
+                showCheckmark: false,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
