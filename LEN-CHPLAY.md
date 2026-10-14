@@ -66,16 +66,42 @@ thật.
 Quyết **trước** khi chụp ảnh màn hình, vì nếu chọn Play Billing thì cả luồng
 mua phải viết lại và ảnh chụp cũ bỏ hết.
 
-Gói AI là nội dung số tiêu thụ ngay trong ứng dụng, mà app đang nạp ví bằng
-chuyển khoản rồi trừ ví để mua. Hai đường:
+### Việt Nam KHÔNG có cửa thanh toán thay thế (kiểm lại 14/10/2026)
 
-1. **Dùng cơ chế thanh toán thay thế** Google mở cho nhà phát triển ở Việt
-   Nam. Giữ nguyên luồng hiện tại, chỉ phải đăng ký và khai báo.
-2. **Dựng Play Billing** cho riêng gói AI. Chắc chắn qua, nhưng tốn công và
-   mất 15–30% doanh thu gói.
+Bản trước của tài liệu này ghi một hướng không tồn tại, nên xoá hẳn: cơ chế
+*user choice billing* và *alternative billing* của Google **không mở cho Việt
+Nam**. Danh sách thị trường của Google gồm 30 nước EEA, Anh, Mỹ, Nhật, Úc,
+Brazil, Indonesia, Nam Phi, cộng Hàn Quốc và Ấn Độ theo diện riêng. Không có
+Việt Nam. Đừng mất thời gian đi đăng ký.
 
-Buổi xem với Reader **không** dính: đó là dịch vụ do người thật thực hiện theo
-thời gian thực, Google cho phép thanh toán ngoài.
+### Cái gì buộc dùng Play Billing, cái gì không
+
+Theo chính sách Thanh toán của Google:
+
+| Luồng tiền trong app | Bắt buộc Play Billing? | Vì sao |
+|---|---|---|
+| **Gói cước AI** | **CÓ** | "subscription services" cho nội dung số, dùng ngay trong app |
+| **Nạp ví ASTROTAROT** | **CÓ** | ví là tiền ảo bán trong app, mà tiền ảo bán trong app bị nêu đích danh |
+| **Buổi xem với Reader** | KHÔNG | miễn trừ "one-to-one online services": hai cá nhân, không xem lại được |
+
+Chỗ chết người là **cái ví**. Nó là một túi chung trả cho cả thứ được miễn
+trừ (buổi xem) lẫn thứ không được miễn trừ (gói AI). Nạp ví bằng PayOS rồi
+trừ ví mua gói AI chính là mẫu Google xem là bán tiền ảo trong ứng dụng.
+
+### Hai đường đi thật
+
+1. **Tách dòng tiền.** Gói AI bán qua Play Billing như một sản phẩm trong ứng
+   dụng thật; ví + PayOS chỉ còn để đặt lịch Reader. Phí Play 15% cho một
+   triệu đô doanh thu đầu (chương trình nhà phát triển nhỏ). Đây là đường
+   chắc chắn qua.
+2. **Bỏ hẳn việc mua trong app Android.** Gói AI chỉ bán trên web, app không
+   có nút mua và không dẫn ra ngoài để mua. App vẫn nhận tiền đặt lịch bình
+   thường vì khoản đó được miễn trừ. Rẻ công hơn, nhưng mất doanh thu gói từ
+   người dùng di động, và phải cẩn thận không để sót chỗ nào mời mua.
+
+Hiện app đang bán gói AI bằng ví (`goi_ai_screen.dart`), tức là đang ở trạng
+thái **chưa hợp lệ** nếu Google soi kỹ. Mốc này không chặn closed testing,
+nhưng sẽ chặn lúc xin phát hành công khai.
 
 ---
 

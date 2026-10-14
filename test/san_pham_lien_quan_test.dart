@@ -238,7 +238,8 @@ void main() {
 
       expect(find.textContaining('chưa đặt giá cho mốc nào'), findsNothing);
       expect(find.textContaining('Tháng '), findsOneWidget);
-      expect(find.text('Khung giờ'), findsOneWidget);
+      // Nhãn mục nay là bước đánh số "3 Chọn giờ" chứ không còn là "Khung giờ".
+      expect(find.text('Chọn giờ'), findsOneWidget);
     });
   });
 }
