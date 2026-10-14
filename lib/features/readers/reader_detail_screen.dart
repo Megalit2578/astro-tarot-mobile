@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -94,7 +96,7 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: Mau.the,
-          title: const Text('Đã đặt lịch'),
+          title: Text('Đã đặt lịch'),
           content: Text(
             '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút\n'
             '${Dinh.tien(b.tongTien)}\n\n'
@@ -105,7 +107,7 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Đã hiểu'),
+              child: Text('Đã hiểu'),
             ),
           ],
         ),
@@ -218,7 +220,7 @@ class _Noi extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0x55E0B341)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Reader này đang tạm ngưng nhận lịch.',
                     style: TextStyle(fontSize: 12.5),
                   ),
@@ -226,7 +228,7 @@ class _Noi extends ConsumerWidget {
               ],
 
               const SizedBox(height: 24),
-              const _Buoc(1, 'Chọn thời lượng'),
+              _Buoc(1, 'Chọn thời lượng'),
               const SizedBox(height: 10),
               // Reader chưa đặt giá nào thì không có mốc nào để hiện.
               //
@@ -236,7 +238,7 @@ class _Noi extends ConsumerWidget {
               // trống thì ba mục liền nhau (Thời lượng, Ngày, Khung giờ) đều rỗng và
               // trang trông như tải hỏng.
               if (muc.isEmpty)
-                const Text(
+                Text(
                   'Reader này chưa đặt giá cho mốc nào, nên chưa nhận đặt lịch.',
                   style: TextStyle(
                     fontSize: 12.5,
@@ -445,10 +447,7 @@ class _Dau extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: Mau.vien),
             image: co
-                ? DecorationImage(
-                    image: NetworkImage(anh),
-                    fit: BoxFit.cover,
-                  )
+                ? DecorationImage(image: NetworkImage(anh), fit: BoxFit.cover)
                 : null,
           ),
           alignment: Alignment.center,
@@ -578,7 +577,9 @@ class _LichDat extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              e is ApiException ? e.message : 'Không tải được lịch của Reader.',
+              e is ApiException
+                  ? e.message
+                  : Ngu.d('Không tải được lịch của Reader.'),
               style: const TextStyle(fontSize: 12.5, color: Mau.chuMo),
             ),
             const SizedBox(height: 10),
@@ -588,7 +589,7 @@ class _LichDat extends ConsumerWidget {
                 foregroundColor: Mau.vang,
                 side: const BorderSide(color: Mau.vien),
               ),
-              child: const Text('Thử lại'),
+              child: Text(Ngu.d('Thử lại')),
             ),
           ],
         ),
@@ -601,7 +602,7 @@ class _LichDat extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _Buoc(2, 'Chọn ngày'),
+            _Buoc(2, Ngu.d('Chọn ngày')),
             const SizedBox(height: 10),
             LuoiThang(
               thang: ngay,
@@ -623,20 +624,21 @@ class _LichDat extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 8),
-            const Wrap(
+            Wrap(
               spacing: 12,
               children: [
-                _Chu('Còn trống', Mau.vang, false),
-                _Chu('Đã kín', Mau.chuMo, false),
-                _Chu('Nghỉ', Mau.chuMo, true),
+                _Chu(Ngu.d('Còn trống'), Mau.vang, false),
+                _Chu(Ngu.d('Đã kín'), Mau.chuMo, false),
+                _Chu(Ngu.d('Nghỉ'), Mau.chuMo, true),
               ],
             ),
             const SizedBox(height: 16),
-            const _Buoc(3, 'Chọn giờ'),
+            _Buoc(3, Ngu.d('Chọn giờ')),
             const SizedBox(height: 4),
-            const Text(
-              'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. '
-              'Khung gạch ngang đã có người.',
+            Text(
+              Ngu.d(
+                'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. Khung gạch ngang đã có người.',
+              ),
               style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.4),
             ),
             const SizedBox(height: 10),
@@ -675,7 +677,7 @@ class _LichDat extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8, top: 4),
                           child: Text(
-                            b.ten.toUpperCase(),
+                            Ngu.d(b.ten).toUpperCase(),
                             style: const TextStyle(
                               fontSize: 10.5,
                               color: Mau.chuMo,
@@ -691,8 +693,7 @@ class _LichDat extends ConsumerWidget {
                             for (final s in cua)
                               _OGio(
                                 slot: s,
-                                chon:
-                                    chon != null && chon!.batDau == s.batDau,
+                                chon: chon != null && chon!.batDau == s.batDau,
                                 onTap: s.datDuoc ? () => doiChon(s) : null,
                               ),
                           ],
@@ -713,15 +714,15 @@ class _LichDat extends ConsumerWidget {
         DateTime(ngay.year, ngay.month, ngay.day) ==
         DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     return switch (hom?.loai) {
-      LoaiNgay.off => 'Reader nghỉ ngày này.',
-      LoaiNgay.closed => 'Reader không làm việc ngày này.',
-      LoaiNgay.full => 'Ngày này đã kín.',
+      LoaiNgay.off => Ngu.d('Reader nghỉ ngày này.'),
+      LoaiNgay.closed => Ngu.d('Reader không làm việc ngày này.'),
+      LoaiNgay.full => Ngu.d('Ngày này đã kín.'),
       LoaiNgay.over =>
         laHomNay
-            ? 'Hôm nay đã qua giờ làm việc của Reader.'
-            : 'Ngày này đã qua giờ làm việc.',
-      LoaiNgay.past => 'Ngày đã qua.',
-      _ => 'Ngày này không còn khung trống.',
+            ? Ngu.d('Hôm nay đã qua giờ làm việc của Reader.')
+            : Ngu.d('Ngày này đã qua giờ làm việc.'),
+      LoaiNgay.past => Ngu.d('Ngày đã qua.'),
+      _ => Ngu.d('Ngày này không còn khung trống.'),
     };
   }
 }
@@ -808,7 +809,9 @@ class _OGio extends StatelessWidget {
               ),
               if (!mo)
                 Text(
-                  slot.trang == TrangO.taken ? 'Đã kín' : 'Đã qua',
+                  slot.trang == TrangO.taken
+                      ? Ngu.d('Đã kín')
+                      : Ngu.d('Đã qua'),
                   style: const TextStyle(fontSize: 9, color: Mau.chuMo),
                 ),
             ],
@@ -839,14 +842,14 @@ class _CanDangNhap extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Đăng nhập để đặt khung giờ này',
+          Text(
+            Ngu.d('Đăng nhập để đặt khung giờ này'),
             style: TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 10),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Quay lại đăng nhập'),
+            child: Text(Ngu.d('Quay lại đăng nhập')),
           ),
         ],
       ),
@@ -914,7 +917,7 @@ class _ThanhDat extends StatelessWidget {
                     width: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Đặt lịch'),
+                : Text(Ngu.d('Đặt lịch')),
           );
           if (hep) {
             return Column(
