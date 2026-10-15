@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -47,7 +49,7 @@ class HuongDanThanhToan {
       phuongThuc == 'PAYOS';
 
   /// Backend trả nguyên văn chuỗi này khi chưa khai tài khoản nhận tiền.
-  bool get chuaCauHinh => !laPayOs && soTaiKhoan == 'Chưa cấu hình';
+  bool get chuaCauHinh => !laPayOs && soTaiKhoan == Ngu.d('Chưa cấu hình');
 
   factory HuongDanThanhToan.fromJson(Map<String, dynamic> j) =>
       HuongDanThanhToan(
@@ -65,16 +67,21 @@ class HuongDanThanhToan {
 
   String get loiGiai {
     return switch (giaiDoan) {
-      'DEPOSIT' => 'Đây là khoản đặt cọc 50%. Sau khi Reader đọc xong, thanh toán nốt 50% còn lại.',
-      'REMAINING' =>
+      'DEPOSIT' => Ngu.d(
+        'Đây là khoản đặt cọc 50%. Sau khi Reader đọc xong, thanh toán nốt 50% còn lại.',
+      ),
+      'REMAINING' => Ngu.d(
         'Đây là 50% còn lại. Reader đọc xong thì chuyển khoản nốt số này.',
-      'FULL' => 'Bạn thanh toán toàn bộ một lần, không đặt cọc.',
+      ),
+      'FULL' => Ngu.d('Bạn thanh toán toàn bộ một lần, không đặt cọc.'),
       _ =>
         laPayOs
-            ? 'Mở PayOS để quét VietQR hoặc chuyển khoản. Hệ thống xác '
-                  'nhận tự động sau khi nhận tiền.'
-            : 'Chuyển đúng số tiền và đúng nội dung bên dưới. Chúng tôi '
-                  'đối soát rồi xác nhận, thường trong vài giờ làm việc.',
+            ? Ngu.d(
+                'Mở PayOS để quét VietQR hoặc chuyển khoản. Hệ thống xác nhận tự động sau khi nhận tiền.',
+              )
+            : Ngu.d(
+                'Chuyển đúng số tiền và đúng nội dung bên dưới. Chúng tôi đối soát rồi xác nhận, thường trong vài giờ làm việc.',
+              ),
     };
   }
 }
@@ -108,13 +115,13 @@ class _BangThanhToan extends StatelessWidget {
     );
     if (!context.mounted) return;
     if (!ok) {
-      baoTin(context, 'Không mở được trang thanh toán.');
+      baoTin(context, Ngu.d('Không mở được trang thanh toán.'));
       return;
     }
     Navigator.of(context).pop();
     baoTin(
       context,
-      'Thanh toán xong thì quay lại đây và kéo xuống để làm mới.',
+      Ngu.d('Thanh toán xong thì quay lại đây và kéo xuống để làm mới.'),
     );
   }
 
@@ -132,7 +139,7 @@ class _BangThanhToan extends StatelessWidget {
                 const Icon(Icons.account_balance_outlined, color: Mau.vang),
                 const SizedBox(width: 8),
                 Text(
-                  h.laPayOs ? 'Thanh toán PayOS' : 'Chuyển khoản',
+                  h.laPayOs ? Ngu.d('Thanh toán PayOS') : Ngu.d('Chuyển khoản'),
                   style: const TextStyle(fontSize: 18),
                 ),
               ],
@@ -163,70 +170,78 @@ class _BangThanhToan extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Quét bằng ứng dụng ngân hàng — số tiền và nội dung đã điền sẵn.',
+              Text(
+                Ngu.d(
+                  'Quét bằng ứng dụng ngân hàng — số tiền và nội dung đã điền sẵn.',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 11, color: Mau.chuMo),
               ),
             ],
             if (h.chuaCauHinh) ...[
               const SizedBox(height: 12),
-              const Text(
-                'Hệ thống chưa cấu hình tài khoản nhận tiền. Báo với quản trị '
-                'viên trước khi chuyển khoản.',
+              Text(
+                Ngu.d(
+                  'Hệ thống chưa cấu hình tài khoản nhận tiền. Báo với quản trị viên trước khi chuyển khoản.',
+                ),
                 style: TextStyle(fontSize: 12.5, color: Color(0xFFE5645E)),
               ),
             ],
             const SizedBox(height: 16),
-            _Truong(nhan: 'Số tiền', giaTri: Dinh.tien(h.soTien), lon: true),
+            _Truong(
+              nhan: Ngu.d('Số tiền'),
+              giaTri: Dinh.tien(h.soTien),
+              lon: true,
+            ),
             if (h.laPayOs)
               _Truong(
-                nhan: 'Mã đơn PayOS',
+                nhan: Ngu.d('Mã đơn PayOS'),
                 giaTri: h.maThamChieu,
                 mono: true,
                 chep: true,
               )
             else ...[
               _Truong(
-                nhan: 'Nội dung chuyển khoản',
+                nhan: Ngu.d('Nội dung chuyển khoản'),
                 giaTri: h.noiDung,
                 mono: true,
                 lon: true,
                 chep: true,
               ),
-              _Truong(nhan: 'Ngân hàng', giaTri: h.nganHang),
+              _Truong(nhan: Ngu.d('Ngân hàng'), giaTri: h.nganHang),
               _Truong(
-                nhan: 'Số tài khoản',
+                nhan: Ngu.d('Số tài khoản'),
                 giaTri: h.soTaiKhoan,
                 mono: true,
                 chep: true,
               ),
-              _Truong(nhan: 'Chủ tài khoản', giaTri: h.chuTaiKhoan),
+              _Truong(nhan: Ngu.d('Chủ tài khoản'), giaTri: h.chuTaiKhoan),
             ],
             const SizedBox(height: 18),
             if (h.linkThanhToan != null && h.linkThanhToan!.isNotEmpty) ...[
               FilledButton.icon(
                 onPressed: () => _moPayOs(context),
                 icon: const Icon(Icons.open_in_new, size: 18),
-                label: const Text('Thanh toán với PayOS'),
+                label: Text(Ngu.d('Thanh toán với PayOS')),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Đóng — trạng thái cập nhật ở trang Lịch hẹn',
+                child: Text(
+                  Ngu.d('Đóng — trạng thái cập nhật ở trang Lịch hẹn'),
                 ),
               ),
             ] else
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Tôi đã chuyển khoản'),
+                child: Text(Ngu.d('Tôi đã chuyển khoản')),
               ),
             if (!h.laPayOs)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 12),
                 child: Text(
-                  'Ghi thiếu hoặc sai nội dung thì khoản tiền không khớp được '
-                  'với lịch hẹn của bạn và sẽ phải xử lý tay.',
+                  Ngu.d(
+                    'Ghi thiếu hoặc sai nội dung thì khoản tiền không khớp được với lịch hẹn của bạn và sẽ phải xử lý tay.',
+                  ),
                   style: TextStyle(fontSize: 11, color: Mau.chuMo, height: 1.5),
                 ),
               ),

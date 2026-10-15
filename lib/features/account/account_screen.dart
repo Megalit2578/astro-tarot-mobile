@@ -45,7 +45,7 @@ class AccountScreen extends ConsumerWidget {
     if (u == null) return const SizedBox.shrink();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tài khoản')),
+      appBar: AppBar(title: Text(Ngu.d('Tài khoản'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
@@ -91,7 +91,7 @@ class AccountScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        _tenVaiTro[u.role] ?? '—',
+                        Ngu.d(_tenVaiTro[u.role] ?? '—'),
                         style: const TextStyle(fontSize: 11, color: Mau.vang),
                       ),
                     ),
@@ -110,10 +110,12 @@ class AccountScreen extends ConsumerWidget {
               muc: [
                 _Muc(
                   icon: Icons.shield_outlined,
-                  nhan: u.co('USERS_MANAGE') ? 'Khu quản trị' : 'Khu quản lý',
+                  nhan: u.co('USERS_MANAGE')
+                      ? Ngu.d('Khu quản trị')
+                      : Ngu.d('Khu quản lý'),
                   phu: u.co('USERS_MANAGE')
-                      ? 'Tổng quan, tài khoản, tiền, nhật ký, sản phẩm'
-                      : 'Nhân sự, hồ sơ Reader, báo cáo, gian hàng',
+                      ? Ngu.d('Tổng quan, tài khoản, tiền, nhật ký, sản phẩm')
+                      : Ngu.d('Nhân sự, hồ sơ Reader, báo cáo, gian hàng'),
                   onTap: () => _mo(context, const AdminHub()),
                 ),
               ],
@@ -124,19 +126,19 @@ class AccountScreen extends ConsumerWidget {
           // Gom mục thành nhóm trong một thẻ, ngăn bằng vạch mảnh — kiểu màn
           // Cài đặt trên điện thoại. Mỗi mục một thẻ riêng như trước thì
           // chín mục đã dài hơn hai màn hình.
-          const _TieuDeNhom('Của tôi'),
+          _TieuDeNhom(Ngu.d('Của tôi')),
           _Nhom(
             muc: [
               _Muc(
                 icon: Icons.person_outline,
                 nhan: Ngu.d('Hồ sơ cá nhân'),
-                phu: 'Tên, ảnh đại diện, ngày sinh',
+                phu: Ngu.d('Tên, ảnh đại diện, ngày sinh'),
                 onTap: () => _mo(context, const ProfileScreen()),
               ),
               _Muc(
                 icon: Icons.auto_awesome_outlined,
                 nhan: Ngu.d('Bản đồ sao'),
-                phu: 'AI đọc bài dựa trên hồ sơ chính',
+                phu: Ngu.d('AI đọc bài dựa trên hồ sơ chính'),
                 onTap: () => _mo(context, const AstrologyScreen()),
               ),
               // Màn này gộp VÍ với GÓI AI. Chỉ phần gói là việc của khách; ví
@@ -149,16 +151,18 @@ class AccountScreen extends ConsumerWidget {
                 icon: u.co('CUSTOMER_ACTIONS')
                     ? Icons.workspace_premium_outlined
                     : Icons.account_balance_wallet_outlined,
-                nhan: u.co('CUSTOMER_ACTIONS') ? 'Gói AI' : 'Ví ASTROTAROT',
+                nhan: u.co('CUSTOMER_ACTIONS')
+                    ? Ngu.d('Gói AI')
+                    : Ngu.d('Ví ASTROTAROT'),
                 phu: u.co('CUSTOMER_ACTIONS')
-                    ? 'Hạn mức mỗi ngày, số dư ví, mua gói'
-                    : 'Số dư và lịch sử giao dịch của bạn',
+                    ? Ngu.d('Hạn mức mỗi ngày, số dư ví, mua gói')
+                    : Ngu.d('Số dư và lịch sử giao dịch của bạn'),
                 onTap: () => _mo(context, const GoiAiScreen()),
               ),
               _Muc(
                 icon: Icons.history,
                 nhan: Ngu.d('Lịch sử trải bài'),
-                phu: 'Xem lại lời giải AI đã lưu',
+                phu: Ngu.d('Xem lại lời giải AI đã lưu'),
                 onTap: () => _mo(context, const TarotHistoryScreen()),
               ),
               // Nhân sự đã có hồ sơ Reader thì mục này thừa; người dùng thường
@@ -167,46 +171,46 @@ class AccountScreen extends ConsumerWidget {
                 _Muc(
                   icon: Icons.workspace_premium_outlined,
                   nhan: Ngu.d('Đăng ký làm Reader'),
-                  phu: 'Nộp đơn hoặc xem trạng thái đơn',
+                  phu: Ngu.d('Nộp đơn hoặc xem trạng thái đơn'),
                   onTap: () => _mo(context, const ReaderApplyScreen()),
                 ),
             ],
           ),
 
           const SizedBox(height: 18),
-          const _TieuDeNhom('Khám phá'),
+          _TieuDeNhom(Ngu.d('Khám phá')),
           _Nhom(
             muc: [
               _Muc(
                 icon: Icons.article_outlined,
                 nhan: Ngu.d('Bài viết'),
-                phu: 'Kiến thức Tarot và chiêm tinh',
+                phu: Ngu.d('Kiến thức Tarot và chiêm tinh'),
                 onTap: () => _mo(context, const BlogScreen()),
               ),
               _Muc(
                 icon: Icons.storefront_outlined,
                 nhan: Ngu.d('Gian hàng'),
-                phu: 'Bài Tarot, đá, phụ kiện chọn lọc',
+                phu: Ngu.d('Bài Tarot, đá, phụ kiện chọn lọc'),
                 onTap: () => _mo(context, const ShopScreen()),
               ),
             ],
           ),
 
           const SizedBox(height: 18),
-          const _TieuDeNhom('Trợ giúp'),
+          _TieuDeNhom(Ngu.d('Trợ giúp')),
           _Nhom(
             muc: [
               _Muc(
                 icon: Icons.support_agent_outlined,
                 nhan: Ngu.d('Hỗ trợ'),
-                phu: 'Gửi yêu cầu và xem phản hồi',
+                phu: Ngu.d('Gửi yêu cầu và xem phản hồi'),
                 onTap: () => _mo(context, const SupportScreen()),
               ),
               if (ref.watch(tinhTrangGopYProvider).asData?.value?.daGui != true)
                 _Muc(
                   icon: Icons.rate_review_outlined,
                   nhan: Ngu.d('Góp ý'),
-                  phu: 'Khảo sát ngắn — ASTROTAROT có giúp bạn không?',
+                  phu: Ngu.d('Khảo sát ngắn — ASTROTAROT có giúp bạn không?'),
                   onTap: () => _mo(context, const FeedbackScreen()),
                 ),
             ],
@@ -223,7 +227,7 @@ class AccountScreen extends ConsumerWidget {
             onPressed: () =>
                 ref.read(authControllerProvider.notifier).dangXuat(),
             icon: const Icon(Icons.logout, size: 18),
-            label: const Text('Đăng xuất'),
+            label: Text(Ngu.d('Đăng xuất')),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
               foregroundColor: const Color(0xFFE5645E),
@@ -254,7 +258,7 @@ class AccountScreen extends ConsumerWidget {
                   onPressed: () =>
                       _moLienKet('${AppConfig.webBaseUrl}/chinh-sach-rieng-tu'),
                   style: _nhatNho,
-                  child: const Text('Chính sách riêng tư'),
+                  child: Text(Ngu.d('Chính sách riêng tư')),
                 ),
                 const Text('·', style: TextStyle(color: Mau.chuMo)),
                 // Ghi công ảnh minh hoạ. App hiện ĐÚNG những ảnh ấy trong
@@ -266,13 +270,13 @@ class AccountScreen extends ConsumerWidget {
                   onPressed: () =>
                       _moLienKet('${AppConfig.webBaseUrl}/ghi-cong'),
                   style: _nhatNho,
-                  child: const Text('Nguồn ảnh'),
+                  child: Text(Ngu.d('Nguồn ảnh')),
                 ),
                 const Text('·', style: TextStyle(color: Mau.chuMo)),
                 TextButton(
                   onPressed: () => _xacNhanXoa(context, ref),
                   style: _nhatNho,
-                  child: const Text('Xoá tài khoản'),
+                  child: Text(Ngu.d('Xoá tài khoản')),
                 ),
               ],
             ),
@@ -430,9 +434,10 @@ class _HopQuyen extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Mau.chuMo),
           ),
           children: [
-            const Text(
-              'App không tự suy ra quyền từ vai trò — chỉ hiển thị đúng thứ '
-              'backend gửi về.',
+            Text(
+              Ngu.d(
+                'App không tự suy ra quyền từ vai trò — chỉ hiển thị đúng thứ backend gửi về.',
+              ),
               style: TextStyle(fontSize: 11, color: Mau.chuMo, height: 1.5),
             ),
             const SizedBox(height: 10),
@@ -511,7 +516,9 @@ class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
       if (!mounted) return;
       setState(() {
         _dangChay = false;
-        _loi = e is ApiException ? e.message : 'Không xoá được. Thử lại sau.';
+        _loi = e is ApiException
+            ? e.message
+            : Ngu.d('Không xoá được. Thử lại sau.');
       });
     }
   }
@@ -521,26 +528,27 @@ class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
     final goDu = _matKhau.text.isNotEmpty;
     return AlertDialog(
       backgroundColor: Mau.the,
-      title: const Text('Xoá tài khoản'),
+      title: Text(Ngu.d('Xoá tài khoản')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Việc này không hoàn tác được.',
+          Text(
+            Ngu.d('Việc này không hoàn tác được.'),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Sẽ xoá hẳn: hồ sơ chiêm tinh của bạn (ngày, giờ, nơi sinh) và '
-            'ảnh đại diện.',
+          Text(
+            Ngu.d(
+              'Sẽ xoá hẳn: hồ sơ chiêm tinh của bạn (ngày, giờ, nơi sinh) và ảnh đại diện.',
+            ),
             style: TextStyle(fontSize: 13, color: Mau.chuMo),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Sẽ giữ lại: lịch sử giao dịch và các buổi xem đã diễn ra — đây là '
-            'lịch sử của cả Reader, và sổ sách phải giữ. Tên bạn sẽ được gỡ '
-            'khỏi chúng.',
+          Text(
+            Ngu.d(
+              'Sẽ giữ lại: lịch sử giao dịch và các buổi xem đã diễn ra — đây là lịch sử của cả Reader, và sổ sách phải giữ. Tên bạn sẽ được gỡ khỏi chúng.',
+            ),
             style: TextStyle(fontSize: 13, color: Mau.chuMo),
           ),
           const SizedBox(height: 16),
@@ -550,8 +558,8 @@ class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
             autofocus: true,
             enabled: !_dangChay,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Nhập mật khẩu để xác nhận',
+            decoration: InputDecoration(
+              labelText: Ngu.d('Nhập mật khẩu để xác nhận'),
             ),
           ),
           if (_loi != null) ...[
@@ -566,7 +574,7 @@ class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
       actions: [
         TextButton(
           onPressed: _dangChay ? null : () => Navigator.of(context).pop(),
-          child: const Text('Thôi'),
+          child: Text(Ngu.d('Thôi')),
         ),
         FilledButton(
           onPressed: (_dangChay || !goDu) ? null : _xoa,
@@ -583,7 +591,7 @@ class _HopXoaTaiKhoanState extends ConsumerState<_HopXoaTaiKhoan> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Xoá tài khoản'),
+              : Text(Ngu.d('Xoá tài khoản')),
         ),
       ],
     );

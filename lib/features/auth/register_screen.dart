@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,7 +43,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _loi = null;
     });
     try {
-      final cau = await ref.read(authControllerProvider.notifier).dangKy(
+      final cau = await ref
+          .read(authControllerProvider.notifier)
+          .dangKy(
             email: _email.text,
             matKhau: _matKhau.text,
             hoTen: _hoTen.text,
@@ -53,7 +57,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _loi = e.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _loi = 'Không tạo được tài khoản.');
+      setState(() => _loi = Ngu.d('Không tạo được tài khoản.'));
     } finally {
       if (mounted) setState(() => _dangGui = false);
     }
@@ -62,10 +66,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tạo tài khoản')),
-      body: SafeArea(
-        child: _xong != null ? _ManXong(cau: _xong!) : _manForm(),
-      ),
+      appBar: AppBar(title: Text(Ngu.d('Tạo tài khoản'))),
+      body: SafeArea(child: _xong != null ? _ManXong(cau: _xong!) : _manForm()),
     );
   }
 
@@ -84,12 +86,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.name],
-                decoration: const InputDecoration(
-                  hintText: 'Họ và tên',
+                decoration: InputDecoration(
+                  hintText: Ngu.d('Họ và tên'),
                   prefixIcon: Icon(Icons.badge_outlined, size: 20),
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Hãy nhập họ tên'
+                    ? Ngu.d('Hãy nhập họ tên')
                     : null,
               ),
               const SizedBox(height: 12),
@@ -108,7 +110,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // chặt hơn ở đây là chặn nhầm những email hợp lệ mà hiếm
                   // gặp, và người dùng không hiểu vì sao bị từ chối.
                   final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(t);
-                  return ok ? null : 'Email chưa đúng định dạng';
+                  return ok ? null : Ngu.d('Email chưa đúng định dạng');
                 },
               ),
               const SizedBox(height: 12),
@@ -118,20 +120,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.newPassword],
                 decoration: InputDecoration(
-                  hintText: 'Mật khẩu',
+                  hintText: Ngu.d('Mật khẩu'),
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
-                    icon: Icon(_hien ? Icons.visibility_off : Icons.visibility,
-                        size: 20),
+                    icon: Icon(
+                      _hien ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
                     onPressed: () => setState(() => _hien = !_hien),
-                    tooltip: _hien ? 'Ẩn mật khẩu' : 'Hiện mật khẩu',
+                    tooltip: _hien
+                        ? Ngu.d('Ẩn mật khẩu')
+                        : Ngu.d('Hiện mật khẩu'),
                   ),
                 ),
                 // 8 ký tự, khớp đúng @Size(min = 8) bên backend. Đặt 6 như màn
                 // đăng nhập thì người dùng gõ xong mới bị máy chủ từ chối.
                 validator: (v) => (v == null || v.length < 8)
-                    ? 'Mật khẩu phải từ 8 ký tự'
-                    : (v.length > 128 ? 'Mật khẩu tối đa 128 ký tự' : null),
+                    ? Ngu.d('Mật khẩu phải từ 8 ký tự')
+                    : (v.length > 128
+                          ? Ngu.d('Mật khẩu tối đa 128 ký tự')
+                          : null),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -139,12 +147,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 obscureText: !_hien,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _gui(),
-                decoration: const InputDecoration(
-                  hintText: 'Nhắc lại mật khẩu',
+                decoration: InputDecoration(
+                  hintText: Ngu.d('Nhắc lại mật khẩu'),
                   prefixIcon: Icon(Icons.lock_outline, size: 20),
                 ),
-                validator: (v) =>
-                    v == _matKhau.text ? null : 'Hai lần nhập không khớp',
+                validator: (v) => v == _matKhau.text
+                    ? null
+                    : Ngu.d('Hai lần nhập không khớp'),
               ),
               if (_loi != null) ...[
                 const SizedBox(height: 14),
@@ -159,15 +168,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Tạo tài khoản'),
+                    : Text(Ngu.d('Tạo tài khoản')),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Tạo xong bạn sẽ nhận một thư xác minh. Phải bấm liên kết '
-                'trong thư mới đăng nhập được.',
+              Text(
+                Ngu.d(
+                  'Tạo xong bạn sẽ nhận một thư xác minh. Phải bấm liên kết trong thư mới đăng nhập được.',
+                ),
                 textAlign: TextAlign.center,
-                style:
-                    TextStyle(color: Mau.chuMo, fontSize: 12, height: 1.6),
+                style: TextStyle(color: Mau.chuMo, fontSize: 12, height: 1.6),
               ),
             ],
           ),
@@ -189,8 +198,11 @@ class _ManXong extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.mark_email_unread_outlined,
-                size: 44, color: Mau.vang),
+            const Icon(
+              Icons.mark_email_unread_outlined,
+              size: 44,
+              color: Mau.vang,
+            ),
             const SizedBox(height: 20),
             Text(
               cau,
@@ -200,7 +212,7 @@ class _ManXong extends StatelessWidget {
             const SizedBox(height: 26),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Quay lại đăng nhập'),
+              child: Text(Ngu.d('Quay lại đăng nhập')),
             ),
           ],
         ),

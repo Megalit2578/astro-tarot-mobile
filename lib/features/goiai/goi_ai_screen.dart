@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,13 +40,13 @@ class GoiAiScreen extends ConsumerWidget {
     //
     // Bản trước tôi gác cả màn, nên Nhân viên mất luôn đường tới ví — chặt
     // hơn backend, và ngược với chính lý do đã viết ra khi mở backend.
-    final laKhach = ref.watch(authControllerProvider).user?.co(
-              'CUSTOMER_ACTIONS',
-            ) ??
-        false;
+    final laKhach =
+        ref.watch(authControllerProvider).user?.co('CUSTOMER_ACTIONS') ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: Text(laKhach ? 'Gói AI' : 'Ví ASTROTAROT')),
+      appBar: AppBar(
+        title: Text(laKhach ? Ngu.d('Gói AI') : Ngu.d('Ví ASTROTAROT')),
+      ),
       body: RefreshIndicator(
         color: Mau.vang,
         backgroundColor: Mau.the,
@@ -61,7 +63,7 @@ class GoiAiScreen extends ConsumerWidget {
           error: (e, _) => KhoiLoi(
             thongDiep: e is ApiException
                 ? e.message
-                : 'Không tải được danh sách gói. Thử lại sau.',
+                : Ngu.d('Không tải được danh sách gói. Thử lại sau.'),
             thuLai: () => ref.invalidate(goiDangBanProvider),
           ),
           data: (goi) => ListView(
@@ -73,15 +75,15 @@ class GoiAiScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 const _HanMucHomNay(),
                 const SizedBox(height: 20),
-                const Text(
-                  'Chọn gói',
+                Text(
+                  Ngu.d('Chọn gói'),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 if (goi.isEmpty)
-                  const KhoiTrong(
+                  KhoiTrong(
                     icon: Icons.auto_awesome,
-                    tieuDe: 'Chưa có gói nào đang bán',
+                    tieuDe: Ngu.d('Chưa có gói nào đang bán'),
                   )
                 else
                   for (final g in goi) _TheGoi(goi: g),
@@ -126,8 +128,8 @@ class _TheVi extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Số dư ví',
+                Text(
+                  Ngu.d('Số dư ví'),
                   style: TextStyle(fontSize: 12, color: Mau.chuMo),
                 ),
                 const SizedBox(height: 2),
@@ -149,7 +151,7 @@ class _TheVi extends ConsumerWidget {
           if (napDuoc)
             OutlinedButton(
               onPressed: () => _moNap(context, ref),
-              child: const Text('Nạp tiền'),
+              child: Text(Ngu.d('Nạp tiền')),
             ),
         ],
       ),
@@ -170,7 +172,9 @@ class _HanMucHomNay extends ConsumerWidget {
     // Không có gói nào đang chạy thì vẫn còn hạn mức miễn phí của hệ thống.
     // Không bịa con số ấy ra ở đây: chỉ nói đang dùng gói miễn phí, để mình
     // không nói một đằng mà máy chủ chặn một nẻo.
-    final ten = dangChay.isEmpty ? 'Gói miễn phí' : dangChay.first.tenGoi;
+    final ten = dangChay.isEmpty
+        ? Ngu.d('Gói miễn phí')
+        : dangChay.first.tenGoi;
     final tong = dangChay.isEmpty ? null : dangChay.first.hanMucNgay;
 
     return Container(
@@ -259,7 +263,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: Mau.the,
-        title: const Text('Xác nhận mua'),
+        title: Text(Ngu.d('Xác nhận mua')),
         content: Text(
           'Mua ${g.ten} với giá ${Dinh.tien(g.gia)}?\n\n'
           'Tiền trừ thẳng từ số dư ví. Sau khi mua, số dư còn '
@@ -268,7 +272,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('Thôi'),
+            child: Text(Ngu.d('Thôi')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(c, true),
@@ -293,7 +297,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e is ApiException ? e.message : 'Mua không thành công.',
+            e is ApiException ? e.message : Ngu.d('Mua không thành công.'),
           ),
         ),
       );
@@ -353,7 +357,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
             width: double.infinity,
             child: FilledButton(
               onPressed: _dangMua ? null : _mua,
-              child: Text(_dangMua ? 'Đang mua…' : 'Mua bằng ví'),
+              child: Text(_dangMua ? Ngu.d('Đang mua…') : Ngu.d('Mua bằng ví')),
             ),
           ),
         ],
@@ -379,8 +383,8 @@ class _SoViCuaToi extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Sổ ví',
+        Text(
+          Ngu.d('Sổ ví'),
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -397,9 +401,7 @@ class _SoViCuaToi extends ConsumerWidget {
               style: const TextStyle(fontSize: 14),
             ),
             subtitle: Text(
-              g.moTa?.isNotEmpty == true
-                  ? g.moTa!
-                  : Dinh.ngayGio(g.luc),
+              g.moTa?.isNotEmpty == true ? g.moTa! : Dinh.ngayGio(g.luc),
               style: const TextStyle(fontSize: 12),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -442,8 +444,8 @@ class _LuotMuaCuaToi extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Gói đã mua',
+        Text(
+          Ngu.d('Gói đã mua'),
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -478,7 +480,7 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
     context: context,
     builder: (c) => AlertDialog(
       backgroundColor: Mau.the,
-      title: const Text('Nạp tiền vào ví'),
+      title: Text(Ngu.d('Nạp tiền vào ví')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -486,8 +488,8 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
             controller: o,
             keyboardType: TextInputType.number,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Số tiền',
+            decoration: InputDecoration(
+              labelText: Ngu.d('Số tiền'),
               suffixText: 'đ',
             ),
           ),
@@ -507,14 +509,14 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(c),
-          child: const Text('Thôi'),
+          child: Text(Ngu.d('Thôi')),
         ),
         FilledButton(
           onPressed: () {
             final v = int.tryParse(o.text.trim());
             if (v != null && v > 0) Navigator.pop(c, v);
           },
-          child: const Text('Tạo mã nạp'),
+          child: Text(Ngu.d('Tạo mã nạp')),
         ),
       ],
     ),
@@ -528,7 +530,7 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: Mau.the,
-        title: const Text('Chuyển khoản để nạp'),
+        title: Text(Ngu.d('Chuyển khoản để nạp')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,8 +541,8 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
             if (h.chuTaiKhoan != null) Text('Chủ tài khoản: ${h.chuTaiKhoan}'),
             if (h.noiDung != null) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Nội dung chuyển khoản — ghi ĐÚNG:',
+              Text(
+                Ngu.d('Nội dung chuyển khoản — ghi ĐÚNG:'),
                 style: TextStyle(fontSize: 12, color: Mau.chuMo),
               ),
               SelectableText(
@@ -551,9 +553,10 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Sai nội dung thì hệ thống không khớp được lượt chuyển với ví '
-                'của bạn, và tiền phải đối soát tay.',
+              Text(
+                Ngu.d(
+                  'Sai nội dung thì hệ thống không khớp được lượt chuyển với ví của bạn, và tiền phải đối soát tay.',
+                ),
                 style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
               ),
             ],
@@ -576,7 +579,7 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          e is ApiException ? e.message : 'Không tạo được lệnh nạp.',
+          e is ApiException ? e.message : Ngu.d('Không tạo được lệnh nạp.'),
         ),
       ),
     );

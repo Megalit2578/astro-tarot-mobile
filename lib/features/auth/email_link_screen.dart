@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,9 +72,9 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
   }
 
   void _khiDoi(String v) => setState(() {
-        _doc = LienKetEmail.doc(v);
-        _loi = null;
-      });
+    _doc = LienKetEmail.doc(v);
+    _loi = null;
+  });
 
   Future<void> _dan() async {
     final d = await Clipboard.getData(Clipboard.kTextPlain);
@@ -98,16 +100,18 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
       if (doc.loai == LoaiLienKet.xacMinh) {
         final email = await auth.xacMinhEmail(doc.token);
         _xong = email.isEmpty
-            ? 'Tài khoản đã được kích hoạt. Bạn có thể đăng nhập ngay.'
+            ? Ngu.d('Tài khoản đã được kích hoạt. Bạn có thể đăng nhập ngay.')
             : 'Tài khoản $email đã được kích hoạt. Bạn có thể đăng nhập ngay.';
       } else {
         await auth.datLaiMatKhau(doc.token, _matKhau.text);
-        _xong = 'Đã đặt mật khẩu mới. Đăng nhập bằng mật khẩu vừa đặt nhé.';
+        _xong = Ngu.d(
+          'Đã đặt mật khẩu mới. Đăng nhập bằng mật khẩu vừa đặt nhé.',
+        );
       }
     } on ApiException catch (e) {
       _loi = e.message;
     } catch (_) {
-      _loi = 'Không xử lý được liên kết này.';
+      _loi = Ngu.d('Không xử lý được liên kết này.');
     } finally {
       if (mounted) setState(() => _dangChay = false);
     }
@@ -117,7 +121,7 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
   Widget build(BuildContext context) {
     final doc = _doc;
     return Scaffold(
-      appBar: AppBar(title: const Text('Liên kết trong email')),
+      appBar: AppBar(title: Text(Ngu.d('Liên kết trong email'))),
       body: SafeArea(
         child: _xong != null
             ? _KetQua(noiDung: _xong!)
@@ -126,11 +130,15 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(22, 12, 22, 28),
                   children: [
-                    const Text(
-                      'Mở thư xác minh hoặc thư đặt lại mật khẩu, giữ ngón tay '
-                      'lên nút trong thư để chép liên kết, rồi dán vào đây.',
+                    Text(
+                      Ngu.d(
+                        'Mở thư xác minh hoặc thư đặt lại mật khẩu, giữ ngón tay lên nút trong thư để chép liên kết, rồi dán vào đây.',
+                      ),
                       style: TextStyle(
-                          color: Mau.chuMo, fontSize: 13, height: 1.6),
+                        color: Mau.chuMo,
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
                     ),
                     const SizedBox(height: 18),
                     TextField(
@@ -142,7 +150,7 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
                       decoration: InputDecoration(
                         hintText: 'https://astrotarot.date/…?token=…',
                         suffixIcon: IconButton(
-                          tooltip: 'Dán',
+                          tooltip: Ngu.d('Dán'),
                           icon: const Icon(Icons.content_paste, size: 20),
                           onPressed: _dan,
                         ),
@@ -150,20 +158,23 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
                     ),
                     const SizedBox(height: 10),
                     if (_lienKet.text.trim().isNotEmpty && doc == null)
-                      const Text(
-                        'Chưa nhận ra liên kết. Hãy chép nguyên liên kết trong '
-                        'thư — có cả phần "?token=".',
+                      Text(
+                        Ngu.d(
+                          'Chưa nhận ra liên kết. Hãy chép nguyên liên kết trong thư — có cả phần "?token=".',
+                        ),
                         style: TextStyle(
-                            fontSize: 12.5, color: Color(0xFFE5645E)),
+                          fontSize: 12.5,
+                          color: Color(0xFFE5645E),
+                        ),
                       ),
                     if (doc != null)
                       Text(
                         doc.loai == LoaiLienKet.xacMinh
-                            ? 'Đây là liên kết xác minh email.'
-                            : 'Đây là liên kết đặt lại mật khẩu. Nhập mật khẩu '
-                                'mới bên dưới.',
-                        style:
-                            const TextStyle(fontSize: 12.5, color: Mau.vang),
+                            ? Ngu.d('Đây là liên kết xác minh email.')
+                            : Ngu.d(
+                                'Đây là liên kết đặt lại mật khẩu. Nhập mật khẩu mới bên dưới.',
+                              ),
+                        style: const TextStyle(fontSize: 12.5, color: Mau.vang),
                       ),
                     if (doc?.loai == LoaiLienKet.datLaiMatKhau) ...[
                       const SizedBox(height: 16),
@@ -171,36 +182,43 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
                         key: const ValueKey('o-mat-khau-moi'),
                         controller: _matKhau,
                         obscureText: true,
-                        decoration:
-                            const InputDecoration(hintText: 'Mật khẩu mới'),
+                        decoration: InputDecoration(
+                          hintText: Ngu.d('Mật khẩu mới'),
+                        ),
                         // Khớp @Size(min = 8, max = 128) của backend.
                         validator: (v) => (v == null || v.length < 8)
-                            ? 'Mật khẩu phải từ 8 ký tự'
+                            ? Ngu.d('Mật khẩu phải từ 8 ký tự')
                             : (v.length > 128
-                                ? 'Mật khẩu tối đa 128 ký tự'
-                                : null),
+                                  ? Ngu.d('Mật khẩu tối đa 128 ký tự')
+                                  : null),
                       ),
                       const SizedBox(height: 10),
                       TextFormField(
                         key: const ValueKey('o-nhap-lai'),
                         controller: _nhapLai,
                         obscureText: true,
-                        decoration: const InputDecoration(
-                            hintText: 'Nhập lại mật khẩu mới'),
+                        decoration: InputDecoration(
+                          hintText: Ngu.d('Nhập lại mật khẩu mới'),
+                        ),
                         validator: (v) => v != _matKhau.text
-                            ? 'Mật khẩu nhập lại không khớp'
+                            ? Ngu.d('Mật khẩu nhập lại không khớp')
                             : null,
                       ),
                     ],
                     if (_loi != null) ...[
                       const SizedBox(height: 14),
-                      Text(_loi!,
-                          style: const TextStyle(
-                              fontSize: 13, color: Color(0xFFE5645E))),
+                      Text(
+                        _loi!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFE5645E),
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Liên kết chỉ dùng được một lần và có hạn. Nếu đã quá '
-                        'hạn, hãy yêu cầu thư mới từ màn đăng nhập.',
+                      Text(
+                        Ngu.d(
+                          'Liên kết chỉ dùng được một lần và có hạn. Nếu đã quá hạn, hãy yêu cầu thư mới từ màn đăng nhập.',
+                        ),
                         style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
                       ),
                     ],
@@ -213,9 +231,11 @@ class _EmailLinkScreenState extends ConsumerState<EmailLinkScreen> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(doc?.loai == LoaiLienKet.datLaiMatKhau
-                              ? 'Đặt mật khẩu mới'
-                              : 'Xác minh'),
+                          : Text(
+                              doc?.loai == LoaiLienKet.datLaiMatKhau
+                                  ? Ngu.d('Đặt mật khẩu mới')
+                                  : Ngu.d('Xác minh'),
+                            ),
                     ),
                   ],
                 ),
@@ -234,16 +254,21 @@ class _KetQua extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(28, 70, 28, 28),
       children: [
-        const Icon(Icons.check_circle_outline,
-            size: 48, color: Color(0xFF34D399)),
+        const Icon(
+          Icons.check_circle_outline,
+          size: 48,
+          color: Color(0xFF34D399),
+        ),
         const SizedBox(height: 18),
-        Text(noiDung,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, height: 1.6)),
+        Text(
+          noiDung,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 14, height: 1.6),
+        ),
         const SizedBox(height: 26),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Về đăng nhập'),
+          child: Text(Ngu.d('Về đăng nhập')),
         ),
       ],
     );

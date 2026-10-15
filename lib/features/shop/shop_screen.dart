@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -16,11 +18,7 @@ import 'shop_repository.dart';
 ///
 /// Dùng chung cho thẻ trong danh sách và màn chi tiết — hai nơi tự viết hai
 /// kiểu thì sớm muộn một nơi quên ghi nhận lượt bấm, tức là mất hoa hồng.
-Future<void> moTrenSan(
-  BuildContext context,
-  WidgetRef ref,
-  SanPham p,
-) async {
+Future<void> moTrenSan(BuildContext context, WidgetRef ref, SanPham p) async {
   final url = await ref
       .read(shopRepositoryProvider)
       .ghiNhanBam(p.slug, duPhong: p.lienKet);
@@ -36,9 +34,10 @@ Future<void> moTrenSan(
 ///
 /// Người dùng có quyền biết mình sắp rời app sang sàn khác, và biết rằng
 /// chúng ta hưởng hoa hồng.
+/// Giữ tiếng Việt ở hằng số, dịch ở chỗ hiển thị: `const` tính một lần lúc
+/// nạp nên dịch tại đây là chữ đóng băng theo ngôn ngữ lúc ấy.
 const loiCongBoTiepThi =
-    'Đây là những món chúng tôi chọn lọc. Bấm mua sẽ mở sàn thương mại điện '
-    'tử; chúng tôi nhận hoa hồng cho mỗi đơn, còn giá bạn trả không đổi.';
+    'Đây là những món chúng tôi chọn lọc. Bấm mua sẽ mở sàn thương mại điện tử; chúng tôi nhận hoa hồng cho mỗi đơn, còn giá bạn trả không đổi.';
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -75,23 +74,24 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final repo = ref.watch(shopRepositoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Gian hàng')),
+      appBar: AppBar(title: Text(Ngu.d('Gian hàng'))),
       body: DanhSachPhanTrang<SanPham>(
         key: ValueKey('shop-$_danhMuc-$_tuKhoa'),
-        tai: (t) =>
-            repo.sanPham(danhMuc: _danhMuc, tuKhoa: _tuKhoa, trang: t),
-        loiDuPhong: 'Không tải được gian hàng.',
+        tai: (t) => repo.sanPham(danhMuc: _danhMuc, tuKhoa: _tuKhoa, trang: t),
+        loiDuPhong: Ngu.d('Không tải được gian hàng.'),
         dau: [
-          const Text(loiCongBoTiepThi,
-              style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.6)),
+          Text(
+            Ngu.d(loiCongBoTiepThi),
+            style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.6),
+          ),
           const SizedBox(height: 12),
           TextField(
             key: const ValueKey('o-tim-san-pham'),
             controller: _tim,
             onChanged: _khiGo,
             textInputAction: TextInputAction.search,
-            decoration: const InputDecoration(
-              hintText: 'Tìm bộ bài, đá, phụ kiện...',
+            decoration: InputDecoration(
+              hintText: Ngu.d('Tìm bộ bài, đá, phụ kiện...'),
               prefixIcon: Icon(Icons.search, size: 20),
               isDense: true,
             ),
@@ -104,7 +104,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   _ChipDanhMuc(
-                    nhan: 'Tất cả',
+                    nhan: Ngu.d('Tất cả'),
                     chon: _danhMuc.isEmpty,
                     bam: () => setState(() => _danhMuc = ''),
                   ),
@@ -123,11 +123,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         trong: KhoiTrong(
           icon: Icons.storefront_outlined,
           tieuDe: _tuKhoa.isEmpty && _danhMuc.isEmpty
-              ? 'Gian hàng đang trống'
-              : 'Không có sản phẩm phù hợp',
+              ? Ngu.d('Gian hàng đang trống')
+              : Ngu.d('Không có sản phẩm phù hợp'),
           moTa: _tuKhoa.isEmpty && _danhMuc.isEmpty
-              ? 'Chưa có sản phẩm nào được đưa lên.'
-              : 'Thử từ khoá khác hoặc bỏ bộ lọc.',
+              ? Ngu.d('Chưa có sản phẩm nào được đưa lên.')
+              : Ngu.d('Thử từ khoá khác hoặc bỏ bộ lọc.'),
         ),
         // Hai cột như các app mua sắm: một màn thấy bốn đến sáu món thay vì
         // hai. Mô tả dài để dành cho màn chi tiết.
@@ -182,8 +182,11 @@ class AnhSanPham extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Mau.vien),
       ),
-      child: const Icon(Icons.image_not_supported_outlined,
-          size: 20, color: Mau.chuMo),
+      child: const Icon(
+        Icons.image_not_supported_outlined,
+        size: 20,
+        color: Mau.chuMo,
+      ),
     );
     if (url == null) return trong;
     return ClipRRect(
@@ -214,9 +217,14 @@ class GiaSanPham extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.end,
       spacing: 8,
       children: [
-        Text(Dinh.tien(p.gia),
-            style: TextStyle(
-                fontSize: co, color: Mau.vang, fontWeight: FontWeight.w600)),
+        Text(
+          Dinh.tien(p.gia),
+          style: TextStyle(
+            fontSize: co,
+            color: Mau.vang,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         if (p.coGiamGia)
           Text(
             Dinh.tien(p.giaGoc),
@@ -233,8 +241,12 @@ class GiaSanPham extends StatelessWidget {
 
 /// Nút "Mua trên …". Tự khoá khi đang mở để khỏi bấm hai lần ra hai lượt.
 class NutMuaTrenSan extends ConsumerStatefulWidget {
-  const NutMuaTrenSan(
-      {super.key, required this.p, this.cao = 44, this.gon = false});
+  const NutMuaTrenSan({
+    super.key,
+    required this.p,
+    this.cao = 44,
+    this.gon = false,
+  });
 
   final SanPham p;
   final double cao;
@@ -262,16 +274,21 @@ class _NutMuaTrenSanState extends ConsumerState<NutMuaTrenSan> {
   Widget build(BuildContext context) {
     final p = widget.p;
     if (!p.coLienKet) {
-      return const Text('Món này chưa có liên kết mua.',
-          style: TextStyle(fontSize: 11.5, color: Mau.chuMo));
+      return Text(
+        Ngu.d('Món này chưa có liên kết mua.'),
+        style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
+      );
     }
     return FilledButton.icon(
       onPressed: _dangMo ? null : _mua,
       icon: Icon(Icons.open_in_new, size: widget.gon ? 14 : 16),
       // Nói TÊN sàn: người dùng cần biết mình sắp mở ứng dụng nào trước khi
       // rời app.
-      label: Text('Mua trên ${tenSan(p.san)}',
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      label: Text(
+        'Mua trên ${tenSan(p.san)}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       style: FilledButton.styleFrom(
         minimumSize: Size.fromHeight(widget.cao),
         padding: widget.gon ? const EdgeInsets.symmetric(horizontal: 8) : null,
@@ -296,8 +313,11 @@ class TheSanPham extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(slug: p.slug, banDau: p))),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(slug: p.slug, banDau: p),
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -311,15 +331,21 @@ class TheSanPham extends StatelessWidget {
                     Positioned(
                       top: 8,
                       left: 8,
-                      child: _Nhan('-$giam%',
-                          nen: Mau.vang, chu: const Color(0xFF1A1206)),
+                      child: _Nhan(
+                        '-$giam%',
+                        nen: Mau.vang,
+                        chu: const Color(0xFF1A1206),
+                      ),
                     ),
                   if (p.anhMinhHoa)
-                    const Positioned(
+                    Positioned(
                       left: 8,
                       bottom: 8,
-                      child: _Nhan('Ảnh minh hoạ',
-                          nen: Color(0xCC0A0A0F), chu: Mau.chuMo),
+                      child: _Nhan(
+                        Ngu.d('Ảnh minh hoạ'),
+                        nen: Color(0xCC0A0A0F),
+                        chu: Mau.chuMo,
+                      ),
                     ),
                 ],
               ),
@@ -331,21 +357,27 @@ class TheSanPham extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (p.danhMuc != null)
-                      Text(p.danhMuc!.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 9.5,
-                              letterSpacing: 0.8,
-                              color: Mau.vang)),
-                    const SizedBox(height: 3),
-                    Text(p.ten,
-                        maxLines: 2,
+                      Text(
+                        p.danhMuc!.toUpperCase(),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            height: 1.3)),
+                          fontSize: 9.5,
+                          letterSpacing: 0.8,
+                          color: Mau.vang,
+                        ),
+                      ),
+                    const SizedBox(height: 3),
+                    Text(
+                      p.ten,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
                     const SizedBox(height: 5),
                     GiaSanPham(p: p, co: 13.5),
                     const Spacer(),
@@ -371,13 +403,19 @@ class _AnhVuong extends StatelessWidget {
     const trong = ColoredBox(
       color: Color(0xFF0F0F16),
       child: Center(
-        child: Icon(Icons.image_not_supported_outlined,
-            size: 22, color: Mau.chuMo),
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          size: 22,
+          color: Mau.chuMo,
+        ),
       ),
     );
     if (url == null) return trong;
-    return Image.network(url!,
-        fit: BoxFit.cover, errorBuilder: (_, _, _) => trong);
+    return Image.network(
+      url!,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => trong,
+    );
   }
 }
 
@@ -389,13 +427,14 @@ class _Nhan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-        decoration: BoxDecoration(
-          color: nen,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.w600, color: chu)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+    decoration: BoxDecoration(
+      color: nen,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: chu),
+    ),
+  );
 }

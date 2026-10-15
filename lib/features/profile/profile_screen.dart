@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,13 +19,12 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hs = ref.watch(hoSoProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Hồ sơ cá nhân')),
+      appBar: AppBar(title: Text('Hồ sơ cá nhân')),
       body: hs.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(color: Mau.vang)),
         error: (e, _) => KhoiLoi(
-          thongDiep:
-              e is ApiException ? e.message : 'Không tải được hồ sơ.',
+          thongDiep: e is ApiException ? e.message : 'Không tải được hồ sơ.',
           thuLai: () => ref.invalidate(hoSoProvider),
         ),
         data: (h) => _Form(hoSo: h),
@@ -72,8 +73,9 @@ class _FormState extends ConsumerState<_Form> {
     _tinh = TextEditingController(text: h.city ?? '');
     _quocGia = TextEditingController(text: h.country ?? '');
     _gioiTinh = _gioiTinhs.containsKey(h.gender) ? h.gender : null;
-    _ngaySinh =
-        h.dateOfBirth == null ? null : DateTime.tryParse(h.dateOfBirth!);
+    _ngaySinh = h.dateOfBirth == null
+        ? null
+        : DateTime.tryParse(h.dateOfBirth!);
   }
 
   @override
@@ -107,7 +109,10 @@ class _FormState extends ConsumerState<_Form> {
       await ref.read(authControllerProvider.notifier).lamMoiToi();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã lưu hồ sơ'), backgroundColor: Mau.the),
+        SnackBar(
+          content: Text(Ngu.d('Đã lưu hồ sơ')),
+          backgroundColor: Mau.the,
+        ),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -137,7 +142,7 @@ class _FormState extends ConsumerState<_Form> {
       // Ngày sinh phải ở quá khứ (@Past bên backend). Chặn ngay ở đây thì
       // người dùng không chọn được ngày mai rồi mới bị từ chối.
       lastDate: now.subtract(const Duration(days: 1)),
-      helpText: 'Chọn ngày sinh',
+      helpText: Ngu.d('Chọn ngày sinh'),
     );
     if (d != null) setState(() => _ngaySinh = d);
   }
@@ -160,8 +165,10 @@ class _FormState extends ConsumerState<_Form> {
       await ref.read(authControllerProvider.notifier).lamMoiToi();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Đã đổi ảnh đại diện'), backgroundColor: Mau.the),
+        SnackBar(
+          content: Text(Ngu.d('Đã đổi ảnh đại diện')),
+          backgroundColor: Mau.the,
+        ),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -204,7 +211,9 @@ class _FormState extends ConsumerState<_Form> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Mau.vang),
+                              strokeWidth: 2,
+                              color: Mau.vang,
+                            ),
                           ),
                         ),
                       ),
@@ -214,27 +223,27 @@ class _FormState extends ConsumerState<_Form> {
                 TextButton.icon(
                   onPressed: _dangTaiAnh ? null : _doiAnh,
                   icon: const Icon(Icons.photo_camera_outlined, size: 17),
-                  label: const Text('Đổi ảnh'),
+                  label: Text(Ngu.d('Đổi ảnh')),
                   style: TextButton.styleFrom(foregroundColor: Mau.vang),
                 ),
               ],
             ),
           ),
 
-          _O(nhan: 'Họ và tên', c: _hoTen, batBuoc: true, toiDa: 255),
+          _O(nhan: Ngu.d('Họ và tên'), c: _hoTen, batBuoc: true, toiDa: 255),
           _O(
-            nhan: 'Số điện thoại',
+            nhan: Ngu.d('Số điện thoại'),
             c: _dienThoai,
             kieu: TextInputType.phone,
             // Đúng luật backend: 10 chữ số, bắt đầu bằng 0. Kiểm ở đây để
             // người dùng biết ngay, thay vì gõ xong cả form mới bị từ chối.
             kiem: (v) => (v.isEmpty || RegExp(r'^0[0-9]{9}$').hasMatch(v))
                 ? null
-                : 'Số điện thoại gồm 10 chữ số và bắt đầu bằng 0',
+                : Ngu.d('Số điện thoại gồm 10 chữ số và bắt đầu bằng 0'),
           ),
 
           const SizedBox(height: 4),
-          _Nhan('Giới tính'),
+          _Nhan(Ngu.d('Giới tính')),
           const SizedBox(height: 6),
           Wrap(
             spacing: 8,
@@ -243,8 +252,9 @@ class _FormState extends ConsumerState<_Form> {
                 ChoiceChip(
                   selected: _gioiTinh == e.key,
                   onSelected: (_) => setState(
-                      () => _gioiTinh = _gioiTinh == e.key ? null : e.key),
-                  label: Text(e.value),
+                    () => _gioiTinh = _gioiTinh == e.key ? null : e.key,
+                  ),
+                  label: Text(Ngu.d(e.value)),
                   labelStyle: TextStyle(
                     fontSize: 12,
                     color: _gioiTinh == e.key ? Mau.vang : Mau.chuMo,
@@ -252,21 +262,21 @@ class _FormState extends ConsumerState<_Form> {
                   backgroundColor: Mau.the,
                   selectedColor: Mau.vang.withValues(alpha: 0.16),
                   side: BorderSide(
-                      color: _gioiTinh == e.key ? Mau.vang : Mau.vien),
+                    color: _gioiTinh == e.key ? Mau.vang : Mau.vien,
+                  ),
                   showCheckmark: false,
                 ),
             ],
           ),
 
           const SizedBox(height: 16),
-          _Nhan('Ngày sinh'),
+          _Nhan(Ngu.d('Ngày sinh')),
           const SizedBox(height: 6),
           InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: _chonNgay,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
               decoration: BoxDecoration(
                 color: Mau.the,
                 borderRadius: BorderRadius.circular(14),
@@ -274,16 +284,19 @@ class _FormState extends ConsumerState<_Form> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 17, color: Mau.chuMo),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 17,
+                    color: Mau.chuMo,
+                  ),
                   const SizedBox(width: 11),
                   Text(
                     _ngaySinh == null
-                        ? 'Chưa chọn'
+                        ? Ngu.d('Chưa chọn')
                         // dd/mm/yyyy — thống nhất toàn dự án.
                         : '${_ngaySinh!.day.toString().padLeft(2, '0')}/'
-                            '${_ngaySinh!.month.toString().padLeft(2, '0')}/'
-                            '${_ngaySinh!.year}',
+                              '${_ngaySinh!.month.toString().padLeft(2, '0')}/'
+                              '${_ngaySinh!.year}',
                     style: TextStyle(
                       fontSize: 14,
                       color: _ngaySinh == null ? Mau.chuMo : Mau.chu,
@@ -295,10 +308,10 @@ class _FormState extends ConsumerState<_Form> {
           ),
 
           const SizedBox(height: 16),
-          _O(nhan: 'Giới thiệu', c: _gioiThieu, dong: 3, toiDa: 500),
-          _O(nhan: 'Địa chỉ', c: _diaChi, toiDa: 500),
-          _O(nhan: 'Tỉnh/Thành', c: _tinh, toiDa: 120),
-          _O(nhan: 'Quốc gia', c: _quocGia, toiDa: 120),
+          _O(nhan: Ngu.d('Giới thiệu'), c: _gioiThieu, dong: 3, toiDa: 500),
+          _O(nhan: Ngu.d('Địa chỉ'), c: _diaChi, toiDa: 500),
+          _O(nhan: Ngu.d('Tỉnh/Thành'), c: _tinh, toiDa: 120),
+          _O(nhan: Ngu.d('Quốc gia'), c: _quocGia, toiDa: 120),
 
           const SizedBox(height: 10),
           FilledButton(
@@ -307,40 +320,44 @@ class _FormState extends ConsumerState<_Form> {
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Lưu hồ sơ'),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(Ngu.d('Lưu hồ sơ')),
           ),
 
           const SizedBox(height: 26),
           _ChiDoc(nhan: 'Email', giaTri: h.email ?? '—'),
           _ChiDoc(
-            nhan: 'Xác minh email',
-            giaTri: h.emailVerified ? 'Đã xác minh' : 'Chưa xác minh',
+            nhan: Ngu.d('Xác minh email'),
+            giaTri: h.emailVerified
+                ? Ngu.d('Đã xác minh')
+                : Ngu.d('Chưa xác minh'),
           ),
-          _ChiDoc(nhan: 'Tên đăng nhập', giaTri: h.username),
+          _ChiDoc(nhan: Ngu.d('Tên đăng nhập'), giaTri: h.username),
           const SizedBox(height: 6),
           // Nói rõ vì sao ba ô trên không sửa được. Không nói thì người dùng
           // đi tìm nút sửa, tưởng giao diện thiếu.
-          const Text(
-            'Email và tên đăng nhập không sửa ở đây: đổi email phải đi qua '
-            'luồng xác minh riêng.',
+          Text(
+            Ngu.d(
+              'Email và tên đăng nhập không sửa ở đây: đổi email phải đi qua luồng xác minh riêng.',
+            ),
             style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.6),
           ),
 
           const SizedBox(height: 22),
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const ChangePasswordScreen()),
+              MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
             ),
             icon: const Icon(Icons.lock_outline, size: 18),
-            label: const Text('Đổi mật khẩu'),
+            label: Text(Ngu.d('Đổi mật khẩu')),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
               foregroundColor: Mau.vang,
               side: const BorderSide(color: Mau.vien),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999)),
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
           ),
         ],
@@ -353,8 +370,8 @@ class _Nhan extends StatelessWidget {
   const _Nhan(this.text);
   final String text;
   @override
-  Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(fontSize: 12, color: Mau.chuMo));
+  Widget build(BuildContext context) =>
+      Text(text, style: const TextStyle(fontSize: 12, color: Mau.chuMo));
 }
 
 class _O extends StatelessWidget {
@@ -395,7 +412,7 @@ class _O extends StatelessWidget {
                 : TextCapitalization.words,
             validator: (v) {
               final t = (v ?? '').trim();
-              if (batBuoc && t.isEmpty) return 'Không được để trống';
+              if (batBuoc && t.isEmpty) return Ngu.d('Không được để trống');
               if (toiDa != null && t.length > toiDa!) {
                 return 'Tối đa $toiDa ký tự';
               }
@@ -422,11 +439,12 @@ class _ChiDoc extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(nhan,
-                style: const TextStyle(fontSize: 12.5, color: Mau.chuMo)),
+            child: Text(
+              nhan,
+              style: const TextStyle(fontSize: 12.5, color: Mau.chuMo),
+            ),
           ),
-          Expanded(
-              child: Text(giaTri, style: const TextStyle(fontSize: 13))),
+          Expanded(child: Text(giaTri, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );
