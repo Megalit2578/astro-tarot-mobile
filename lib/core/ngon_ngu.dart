@@ -62,3 +62,13 @@ class NguNghe extends StatelessWidget {
     builder: (c, _, _) => con(c),
   );
 }
+
+/// "đánh giá" / "review" / "reviews" — chọn số ít hay số nhiều.
+///
+/// Tiếng Việt không chia số nhiều nên một khoá từ điển là đủ cho nó, nhưng
+/// tiếng Anh thì "(1 reviews)" đọc lên là sai. Hàm này sống ở đây chứ không
+/// nằm trong từ điển vì từ điển chỉ tra chuỗi sang chuỗi, không biết đếm.
+String danhGiaSoNhieu(int so) {
+  if (Ngu.hien.value != 'en') return 'đánh giá';
+  return so == 1 ? 'review' : 'reviews';
+}

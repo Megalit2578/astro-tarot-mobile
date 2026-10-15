@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -64,11 +66,14 @@ Future<Trang<BaiViet>> _taiTrangBaiViet(
   String tuKhoa = '',
 }) async {
   final api = ref.read(apiClientProvider);
-  final d = await api.get<dynamic>(Endpoints.blogs, query: {
-    'page': trang,
-    'size': 20,
-    if (tuKhoa.isNotEmpty) 'keyword': tuKhoa,
-  });
+  final d = await api.get<dynamic>(
+    Endpoints.blogs,
+    query: {
+      'page': trang,
+      'size': 20,
+      if (tuKhoa.isNotEmpty) 'keyword': tuKhoa,
+    },
+  );
   return Trang.tu(d, BaiViet.fromJson);
 }
 
@@ -89,16 +94,21 @@ int phutDoc(String? noiDung) {
 /// năm bài thì chỉ tốn một lượt gọi, không phải năm.
 final baiVietTrangDauProvider = FutureProvider<List<BaiViet>>((ref) async {
   final api = ref.watch(apiClientProvider);
-  final d = await api.get<dynamic>(Endpoints.blogs,
-      query: {'page': 0, 'size': 6});
+  final d = await api.get<dynamic>(
+    Endpoints.blogs,
+    query: {'page': 0, 'size': 6},
+  );
   return Trang.tu(d, BaiViet.fromJson).muc;
 });
 
-final baiVietChiTietProvider =
-    FutureProvider.family<BaiViet, String>((ref, slug) async {
+final baiVietChiTietProvider = FutureProvider.family<BaiViet, String>((
+  ref,
+  slug,
+) async {
   final api = ref.watch(apiClientProvider);
   return BaiViet.fromJson(
-      await api.get<Map<String, dynamic>>(Endpoints.blog(slug)));
+    await api.get<Map<String, dynamic>>(Endpoints.blog(slug)),
+  );
 });
 
 class BlogScreen extends ConsumerStatefulWidget {
@@ -132,12 +142,12 @@ class _BlogScreenState extends ConsumerState<BlogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Bài viết')),
+      appBar: AppBar(title: Text(Ngu.d('Bài viết'))),
       body: DanhSachPhanTrang<BaiViet>(
         // Đổi từ khoá thì dựng lại từ trang đầu.
         key: ValueKey('blog-$_tuKhoa'),
         tai: (t) => _taiTrangBaiViet(ref, t, tuKhoa: _tuKhoa),
-        loiDuPhong: 'Không tải được bài viết.',
+        loiDuPhong: Ngu.d('Không tải được bài viết.'),
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
         dau: [
           // Web có ô tìm từ lâu, app thì chưa. Danh sách bài chỉ dài thêm
@@ -147,8 +157,8 @@ class _BlogScreenState extends ConsumerState<BlogScreen> {
             controller: _tim,
             onChanged: _khiGo,
             textInputAction: TextInputAction.search,
-            decoration: const InputDecoration(
-              hintText: 'Tìm bài viết, tác giả...',
+            decoration: InputDecoration(
+              hintText: Ngu.d('Tìm bài viết, tác giả...'),
               prefixIcon: Icon(Icons.search, size: 20),
               isDense: true,
             ),
@@ -160,11 +170,11 @@ class _BlogScreenState extends ConsumerState<BlogScreen> {
               ? Icons.article_outlined
               : Icons.search_off_outlined,
           tieuDe: _tuKhoa.isEmpty
-              ? 'Chưa có bài viết nào'
-              : 'Không tìm thấy bài nào',
+              ? Ngu.d('Chưa có bài viết nào')
+              : Ngu.d('Không tìm thấy bài nào'),
           moTa: _tuKhoa.isEmpty
-              ? 'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.'
-              : 'Thử một từ khoá khác, hoặc xoá ô tìm để xem tất cả.',
+              ? Ngu.d('Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.')
+              : Ngu.d('Thử một từ khoá khác, hoặc xoá ô tìm để xem tất cả.'),
         ),
         dong: (_, b) => _The(b: b),
       ),
@@ -183,16 +193,16 @@ class _The extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => BlogDetailScreen(bai: b)),
-        ),
+        onTap: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => BlogDetailScreen(bai: b))),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (anh != null)
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: Image.network(
                   anh,
                   height: 140,
@@ -208,20 +218,26 @@ class _The extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(b.tieuDe,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          height: 1.4)),
+                  Text(
+                    b.tieuDe,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
                   if (b.tomTat != null && b.tomTat!.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(b.tomTat!,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 12.5,
-                            color: Mau.chuMo,
-                            height: 1.55)),
+                    Text(
+                      b.tomTat!,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Mau.chuMo,
+                        height: 1.55,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 8),
                   Text(
@@ -229,8 +245,7 @@ class _The extends StatelessWidget {
                       if (b.tacGia != null) b.tacGia!,
                       if (b.luc != null) Dinh.ngay(b.luc),
                     ].join(' · '),
-                    style:
-                        const TextStyle(fontSize: 11, color: Mau.chuMo),
+                    style: const TextStyle(fontSize: 11, color: Mau.chuMo),
                   ),
                 ],
               ),
@@ -253,22 +268,26 @@ class BlogDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(bai.tieuDe,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 15)),
+        title: Text(
+          bai.tieuDe,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15),
+        ),
         actions: [
           // Chép liên kết thay vì mở khay chia sẻ của hệ điều hành: khay ấy
           // cần thêm một phụ thuộc, mà bài viết nằm trên web nên thứ người ta
           // thật sự muốn gửi đi là cái địa chỉ.
           IconButton(
-            tooltip: 'Chép liên kết bài viết',
+            tooltip: Ngu.d('Chép liên kết bài viết'),
             icon: const Icon(Icons.link, size: 20),
             onPressed: () async {
               await Clipboard.setData(
                 ClipboardData(text: '${AppConfig.webBaseUrl}/blog/${bai.slug}'),
               );
-              if (context.mounted) baoTin(context, 'Đã chép liên kết bài viết.');
+              if (context.mounted) {
+                baoTin(context, Ngu.d('Đã chép liên kết bài viết.'));
+              }
             },
           ),
         ],
@@ -277,16 +296,22 @@ class BlogDetailScreen extends ConsumerWidget {
         loading: () =>
             const Center(child: CircularProgressIndicator(color: Mau.vang)),
         error: (e, _) => KhoiLoi(
-          thongDiep:
-              e is ApiException ? e.message : 'Không tải được bài viết.',
+          thongDiep: e is ApiException
+              ? e.message
+              : Ngu.d('Không tải được bài viết.'),
           thuLai: () => ref.invalidate(baiVietChiTietProvider(bai.slug)),
         ),
         data: (b) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
           children: [
-            Text(b.tieuDe,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.w600, height: 1.35)),
+            Text(
+              b.tieuDe,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               [
@@ -312,7 +337,7 @@ class BlogDetailScreen extends ConsumerWidget {
             const SizedBox(height: 18),
             Text(
               (b.noiDung ?? b.tomTat ?? '').trim().isEmpty
-                  ? 'Bài viết này chưa có nội dung.'
+                  ? Ngu.d('Bài viết này chưa có nội dung.')
                   : (b.noiDung ?? b.tomTat)!,
               style: const TextStyle(fontSize: 14, height: 1.8),
             ),
@@ -350,7 +375,7 @@ class _BaiLienQuan extends ConsumerWidget {
         const Divider(height: 1, color: Mau.vien),
         const SizedBox(height: 18),
         Text(
-          'ĐỌC TIẾP',
+          Ngu.d('ĐỌC TIẾP'),
           style: TextStyle(
             fontSize: 10.5,
             letterSpacing: 1.4,
@@ -374,24 +399,28 @@ class _BaiLienQuan extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(b.tieuDe,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w500,
-                                height: 1.45)),
+                        Text(
+                          b.tieuDe,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                            height: 1.45,
+                          ),
+                        ),
                         const SizedBox(height: 3),
                         Text(
                           '${phutDoc(b.noiDung ?? b.tomTat)} phút đọc',
                           style: const TextStyle(
-                              fontSize: 11, color: Mau.chuMo),
+                            fontSize: 11,
+                            color: Mau.chuMo,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right,
-                      size: 18, color: Mau.chuMo),
+                  const Icon(Icons.chevron_right, size: 18, color: Mau.chuMo),
                 ],
               ),
             ),

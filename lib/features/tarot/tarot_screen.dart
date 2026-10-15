@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,7 +38,11 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
   static const _kieu = [
     (so: 1, ten: 'Một lá', moTa: 'Câu trả lời ngắn cho một câu hỏi rõ ràng'),
     (so: 3, ten: 'Ba lá', moTa: 'Quá khứ · Hiện tại · Tương lai'),
-    (so: 5, ten: 'Năm lá', moTa: 'Nhìn sâu hơn: nguyên nhân, trở ngại, lời khuyên'),
+    (
+      so: 5,
+      ten: 'Năm lá',
+      moTa: 'Nhìn sâu hơn: nguyên nhân, trở ngại, lời khuyên',
+    ),
   ];
 
   @override
@@ -58,7 +64,9 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
       _ketQua = null;
     });
     try {
-      final kq = await ref.read(tarotRepositoryProvider).trai(
+      final kq = await ref
+          .read(tarotRepositoryProvider)
+          .trai(
             cauHoi: q,
             soLa: _soLa,
             kieuTrai: _kieu.firstWhere((k) => k.so == _soLa).ten,
@@ -71,9 +79,11 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final c = _khoaKetQua.currentContext;
         if (c != null && c.mounted) {
-          Scrollable.ensureVisible(c,
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeOut);
+          Scrollable.ensureVisible(
+            c,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+          );
         }
       });
       // Trang chủ có khối "lần trải bài gần đây" — giờ nó đã cũ.
@@ -93,10 +103,15 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          const Text(
-            'Đặt một câu hỏi cụ thể. "Tôi có nên nhận lời mời làm việc này '
-            'không" cho lời giải rõ hơn hẳn "tương lai tôi ra sao".',
-            style: TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
+          Text(
+            Ngu.d(
+              'Đặt một câu hỏi cụ thể. "Tôi có nên nhận lời mời làm việc này không" cho lời giải rõ hơn hẳn "tương lai tôi ra sao".',
+            ),
+            style: const TextStyle(
+              color: Mau.chuMo,
+              fontSize: 12.5,
+              height: 1.6,
+            ),
           ),
           // Web bắt khai ngày giờ nơi sinh trước khi trải. Ở đây không chặn —
           // trải bài vẫn chạy được — nhưng nhắc rõ, vì không có bản đồ sao
@@ -107,16 +122,18 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.auto_awesome, color: Mau.vang),
-                title: const Text('Khai ngày giờ nơi sinh trước',
-                    style: TextStyle(fontSize: 13.5)),
-                subtitle: const Text(
-                  'Có bản đồ sao thì lời giải bám vào chính bạn thay vì trả '
-                  'lời chung chung.',
+                title: Text(
+                  'Khai ngày giờ nơi sinh trước',
+                  style: TextStyle(fontSize: 13.5),
+                ),
+                subtitle: Text(
+                  'Có bản đồ sao thì lời giải bám vào chính bạn thay vì trả lời chung chung.',
                   style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
                 ),
                 trailing: const Icon(Icons.chevron_right, color: Mau.chuMo),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const AstrologyScreen())),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AstrologyScreen()),
+                ),
               ),
             ),
           ],
@@ -128,15 +145,14 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             maxLength: 500,
             textCapitalization: TextCapitalization.sentences,
             enabled: !_dangTrai,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Câu hỏi của bạn…',
               counterText: '',
             ),
           ),
 
           const SizedBox(height: 14),
-          const Text('Kiểu trải',
-              style: TextStyle(fontSize: 12, color: Mau.chuMo)),
+          Text('Kiểu trải', style: TextStyle(fontSize: 12, color: Mau.chuMo)),
           const SizedBox(height: 8),
           for (final k in _kieu)
             Padding(
@@ -152,7 +168,8 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
                         : Mau.the,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: _soLa == k.so ? Mau.vang : Mau.vien),
+                      color: _soLa == k.so ? Mau.vang : Mau.vien,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -168,12 +185,15 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(k.ten,
-                                style: const TextStyle(fontSize: 13.5)),
+                            Text(k.ten, style: const TextStyle(fontSize: 13.5)),
                             const SizedBox(height: 2),
-                            Text(k.moTa,
-                                style: const TextStyle(
-                                    fontSize: 11.5, color: Mau.chuMo)),
+                            Text(
+                              k.moTa,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: Mau.chuMo,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -188,9 +208,8 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             onChanged: _dangTrai ? null : (v) => setState(() => _coNguoc = v),
             contentPadding: EdgeInsets.zero,
             activeThumbColor: Mau.vang,
-            title: const Text('Cho phép bài ngược',
-                style: TextStyle(fontSize: 13.5)),
-            subtitle: const Text(
+            title: Text('Cho phép bài ngược', style: TextStyle(fontSize: 13.5)),
+            subtitle: Text(
               'Bài ngược đổi hẳn nghĩa của lá bài. Tắt đi nếu bạn mới bắt đầu.',
               style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.5),
             ),
@@ -213,26 +232,26 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
           FilledButton(
             onPressed: _dangTrai ? null : _trai,
             child: _dangTrai
-                ? const Row(
+                ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2)),
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                       SizedBox(width: 12),
                       Text('Đang trải bài…'),
                     ],
                   )
-                : const Text('Trải bài'),
+                : Text('Trải bài'),
           ),
           if (_dangTrai) ...[
             const SizedBox(height: 10),
             // Nói rõ là chậm, và nói TRƯỚC. Không nói thì người dùng tưởng
             // treo, bấm lại — mà mỗi lần bấm là một lượt gọi mô hình tính phí.
-            const Text(
-              'Lời giải do mô hình ngôn ngữ viết nên có thể mất vài chục '
-              'giây. Đừng bấm lại, cứ chờ nhé.',
+            Text(
+              'Lời giải do mô hình ngôn ngữ viết nên có thể mất vài chục giây. Đừng bấm lại, cứ chờ nhé.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.6),
             ),
@@ -243,8 +262,7 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             _KetQua(key: _khoaKetQua, kq: _ketQua!),
             if (_ketQua!.id.isNotEmpty) ...[
               const SizedBox(height: 24),
-              HoiTiep(
-                  key: ValueKey(_ketQua!.id), readingId: _ketQua!.id),
+              HoiTiep(key: ValueKey(_ketQua!.id), readingId: _ketQua!.id),
             ],
           ],
         ],
@@ -268,8 +286,10 @@ class _KetQua extends StatelessWidget {
         ),
         if (kq.luc != null) ...[
           const SizedBox(height: 4),
-          Text(Dinh.ngayGio(kq.luc),
-              style: const TextStyle(fontSize: 11, color: Mau.chuMo)),
+          Text(
+            Dinh.ngayGio(kq.luc),
+            style: const TextStyle(fontSize: 11, color: Mau.chuMo),
+          ),
         ],
 
         if (kq.cacLa.isNotEmpty) ...[
@@ -285,8 +305,9 @@ class _KetQua extends StatelessWidget {
                     if (i > 0) const SizedBox(width: 8),
                     Expanded(
                       child: _TheLa(
-                          la: kq.cacLa[i],
-                          viTri: tenViTri(i, kq.cacLa.length)),
+                        la: kq.cacLa[i],
+                        viTri: tenViTri(i, kq.cacLa.length),
+                      ),
                     ),
                   ],
                 ],
@@ -302,7 +323,9 @@ class _KetQua extends StatelessWidget {
                 itemBuilder: (_, i) => SizedBox(
                   width: 100,
                   child: _TheLa(
-                      la: kq.cacLa[i], viTri: tenViTri(i, kq.cacLa.length)),
+                    la: kq.cacLa[i],
+                    viTri: tenViTri(i, kq.cacLa.length),
+                  ),
                 ),
               ),
             ),
@@ -328,9 +351,8 @@ class _KetQua extends StatelessWidget {
         const SizedBox(height: 14),
         // Nhắc trách nhiệm. Đây là sản phẩm bói toán bằng AI; không nói rõ là
         // để người dùng hiểu nhầm nó là lời khuyên chuyên môn.
-        const Text(
-          'Lời giải do AI viết, mang tính tham khảo và giải trí. Với các quyết '
-          'định về sức khoẻ, pháp lý hay tài chính, hãy hỏi người có chuyên môn.',
+        Text(
+          'Lời giải do AI viết, mang tính tham khảo và giải trí. Với các quyết định về sức khoẻ, pháp lý hay tài chính, hãy hỏi người có chuyên môn.',
           style: TextStyle(fontSize: 11, color: Mau.chuMo, height: 1.6),
         ),
 
@@ -351,7 +373,7 @@ class _KetQua extends StatelessWidget {
                 builder: (_) => _HopBaoCao(readingId: kq.id),
               ),
               icon: const Icon(Icons.flag_outlined, size: 14),
-              label: const Text('Báo cáo nội dung này'),
+              label: Text('Báo cáo nội dung này'),
               style: TextButton.styleFrom(
                 foregroundColor: Mau.chuMo,
                 textStyle: const TextStyle(fontSize: 11),
@@ -403,11 +425,14 @@ class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
           .baoCaoNoiDung(widget.readingId, _lyDo, _moTa.text);
       if (!mounted) return;
       Navigator.of(context).pop();
-      baoTin(context, 'Đã nhận báo cáo. Cảm ơn bạn.');
+      baoTin(context, Ngu.d('Đã nhận báo cáo. Cảm ơn bạn.'));
     } catch (e) {
       if (!mounted) return;
       setState(() => _dangGui = false);
-      baoTin(context, e is ApiException ? e.message : 'Không gửi được báo cáo.');
+      baoTin(
+        context,
+        e is ApiException ? e.message : Ngu.d('Không gửi được báo cáo.'),
+      );
     }
   }
 
@@ -415,7 +440,7 @@ class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Mau.the,
-      title: const Text('Báo cáo nội dung'),
+      title: Text(Ngu.d('Báo cáo nội dung')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,8 +474,8 @@ class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
             enabled: !_dangGui,
             maxLines: 3,
             maxLength: 2000,
-            decoration: const InputDecoration(
-              labelText: 'Mô tả thêm (không bắt buộc)',
+            decoration: InputDecoration(
+              labelText: Ngu.d('Mô tả thêm (không bắt buộc)'),
             ),
           ),
         ],
@@ -458,7 +483,7 @@ class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
       actions: [
         TextButton(
           onPressed: _dangGui ? null : () => Navigator.of(context).pop(),
-          child: const Text('Thôi'),
+          child: Text(Ngu.d('Thôi')),
         ),
         FilledButton(
           onPressed: _dangGui ? null : _gui,
@@ -468,7 +493,7 @@ class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Gửi'),
+              : Text(Ngu.d('Gửi')),
         ),
       ],
     );
@@ -478,17 +503,17 @@ class _HopBaoCaoState extends ConsumerState<_HopBaoCao> {
 /// Tên vị trí lá bài theo kiểu trải, đúng như mô tả ở ô chọn kiểu.
 /// Máy chủ đánh số vị trí từ 0, người đọc thì không.
 String tenViTri(int i, int soLa) => switch ((soLa, i)) {
-      (1, _) => 'Thông điệp',
-      (3, 0) => 'Quá khứ',
-      (3, 1) => 'Hiện tại',
-      (3, 2) => 'Tương lai',
-      (5, 0) => 'Hiện tại',
-      (5, 1) => 'Nguyên nhân',
-      (5, 2) => 'Trở ngại',
-      (5, 3) => 'Lời khuyên',
-      (5, 4) => 'Kết quả',
-      _ => 'Lá ${i + 1}',
-    };
+  (1, _) => Ngu.d('Thông điệp'),
+  (3, 0) => Ngu.d('Quá khứ'),
+  (3, 1) => Ngu.d('Hiện tại'),
+  (3, 2) => Ngu.d('Tương lai'),
+  (5, 0) => Ngu.d('Hiện tại'),
+  (5, 1) => Ngu.d('Nguyên nhân'),
+  (5, 2) => Ngu.d('Trở ngại'),
+  (5, 3) => Ngu.d('Lời khuyên'),
+  (5, 4) => Ngu.d('Kết quả'),
+  _ => 'Lá ${i + 1}',
+};
 
 class _TheLa extends StatelessWidget {
   const _TheLa({required this.la, required this.viTri});
@@ -507,11 +532,16 @@ class _TheLa extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(viTri.toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 9.5, letterSpacing: 0.8, color: Mau.vang)),
+          Text(
+            viTri.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 9.5,
+              letterSpacing: 0.8,
+              color: Mau.vang,
+            ),
+          ),
           const SizedBox(height: 6),
           Expanded(
             child: Text(
@@ -519,18 +549,27 @@ class _TheLa extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                  fontSize: 12.5, height: 1.35, fontWeight: FontWeight.w600),
+                fontSize: 12.5,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           Row(
             children: [
-              Icon(la.nguoc ? Icons.south : Icons.north,
-                  size: 11, color: la.nguoc ? Mau.vang : Mau.chuMo),
+              Icon(
+                la.nguoc ? Icons.south : Icons.north,
+                size: 11,
+                color: la.nguoc ? Mau.vang : Mau.chuMo,
+              ),
               const SizedBox(width: 3),
-              Text(la.nguoc ? 'ngược' : 'xuôi',
-                  style: TextStyle(
-                      fontSize: 10.5,
-                      color: la.nguoc ? Mau.vang : Mau.chuMo)),
+              Text(
+                la.nguoc ? Ngu.d('ngược') : Ngu.d('xuôi'),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: la.nguoc ? Mau.vang : Mau.chuMo,
+                ),
+              ),
             ],
           ),
         ],

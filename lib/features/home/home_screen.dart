@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -100,22 +102,22 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 _LoiTat(
                   icon: Icons.history,
-                  nhan: 'Lịch sử bài',
+                  nhan: Ngu.d('Lịch sử bài'),
                   onTap: () => _mo(context, const TarotHistoryScreen()),
                 ),
                 _LoiTat(
                   icon: Icons.auto_awesome_outlined,
-                  nhan: 'Bản đồ sao',
+                  nhan: Ngu.d('Bản đồ sao'),
                   onTap: () => _mo(context, const AstrologyScreen()),
                 ),
                 _LoiTat(
                   icon: Icons.storefront_outlined,
-                  nhan: 'Gian hàng',
+                  nhan: Ngu.d('Gian hàng'),
                   onTap: () => _mo(context, const ShopScreen()),
                 ),
                 _LoiTat(
                   icon: Icons.article_outlined,
-                  nhan: 'Bài viết',
+                  nhan: Ngu.d('Bài viết'),
                   onTap: () => _mo(context, const BlogScreen()),
                 ),
               ],
@@ -123,7 +125,7 @@ class HomeScreen extends ConsumerWidget {
 
             if (sapToi.isNotEmpty) ...[
               const SizedBox(height: 26),
-              const _Nhan('Buổi sắp tới'),
+              _Nhan(Ngu.d('Buổi sắp tới')),
               const SizedBox(height: 10),
               for (final b in sapToi.take(2)) _TheSapToi(booking: b),
             ],
@@ -141,12 +143,12 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    const Expanded(child: _Nhan('Lần trải bài gần đây')),
+                    Expanded(child: _Nhan(Ngu.d('Lần trải bài gần đây'))),
                     TextButton(
                       onPressed: () => _mo(context, const TarotHistoryScreen()),
                       style: TextButton.styleFrom(foregroundColor: Mau.vang),
-                      child: const Text(
-                        'Xem tất cả',
+                      child: Text(
+                        Ngu.d('Xem tất cả'),
                         style: TextStyle(fontSize: 12.5),
                       ),
                     ),
@@ -165,12 +167,12 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Expanded(child: _Nhan('Bản đồ sao của bạn')),
+                Expanded(child: _Nhan(Ngu.d('Bản đồ sao của bạn'))),
                 TextButton(
                   onPressed: () => _mo(context, const AstrologyScreen()),
                   style: TextButton.styleFrom(foregroundColor: Mau.vang),
-                  child: const Text(
-                    'Quản lý',
+                  child: Text(
+                    Ngu.d('Quản lý'),
                     style: TextStyle(fontSize: 12.5),
                   ),
                 ),
@@ -239,8 +241,8 @@ class _MoDauState extends State<_MoDau> {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             child: la == null
-                ? const Text(
-                    'Hôm nay bạn muốn hỏi điều gì?',
+                ? Text(
+                    Ngu.d('Hôm nay bạn muốn hỏi điều gì?'),
                     key: ValueKey('hoi'),
                     style: TextStyle(color: Mau.chuMo, fontSize: 13),
                   )
@@ -276,13 +278,13 @@ class _TrangThaiDonReader extends ConsumerWidget {
           ),
           title: Text(
             cho
-                ? 'Đơn làm Reader đang chờ duyệt'
-                : 'Đơn làm Reader chưa được duyệt',
+                ? Ngu.d('Đơn làm Reader đang chờ duyệt')
+                : Ngu.d('Đơn làm Reader chưa được duyệt'),
             style: const TextStyle(fontSize: 13.5),
           ),
           subtitle: Text(
             cho
-                ? 'Bạn sẽ nhận thông báo khi có kết quả.'
+                ? Ngu.d('Bạn sẽ nhận thông báo khi có kết quả.')
                 // Như web: nói luôn lý do, khỏi bấm vào mới biết.
                 : '${d.lyDoTuChoi ?? 'Không có lý do cụ thể.'} Bấm để sửa và gửi lại.',
             maxLines: 3,
@@ -315,7 +317,7 @@ class _ChuongThongBao extends ConsumerWidget {
       children: [
         IconButton(
           onPressed: onTap,
-          tooltip: 'Thông báo',
+          tooltip: Ngu.d('Thông báo'),
           icon: const Icon(Icons.notifications_none, size: 22),
         ),
         if (so > 0)
@@ -379,17 +381,17 @@ class _TheTarot extends StatelessWidget {
           children: [
             const Icon(Icons.auto_awesome, color: Mau.vang, size: 26),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Trải bài Tarot ngay',
+                    Ngu.d('Trải bài Tarot ngay'),
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 3),
                   Text(
-                    'Đặt một câu hỏi, AI rút bài và giải nghĩa',
+                    Ngu.d('Đặt một câu hỏi, AI rút bài và giải nghĩa'),
                     style: TextStyle(fontSize: 12, color: Mau.chuMo),
                   ),
                 ],
@@ -407,7 +409,7 @@ class _TheTarot extends StatelessWidget {
 /// lấy chữ đầu thì thành chào bằng họ.
 String tenGoi(String? hoTen) {
   final t = (hoTen ?? '').trim();
-  if (t.isEmpty) return 'bạn';
+  if (t.isEmpty) return Ngu.d('bạn');
   return t.split(RegExp(r'\s+')).last;
 }
 
@@ -517,8 +519,10 @@ class _TheSapToi extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 b.daCoc
-                    ? 'Đã đặt cọc — vào tab Lịch hẹn để trả nốt sau khi Reader đọc xong'
-                    : 'Chưa thanh toán — vào tab Lịch hẹn để trả',
+                    ? Ngu.d(
+                        'Đã đặt cọc — vào tab Lịch hẹn để trả nốt sau khi Reader đọc xong',
+                      )
+                    : Ngu.d('Chưa thanh toán — vào tab Lịch hẹn để trả'),
                 style: const TextStyle(
                   fontSize: 11.5,
                   color: Color(0xFFE0B341),
@@ -532,7 +536,7 @@ class _TheSapToi extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => ChatScreen(booking: b)),
                 ),
                 icon: const Icon(Icons.chat_bubble_outline, size: 15),
-                label: const Text('Nhắn tin / Gọi'),
+                label: Text(Ngu.d('Nhắn tin / Gọi')),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(0, 38),
                   foregroundColor: Mau.vang,
@@ -611,14 +615,15 @@ class _TheBanDoSao extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Bạn chưa khai ngày giờ nơi sinh',
+              Text(
+                Ngu.d('Bạn chưa khai ngày giờ nơi sinh'),
                 style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Khai rồi thì lời giải Tarot và tử vi bám vào bản đồ sao của '
-                'chính bạn, thay vì trả lời chung chung.',
+              Text(
+                Ngu.d(
+                  'Khai rồi thì lời giải Tarot và tử vi bám vào bản đồ sao của chính bạn, thay vì trả lời chung chung.',
+                ),
                 style: TextStyle(color: Mau.chuMo, fontSize: 12.5, height: 1.6),
               ),
               const SizedBox(height: 12),
@@ -628,7 +633,7 @@ class _TheBanDoSao extends StatelessWidget {
                   foregroundColor: Mau.vang,
                   side: const BorderSide(color: Mau.vien),
                 ),
-                child: const Text('Khai ngày giờ nơi sinh'),
+                child: Text(Ngu.d('Khai ngày giờ nơi sinh')),
               ),
             ],
           ),
@@ -647,11 +652,11 @@ class _TheBanDoSao extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (ngaySinh != null)
-              _Dong(nhan: 'Ngày sinh', giaTri: ngaySinh.toString()),
+              _Dong(nhan: Ngu.d('Ngày sinh'), giaTri: ngaySinh.toString()),
             if (gioSinh != null)
-              _Dong(nhan: 'Giờ sinh', giaTri: gioSinh.toString()),
+              _Dong(nhan: Ngu.d('Giờ sinh'), giaTri: gioSinh.toString()),
             if (noiSinh != null)
-              _Dong(nhan: 'Nơi sinh', giaTri: noiSinh.toString()),
+              _Dong(nhan: Ngu.d('Nơi sinh'), giaTri: noiSinh.toString()),
           ],
         ),
       ),

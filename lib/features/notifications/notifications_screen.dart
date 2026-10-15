@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -88,9 +90,8 @@ class NotificationsRepository {
 
   Future<void> docHet() => _api.patch('${Endpoints.notifications}/read-all');
 
-  Future<void> ghim(String id, bool ghim) => _api.patch(
-      '${Endpoints.notifications}/$id/pin',
-      body: {'pinned': ghim});
+  Future<void> ghim(String id, bool ghim) =>
+      _api.patch('${Endpoints.notifications}/$id/pin', body: {'pinned': ghim});
 
   /// Xoá mọi thông báo đã đọc, trừ tin đã ghim. Trả số tin đã xoá.
   Future<int> xoaDaDoc() async {
@@ -99,12 +100,17 @@ class NotificationsRepository {
   }
 
   /// Xoá một thông báo. Tin ghim bị máy chủ bỏ qua.
-  Future<void> xoa(String id) => _api.dio
-      .delete<dynamic>(Endpoints.notifications, data: {'ids': [id]});
+  Future<void> xoa(String id) => _api.dio.delete<dynamic>(
+    Endpoints.notifications,
+    data: {
+      'ids': [id],
+    },
+  );
 }
 
-final notificationsRepositoryProvider =
-    Provider((ref) => NotificationsRepository(ref.watch(apiClientProvider)));
+final notificationsRepositoryProvider = Provider(
+  (ref) => NotificationsRepository(ref.watch(apiClientProvider)),
+);
 
 class ThongBao {
   const ThongBao({
@@ -135,15 +141,15 @@ class ThongBao {
   final String? phia;
 
   factory ThongBao.fromJson(Map<String, dynamic> j) => ThongBao(
-        id: (j['id'] ?? '').toString(),
-        tieuDe: (j['title'] ?? '') as String,
-        noiDung: (j['message'] ?? '') as String,
-        daDoc: j['read'] == true,
-        ghim: j['pinned'] == true,
-        loai: j['type'] as String?,
-        luc: DateTime.tryParse((j['createdAt'] ?? '').toString()),
-        phia: _phiaCua(j['metadata']),
-      );
+    id: (j['id'] ?? '').toString(),
+    tieuDe: (j['title'] ?? '') as String,
+    noiDung: (j['message'] ?? '') as String,
+    daDoc: j['read'] == true,
+    ghim: j['pinned'] == true,
+    loai: j['type'] as String?,
+    luc: DateTime.tryParse((j['createdAt'] ?? '').toString()),
+    phia: _phiaCua(j['metadata']),
+  );
 }
 
 /// Nhịp báo "có thông báo mới, tải lại đi".
@@ -162,8 +168,9 @@ class ThucThongBao extends Notifier<int> {
   void thuc() => state = state + 1;
 }
 
-final thucThongBaoProvider =
-    NotifierProvider<ThucThongBao, int>(ThucThongBao.new);
+final thucThongBaoProvider = NotifierProvider<ThucThongBao, int>(
+  ThucThongBao.new,
+);
 
 /// Tải MỘT trang thông báo.
 ///
@@ -239,7 +246,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thông báo'),
+        title: Text('Thông báo'),
         actions: [
           TextButton(
             onPressed: () => NotificationsScreen._chay(
@@ -249,20 +256,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               _dieuKhien.taiLai,
             ),
             style: TextButton.styleFrom(foregroundColor: Mau.chuMo),
-            child: const Text('Đọc hết', style: TextStyle(fontSize: 12.5)),
+            child: Text('Đọc hết', style: TextStyle(fontSize: 12.5)),
           ),
           PopupMenuButton<String>(
             tooltip: 'Thêm',
             color: Mau.the,
-            onSelected: (_) => NotificationsScreen._chay(context, ref, () async {
-              final n =
-                  await ref.read(notificationsRepositoryProvider).xoaDaDoc();
-              if (context.mounted) baoTin(context, 'Đã xoá $n thông báo.');
-            }, _dieuKhien.taiLai),
-            itemBuilder: (_) => const [
+            onSelected: (_) =>
+                NotificationsScreen._chay(context, ref, () async {
+                  final n = await ref
+                      .read(notificationsRepositoryProvider)
+                      .xoaDaDoc();
+                  if (context.mounted) baoTin(context, 'Đã xoá $n thông báo.');
+                }, _dieuKhien.taiLai),
+            itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'xoa-da-doc',
-                child: Text('Xoá thông báo đã đọc (trừ tin ghim)'),
+                child: Text(Ngu.d('Xoá thông báo đã đọc (trừ tin ghim)')),
               ),
             ],
           ),
@@ -271,12 +280,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body: DanhSachPhanTrang<ThongBao>(
         dieuKhien: _dieuKhien,
         tai: (t) => _taiTrangThongBao(ref, t),
-        loiDuPhong: 'Không tải được thông báo.',
-        trong: const KhoiTrong(
+        loiDuPhong: Ngu.d('Không tải được thông báo.'),
+        trong: KhoiTrong(
           icon: Icons.notifications_none,
-          tieuDe: 'Chưa có thông báo nào',
-          moTa: 'Khi có người nhận lịch, nhắn tin hay thanh toán, '
-              'bạn sẽ thấy ở đây.',
+          tieuDe: Ngu.d('Chưa có thông báo nào'),
+          moTa: Ngu.d(
+            'Khi có người nhận lịch, nhắn tin hay thanh toán, bạn sẽ thấy ở đây.',
+          ),
         ),
         dong: (_, tb) => _The(tb: tb, taiLai: _dieuKhien.taiLai),
       ),
@@ -302,14 +312,16 @@ class _The extends ConsumerWidget {
           children: [
             ListTile(
               leading: Icon(tb.ghim ? Icons.push_pin_outlined : Icons.push_pin),
-              title: Text(tb.ghim ? 'Bỏ ghim' : 'Ghim lên đầu'),
+              title: Text(tb.ghim ? Ngu.d('Bỏ ghim') : Ngu.d('Ghim lên đầu')),
               onTap: () => Navigator.of(ctx).pop('ghim'),
             ),
             if (!tb.ghim)
               ListTile(
-                leading: const Icon(Icons.delete_outline,
-                    color: Color(0xFFE5645E)),
-                title: const Text('Xoá thông báo'),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFFE5645E),
+                ),
+                title: Text(Ngu.d('Xoá thông báo')),
                 onTap: () => Navigator.of(ctx).pop('xoa'),
               ),
           ],
@@ -375,8 +387,11 @@ class _The extends ConsumerWidget {
                         if (tb.ghim)
                           const Padding(
                             padding: EdgeInsets.only(right: 5),
-                            child: Icon(Icons.push_pin,
-                                size: 12, color: Mau.vang),
+                            child: Icon(
+                              Icons.push_pin,
+                              size: 12,
+                              color: Mau.vang,
+                            ),
                           ),
                         Expanded(
                           child: Text(
@@ -393,17 +408,24 @@ class _The extends ConsumerWidget {
                     ),
                     if (tb.noiDung.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(tb.noiDung,
-                          style: const TextStyle(
-                              fontSize: 12.5,
-                              color: Mau.chuMo,
-                              height: 1.5)),
+                      Text(
+                        tb.noiDung,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Mau.chuMo,
+                          height: 1.5,
+                        ),
+                      ),
                     ],
                     if (tb.luc != null) ...[
                       const SizedBox(height: 5),
-                      Text(Dinh.ngayGio(tb.luc),
-                          style: const TextStyle(
-                              fontSize: 10.5, color: Mau.chuMo)),
+                      Text(
+                        Dinh.ngayGio(tb.luc),
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Mau.chuMo,
+                        ),
+                      ),
                     ],
                   ],
                 ),

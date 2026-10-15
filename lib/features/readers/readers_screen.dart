@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,7 +34,7 @@ class _ReadersScreenState extends ConsumerState<ReadersScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tìm Reader'),
+        title: Text(Ngu.d('Tìm Reader')),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
@@ -42,14 +44,14 @@ class _ReadersScreenState extends ConsumerState<ReadersScreen> {
               onChanged: (v) => ref.read(tuKhoaProvider.notifier).dat(v),
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: 'Tên Reader hoặc chuyên môn…',
+                hintText: Ngu.d('Tên Reader hoặc chuyên môn…'),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 isDense: true,
                 suffixIcon: _oTim.text.isEmpty
                     ? null
                     : IconButton(
                         icon: const Icon(Icons.close, size: 18),
-                        tooltip: 'Xoá từ khoá',
+                        tooltip: Ngu.d('Xoá từ khoá'),
                         onPressed: () {
                           _oTim.clear();
                           ref.read(tuKhoaProvider.notifier).dat('');
@@ -70,7 +72,7 @@ class _ReadersScreenState extends ConsumerState<ReadersScreen> {
           error: (e, _) => KhoiLoi(
             thongDiep: e is ApiException
                 ? e.message
-                : 'Không tải được danh sách Reader.',
+                : Ngu.d('Không tải được danh sách Reader.'),
             thuLai: () => ref.invalidate(readersProvider),
           ),
           data: (list) {
@@ -78,11 +80,13 @@ class _ReadersScreenState extends ConsumerState<ReadersScreen> {
               return KhoiTrong(
                 icon: Icons.person_search,
                 tieuDe: ref.read(tuKhoaProvider).isEmpty
-                    ? 'Chưa có Reader nào'
-                    : 'Không có Reader nào khớp',
+                    ? Ngu.d('Chưa có Reader nào')
+                    : Ngu.d('Không có Reader nào khớp'),
                 moTa: ref.read(tuKhoaProvider).isEmpty
-                    ? 'Hồ sơ Reader phải được duyệt và đặt giá mới xuất hiện ở đây.'
-                    : 'Thử từ khoá khác nhé.',
+                    ? Ngu.d(
+                        'Hồ sơ Reader phải được duyệt và đặt giá mới xuất hiện ở đây.',
+                      )
+                    : Ngu.d('Thử từ khoá khác nhé.'),
               );
             }
             return ListView.builder(
@@ -149,34 +153,49 @@ class _TheReader extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           reader.yearsExperience != null
-                              ? '${reader.yearsExperience} năm kinh nghiệm'
-                              : 'Reader mới',
+                              ? '${reader.yearsExperience} ${Ngu.d('năm kinh nghiệm')}'
+                              : Ngu.d('Reader mới'),
                           style: const TextStyle(
-                              color: Mau.chuMo, fontSize: 12),
+                            color: Mau.chuMo,
+                            fontSize: 12,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.star,
-                                size: 13, color: Mau.vang),
+                            const Icon(Icons.star, size: 13, color: Mau.vang),
                             const SizedBox(width: 4),
-                            Text(
-                              Dinh.diem(reader.rating, reader.totalReviews),
-                              style: const TextStyle(
-                                  color: Mau.vang, fontSize: 12),
-                            ),
-                            const SizedBox(width: 4),
+                            // Khi chưa ai đánh giá thì gộp thành MỘT câu, không
+                            // tách "Chưa có" + "đánh giá" thành hai Text.
+                            //
+                            // Tách ra thì nửa trước đi qua Dinh.diem (không
+                            // dịch) còn nửa sau có dịch, nên bản tiếng Anh ra
+                            // "Chưa có reviews" — lẫn hai thứ tiếng giữa câu,
+                            // tệ hơn cả để nguyên tiếng Việt. Thấy khi xem
+                            // danh sách Reader trên máy ảo.
+                            if (reader.totalReviews > 0)
+                              Text(
+                                Dinh.diem(reader.rating, reader.totalReviews),
+                                style: const TextStyle(
+                                  color: Mau.vang,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            if (reader.totalReviews > 0)
+                              const SizedBox(width: 4),
                             // Flexible: với cỡ chữ lớn của máy, dòng này
                             // tràn khỏi thẻ nếu không được phép co lại.
                             Flexible(
                               child: Text(
                                 reader.totalReviews > 0
-                                    ? '(${reader.totalReviews} đánh giá)'
-                                    : 'đánh giá',
+                                    ? '(${reader.totalReviews} ${danhGiaSoNhieu(reader.totalReviews)})'
+                                    : Ngu.d('Chưa có đánh giá'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                    color: Mau.chuMo, fontSize: 12),
+                                  color: Mau.chuMo,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -188,9 +207,10 @@ class _TheReader extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('chỉ từ',
-                            style: TextStyle(
-                                color: Mau.chuMo, fontSize: 10.5)),
+                        Text(
+                          Ngu.d('chỉ từ'),
+                          style: TextStyle(color: Mau.chuMo, fontSize: 10.5),
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           Dinh.tien(gia),
@@ -211,7 +231,10 @@ class _TheReader extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      color: Mau.chuMo, fontSize: 12.5, height: 1.5),
+                    color: Mau.chuMo,
+                    fontSize: 12.5,
+                    height: 1.5,
+                  ),
                 ),
               ],
               if (reader.specialties.isNotEmpty) ...[
@@ -223,7 +246,9 @@ class _TheReader extends StatelessWidget {
                     for (final s in reader.specialties)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 9, vertical: 3),
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(color: const Color(0x33D4AF37)),
@@ -231,7 +256,9 @@ class _TheReader extends StatelessWidget {
                         child: Text(
                           s,
                           style: const TextStyle(
-                              fontSize: 11, color: Mau.vangNhat),
+                            fontSize: 11,
+                            color: Mau.vangNhat,
+                          ),
                         ),
                       ),
                   ],
@@ -239,8 +266,8 @@ class _TheReader extends StatelessWidget {
               ],
               if (!reader.isAvailable) ...[
                 const SizedBox(height: 10),
-                const Text(
-                  'Đang tạm ngưng nhận lịch',
+                Text(
+                  Ngu.d('Đang tạm ngưng nhận lịch'),
                   style: TextStyle(fontSize: 11.5, color: Color(0xFFE0B341)),
                 ),
               ],
@@ -268,8 +295,7 @@ class _Anh extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: Mau.vien),
         image: co
-            ? DecorationImage(
-                image: NetworkImage(anh), fit: BoxFit.cover)
+            ? DecorationImage(image: NetworkImage(anh), fit: BoxFit.cover)
             : null,
       ),
       alignment: Alignment.center,

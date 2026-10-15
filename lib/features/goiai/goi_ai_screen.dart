@@ -7,6 +7,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/format.dart';
+import '../../core/ngon_ngu.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
 import 'goi_ai_repository.dart';
@@ -72,19 +73,19 @@ class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
       case LoaiKetQua.dangCho:
         // KHÔNG tắt trạng thái đang mua: lượt mua vẫn sống, Google còn chờ
         // khách trả tiền (chuyển khoản, thẻ chờ xác thực) rồi mới trả kết quả.
-        _nhan('Google đang xử lý thanh toán. Gói vào ngay khi xong.');
+        _nhan(Ngu.d('Google đang xử lý thanh toán. Gói vào ngay khi xong.'));
       case LoaiKetQua.xong:
         dangMua.dat(null);
         ref.invalidate(goiCuaToiProvider);
         ref.invalidate(luotDungHomNayProvider);
-        _nhan('Đã kích hoạt gói.');
+        _nhan(Ngu.d('Đã kích hoạt gói.'));
       case LoaiKetQua.huy:
         // Khách tự bỏ giữa luồng của Google: không báo gì, họ biết mình vừa
         // bấm huỷ.
         dangMua.dat(null);
       case LoaiKetQua.loi:
         dangMua.dat(null);
-        _nhan(k.thongBao ?? 'Thanh toán không xong.');
+        _nhan(k.thongBao ?? Ngu.d('Thanh toán không xong.'));
     }
   }
 
@@ -108,7 +109,9 @@ class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
         ref.watch(authControllerProvider).user?.co('CUSTOMER_ACTIONS') ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: Text(laKhach ? 'Gói AI' : 'Ví ASTROTAROT')),
+      appBar: AppBar(
+        title: Text(laKhach ? Ngu.d('Gói AI') : Ngu.d('Ví ASTROTAROT')),
+      ),
       body: RefreshIndicator(
         color: Mau.vang,
         backgroundColor: Mau.the,
@@ -126,7 +129,7 @@ class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
           error: (e, _) => KhoiLoi(
             thongDiep: e is ApiException
                 ? e.message
-                : 'Không tải được danh sách gói. Thử lại sau.',
+                : Ngu.d('Không tải được danh sách gói. Thử lại sau.'),
             thuLai: () => ref.invalidate(goiDangBanProvider),
           ),
           data: (goi) => ListView(
@@ -138,15 +141,15 @@ class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
                 const SizedBox(height: 12),
                 const _HanMucHomNay(),
                 const SizedBox(height: 20),
-                const Text(
-                  'Chọn gói',
+                Text(
+                  Ngu.d('Chọn gói'),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 if (goi.isEmpty)
-                  const KhoiTrong(
+                  KhoiTrong(
                     icon: Icons.auto_awesome,
-                    tieuDe: 'Chưa có gói nào đang bán',
+                    tieuDe: Ngu.d('Chưa có gói nào đang bán'),
                   )
                 else
                   for (final g in goi)
@@ -198,8 +201,8 @@ class _TheVi extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Số dư ví',
+                Text(
+                  Ngu.d('Số dư ví'),
                   style: TextStyle(fontSize: 12, color: Mau.chuMo),
                 ),
                 const SizedBox(height: 2),
@@ -221,7 +224,7 @@ class _TheVi extends ConsumerWidget {
           if (napDuoc)
             OutlinedButton(
               onPressed: () => _moNap(context, ref),
-              child: const Text('Nạp tiền'),
+              child: Text(Ngu.d('Nạp tiền')),
             ),
         ],
       ),
@@ -242,7 +245,9 @@ class _HanMucHomNay extends ConsumerWidget {
     // Không có gói nào đang chạy thì vẫn còn hạn mức miễn phí của hệ thống.
     // Không bịa con số ấy ra ở đây: chỉ nói đang dùng gói miễn phí, để mình
     // không nói một đằng mà máy chủ chặn một nẻo.
-    final ten = dangChay.isEmpty ? 'Gói miễn phí' : dangChay.first.tenGoi;
+    final ten = dangChay.isEmpty
+        ? Ngu.d('Gói miễn phí')
+        : dangChay.first.tenGoi;
     final tong = dangChay.isEmpty ? null : dangChay.first.hanMucNgay;
 
     return Container(
@@ -333,7 +338,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
     final conHieuLuc = daMua.where((p) => p.conHieuLuc).toList();
 
     if (conHieuLuc.any((p) => p.maGoi == g.id)) {
-      return 'Bạn đang dùng gói này rồi.';
+      return Ngu.d('Bạn đang dùng gói này rồi.');
     }
     if (g.loai != 'MONTHLY') return null;
 
@@ -348,8 +353,10 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
       }
       if (loaiCu != 'MONTHLY') continue;
       if (g.hanMucNgay <= p.hanMucNgay && g.gia <= p.gia) {
-        return 'Bạn đang có gói tháng. Chỉ đổi lên được gói có hạn mức hoặc '
-            'giá cao hơn.';
+        return Ngu.d(
+          'Bạn đang có gói tháng. Chỉ đổi lên được gói có hạn mức hoặc '
+          'giá cao hơn.',
+        );
       }
     }
     return null;
@@ -367,7 +374,9 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
       ref.read(dangMuaGoogleProvider.notifier).dat(null);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không mở được thanh toán Google: $e')),
+        SnackBar(
+          content: Text('${Ngu.d('Không mở được thanh toán Google')}: $e'),
+        ),
       );
     }
     // Không tắt trạng thái ở nhánh thành công: luồng mới chỉ MỞ ra thôi. Kết
@@ -398,7 +407,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: Mau.the,
-        title: const Text('Xác nhận mua'),
+        title: Text(Ngu.d('Xác nhận mua')),
         content: Text(
           'Mua ${g.ten} với giá ${Dinh.tien(g.gia)}?\n\n'
           'Tiền trừ thẳng từ số dư ví. Sau khi mua, số dư còn '
@@ -407,7 +416,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('Thôi'),
+            child: Text(Ngu.d('Thôi')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(c, true),
@@ -432,7 +441,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e is ApiException ? e.message : 'Mua không thành công.',
+            e is ApiException ? e.message : Ngu.d('Mua không thành công.'),
           ),
         ),
       );
@@ -459,32 +468,32 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
     final VoidCallback? bam;
     if (nenDungGooglePlay) {
       if (widget.choGia) {
-        nhan = 'Đang lấy giá…';
+        nhan = Ngu.d('Đang lấy giá…');
         bam = null;
       } else if (sp == null) {
-        nhan = 'Chưa mở bán trong ứng dụng';
+        nhan = Ngu.d('Chưa mở bán trong ứng dụng');
         bam = null;
       } else if (vuongMac != null) {
-        nhan = 'Không mua được';
+        nhan = Ngu.d('Không mua được');
         bam = null;
       } else if (maDangMua != null) {
         // Khoá mọi thẻ khi có một lượt mua đang chạy: Google chỉ xử lý một
         // luồng mua một lúc, bấm thẻ thứ hai chỉ nhận về lỗi.
-        nhan = maDangMua == g.id ? 'Đang mua…' : 'Mua qua Google Play';
+        nhan = Ngu.d(maDangMua == g.id ? 'Đang mua…' : 'Mua qua Google Play');
         bam = null;
       } else {
-        nhan = 'Mua qua Google Play';
+        nhan = Ngu.d('Mua qua Google Play');
         bam = () => _muaQuaGoogle(sp);
       }
     } else {
       if (_dangMuaVi) {
-        nhan = 'Đang mua…';
+        nhan = Ngu.d('Đang mua…');
         bam = null;
       } else if (vuongMac != null) {
-        nhan = 'Không mua được';
+        nhan = Ngu.d('Không mua được');
         bam = null;
       } else {
-        nhan = 'Mua bằng ví';
+        nhan = Ngu.d('Mua bằng ví');
         bam = _muaBangVi;
       }
     }
@@ -567,8 +576,8 @@ class _SoViCuaToi extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Sổ ví',
+        Text(
+          Ngu.d('Sổ ví'),
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -628,8 +637,8 @@ class _LuotMuaCuaToi extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Gói đã mua',
+        Text(
+          Ngu.d('Gói đã mua'),
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -664,7 +673,7 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
     context: context,
     builder: (c) => AlertDialog(
       backgroundColor: Mau.the,
-      title: const Text('Nạp tiền vào ví'),
+      title: Text(Ngu.d('Nạp tiền vào ví')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -672,8 +681,8 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
             controller: o,
             keyboardType: TextInputType.number,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Số tiền',
+            decoration: InputDecoration(
+              labelText: Ngu.d('Số tiền'),
               suffixText: 'đ',
             ),
           ),
@@ -693,14 +702,14 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(c),
-          child: const Text('Thôi'),
+          child: Text(Ngu.d('Thôi')),
         ),
         FilledButton(
           onPressed: () {
             final v = int.tryParse(o.text.trim());
             if (v != null && v > 0) Navigator.pop(c, v);
           },
-          child: const Text('Tạo mã nạp'),
+          child: Text(Ngu.d('Tạo mã nạp')),
         ),
       ],
     ),
@@ -714,7 +723,7 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: Mau.the,
-        title: const Text('Chuyển khoản để nạp'),
+        title: Text(Ngu.d('Chuyển khoản để nạp')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -725,8 +734,8 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
             if (h.chuTaiKhoan != null) Text('Chủ tài khoản: ${h.chuTaiKhoan}'),
             if (h.noiDung != null) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Nội dung chuyển khoản — ghi ĐÚNG:',
+              Text(
+                Ngu.d('Nội dung chuyển khoản — ghi ĐÚNG:'),
                 style: TextStyle(fontSize: 12, color: Mau.chuMo),
               ),
               SelectableText(
@@ -737,9 +746,10 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Sai nội dung thì hệ thống không khớp được lượt chuyển với ví '
-                'của bạn, và tiền phải đối soát tay.',
+              Text(
+                Ngu.d(
+                  'Sai nội dung thì hệ thống không khớp được lượt chuyển với ví của bạn, và tiền phải đối soát tay.',
+                ),
                 style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
               ),
             ],
@@ -762,7 +772,7 @@ Future<void> _moNap(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          e is ApiException ? e.message : 'Không tạo được lệnh nạp.',
+          e is ApiException ? e.message : Ngu.d('Không tạo được lệnh nạp.'),
         ),
       ),
     );
