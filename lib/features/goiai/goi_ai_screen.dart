@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/auth/auth_controller.dart';
@@ -7,6 +10,7 @@ import '../../core/format.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
 import 'goi_ai_repository.dart';
+import 'google_billing.dart';
 import 'vi_repository.dart';
 
 /// Gói AI và ví — phần web đã có mà app chưa có.
@@ -18,17 +22,79 @@ import 'vi_repository.dart';
 /// đúng gói. Đặt số dư ngay trên đầu danh sách gói thì người dùng thấy ngay
 /// mình đủ tiền hay chưa, trước khi bấm vào gói nào.
 ///
-/// ## Vì sao mua bằng ví chứ không qua cổng thanh toán
+/// ## Vì sao trên Android mua qua Google Play, không mua bằng ví
 ///
-/// Dẫn người dùng rời app sang cổng rồi quay lại là một đường vòng dễ đứt —
-/// nhất là khi app chưa có liên kết sâu để bắt lại lượt quay về. Nạp ví một
-/// lần rồi mua nhiều lần bằng số dư thì mỗi lần mua chỉ còn một cú bấm.
-class GoiAiScreen extends ConsumerWidget {
+/// Chính sách Thanh toán của Google xếp gói nội dung số dùng trong ứng dụng
+/// vào diện BẮT BUỘC dùng hệ thống thanh toán của Play, và Việt Nam không nằm
+/// trong chương trình thanh toán thay thế nào. Bán bằng ví là bị gỡ app.
+///
+/// Ví vẫn ở lại màn này, nhưng trên Android nó chỉ còn để trả buổi xem với
+/// Reader — dịch vụ một-kèm-một giữa hai người, Google miễn trừ khoản ấy.
+/// Trên nền tảng khác (máy tính lúc phát triển) thì mua gói bằng ví như cũ.
+class GoiAiScreen extends ConsumerStatefulWidget {
   const GoiAiScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GoiAiScreen> createState() => _GoiAiScreenState();
+}
+
+class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
+  StreamSubscription<KetQuaMua>? _nghe;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!nenDungGooglePlay) return;
+    // Lắng nghe NGAY khi mở màn, trước cú bấm mua đầu tiên: Google có thể
+    // phát lại một lượt mua còn dở từ phiên trước ngay lúc này — đó là cách
+    // khách lấy được gói khi lần trước mạng hỏng giữa đường.
+    try {
+      final b = ref.read(googleBillingProvider);
+      b.mo();
+      _nghe = b.ketQua.listen(_nhanKetQua);
+    } catch (e) {
+      // Máy Android không có Play Billing đăng ký: màn vẫn mở được, chỉ mất
+      // lối mua — `sanPhamGoogleProvider` cũng trả rỗng nên nút đã tự khoá.
+      debugPrint('Không bật được Google Play Billing: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _nghe?.cancel();
+    super.dispose();
+  }
+
+  void _nhanKetQua(KetQuaMua k) {
+    if (!mounted) return;
+    final dangMua = ref.read(dangMuaGoogleProvider.notifier);
+    switch (k.loai) {
+      case LoaiKetQua.dangCho:
+        // KHÔNG tắt trạng thái đang mua: lượt mua vẫn sống, Google còn chờ
+        // khách trả tiền (chuyển khoản, thẻ chờ xác thực) rồi mới trả kết quả.
+        _nhan('Google đang xử lý thanh toán. Gói vào ngay khi xong.');
+      case LoaiKetQua.xong:
+        dangMua.dat(null);
+        ref.invalidate(goiCuaToiProvider);
+        ref.invalidate(luotDungHomNayProvider);
+        _nhan('Đã kích hoạt gói.');
+      case LoaiKetQua.huy:
+        // Khách tự bỏ giữa luồng của Google: không báo gì, họ biết mình vừa
+        // bấm huỷ.
+        dangMua.dat(null);
+      case LoaiKetQua.loi:
+        dangMua.dat(null);
+        _nhan(k.thongBao ?? 'Thanh toán không xong.');
+    }
+  }
+
+  void _nhan(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
+  @override
+  Widget build(BuildContext context) {
     final ds = ref.watch(goiDangBanProvider);
+    final sanPham = ref.watch(sanPhamGoogleProvider);
     // Màn này gộp hai thứ: VÍ của người dùng, và GÓI AI đang bán.
     //
     // Chỉ phần gói là việc của khách — mua gói và nạp ví đều đòi
@@ -38,10 +104,8 @@ class GoiAiScreen extends ConsumerWidget {
     //
     // Bản trước tôi gác cả màn, nên Nhân viên mất luôn đường tới ví — chặt
     // hơn backend, và ngược với chính lý do đã viết ra khi mở backend.
-    final laKhach = ref.watch(authControllerProvider).user?.co(
-              'CUSTOMER_ACTIONS',
-            ) ??
-        false;
+    final laKhach =
+        ref.watch(authControllerProvider).user?.co('CUSTOMER_ACTIONS') ?? false;
 
     return Scaffold(
       appBar: AppBar(title: Text(laKhach ? 'Gói AI' : 'Ví ASTROTAROT')),
@@ -53,6 +117,7 @@ class GoiAiScreen extends ConsumerWidget {
           ref.invalidate(viCuaToiProvider);
           ref.invalidate(goiCuaToiProvider);
           ref.invalidate(luotDungHomNayProvider);
+          ref.invalidate(sanPhamGoogleProvider);
           await ref.read(goiDangBanProvider.future);
         },
         child: ds.when(
@@ -84,7 +149,14 @@ class GoiAiScreen extends ConsumerWidget {
                     tieuDe: 'Chưa có gói nào đang bán',
                   )
                 else
-                  for (final g in goi) _TheGoi(goi: g),
+                  for (final g in goi)
+                    _TheGoi(
+                      goi: g,
+                      sanPham: g.maGooglePlay == null
+                          ? null
+                          : sanPham.asData?.value[g.maGooglePlay],
+                      choGia: sanPham.isLoading,
+                    ),
               ],
               const SizedBox(height: 20),
               // Hai khối này là LỊCH SỬ của chính họ, giữ cho mọi vai trò.
@@ -225,17 +297,84 @@ class _HanMucHomNay extends ConsumerWidget {
 }
 
 class _TheGoi extends ConsumerStatefulWidget {
-  const _TheGoi({required this.goi});
+  const _TheGoi({required this.goi, this.sanPham, this.choGia = false});
+
   final GoiAi goi;
+
+  /// Gói tương ứng bên Google, kèm giá đã quy đổi theo nước của khách.
+  ///
+  /// Null nghĩa là không mua được qua Play: máy không có Google Play, hoặc
+  /// Play Console chưa khai mã sản phẩm này.
+  final ProductDetails? sanPham;
+
+  /// Còn đang hỏi giá Google.
+  final bool choGia;
 
   @override
   ConsumerState<_TheGoi> createState() => _TheGoiState();
 }
 
 class _TheGoiState extends ConsumerState<_TheGoi> {
-  bool _dangMua = false;
+  /// Chỉ dùng cho đường mua bằng ví.
+  ///
+  /// Đường Google không giữ trạng thái ở đây được: kết quả về qua stream, có
+  /// thể về sau khi hệ điều hành đã thu hồi app rồi mở lại, lúc ấy thẻ này đã
+  /// bị dựng lại từ đầu. Nó đọc [dangMuaGoogleProvider] thay thế.
+  bool _dangMuaVi = false;
 
-  Future<void> _mua() async {
+  /// Lý do không cho mua, null là mua được.
+  ///
+  /// Chép đúng luật `assertMayAcquirePlan` bên máy chủ, và phải chép: đường
+  /// Google không chặn được ở máy chủ nữa, vì lúc máy chủ biết chuyện thì
+  /// Google đã trừ tiền khách rồi. Chặn muộn là khách mất tiền.
+  String? _vuongMac() {
+    final g = widget.goi;
+    final daMua = ref.watch(goiCuaToiProvider).asData?.value ?? const [];
+    final conHieuLuc = daMua.where((p) => p.conHieuLuc).toList();
+
+    if (conHieuLuc.any((p) => p.maGoi == g.id)) {
+      return 'Bạn đang dùng gói này rồi.';
+    }
+    if (g.loai != 'MONTHLY') return null;
+
+    // Gói tháng đang chạy thì chỉ cho nâng cấp. So bằng giá trong cơ sở dữ
+    // liệu chứ không phải giá Google hiện ra: máy chủ cũng so bằng giá ấy,
+    // lệch nhau là app cho bấm rồi máy chủ mới chặn.
+    final dangBan = ref.watch(goiDangBanProvider).asData?.value ?? const [];
+    for (final p in conHieuLuc) {
+      String? loaiCu;
+      for (final x in dangBan) {
+        if (x.id == p.maGoi) loaiCu = x.loai;
+      }
+      if (loaiCu != 'MONTHLY') continue;
+      if (g.hanMucNgay <= p.hanMucNgay && g.gia <= p.gia) {
+        return 'Bạn đang có gói tháng. Chỉ đổi lên được gói có hạn mức hoặc '
+            'giá cao hơn.';
+      }
+    }
+    return null;
+  }
+
+  /// Mở luồng thanh toán của Google.
+  ///
+  /// Không có hộp xác nhận của mình: Google đã có màn xác nhận giá và phương
+  /// thức thanh toán riêng, thêm một lớp nữa chỉ là một cú bấm thừa.
+  Future<void> _muaQuaGoogle(ProductDetails sp) async {
+    ref.read(dangMuaGoogleProvider.notifier).dat(widget.goi.id);
+    try {
+      await ref.read(googleBillingProvider).mua(sp);
+    } catch (e) {
+      ref.read(dangMuaGoogleProvider.notifier).dat(null);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không mở được thanh toán Google: $e')),
+      );
+    }
+    // Không tắt trạng thái ở nhánh thành công: luồng mới chỉ MỞ ra thôi. Kết
+    // quả về qua stream, và màn gói tắt trạng thái ở đó.
+  }
+
+  Future<void> _muaBangVi() async {
     final g = widget.goi;
     final soDu = ref.read(viCuaToiProvider).asData?.value.soDu ?? 0;
 
@@ -279,7 +418,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
     );
     if (dong != true) return;
 
-    setState(() => _dangMua = true);
+    setState(() => _dangMuaVi = true);
     try {
       await ref.read(goiAiRepositoryProvider).mua(g.id);
       ref.invalidate(viCuaToiProvider);
@@ -298,13 +437,58 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _dangMua = false);
+      if (mounted) setState(() => _dangMuaVi = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final g = widget.goi;
+    final sp = widget.sanPham;
+    final vuongMac = _vuongMac();
+    final maDangMua = ref.watch(dangMuaGoogleProvider);
+
+    // Giá hiện ra: trên Android lấy của Google, không lấy của máy chủ mình.
+    //
+    // Google bắt hiện đúng con số thư viện trả về — đã gồm thuế và đúng tiền
+    // tệ từng nước — và con số ấy chỉnh ở Play Console. Giá trên app cao hơn
+    // giá web vì Google thu hoa hồng mỗi lượt mua.
+    final gia = sp?.price ?? Dinh.tien(g.gia);
+
+    final String nhan;
+    final VoidCallback? bam;
+    if (nenDungGooglePlay) {
+      if (widget.choGia) {
+        nhan = 'Đang lấy giá…';
+        bam = null;
+      } else if (sp == null) {
+        nhan = 'Chưa mở bán trong ứng dụng';
+        bam = null;
+      } else if (vuongMac != null) {
+        nhan = 'Không mua được';
+        bam = null;
+      } else if (maDangMua != null) {
+        // Khoá mọi thẻ khi có một lượt mua đang chạy: Google chỉ xử lý một
+        // luồng mua một lúc, bấm thẻ thứ hai chỉ nhận về lỗi.
+        nhan = maDangMua == g.id ? 'Đang mua…' : 'Mua qua Google Play';
+        bam = null;
+      } else {
+        nhan = 'Mua qua Google Play';
+        bam = () => _muaQuaGoogle(sp);
+      }
+    } else {
+      if (_dangMuaVi) {
+        nhan = 'Đang mua…';
+        bam = null;
+      } else if (vuongMac != null) {
+        nhan = 'Không mua được';
+        bam = null;
+      } else {
+        nhan = 'Mua bằng ví';
+        bam = _muaBangVi;
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -327,7 +511,7 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
                 ),
               ),
               Text(
-                Dinh.tien(g.gia),
+                gia,
                 style: const TextStyle(
                   color: Mau.vangNhat,
                   fontWeight: FontWeight.w600,
@@ -348,13 +532,17 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
               style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
             ),
           ],
+          if (vuongMac != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              vuongMac,
+              style: const TextStyle(color: Color(0xFFE0B341), fontSize: 12),
+            ),
+          ],
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
-              onPressed: _dangMua ? null : _mua,
-              child: Text(_dangMua ? 'Đang mua…' : 'Mua bằng ví'),
-            ),
+            child: FilledButton(onPressed: bam, child: Text(nhan)),
           ),
         ],
       ),
@@ -397,9 +585,7 @@ class _SoViCuaToi extends ConsumerWidget {
               style: const TextStyle(fontSize: 14),
             ),
             subtitle: Text(
-              g.moTa?.isNotEmpty == true
-                  ? g.moTa!
-                  : Dinh.ngayGio(g.luc),
+              g.moTa?.isNotEmpty == true ? g.moTa! : Dinh.ngayGio(g.luc),
               style: const TextStyle(fontSize: 12),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

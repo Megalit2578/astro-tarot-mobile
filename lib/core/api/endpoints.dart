@@ -60,6 +60,12 @@ class Endpoints {
   static const viGiaoDich = '/api/v1/wallet/transactions';
   static const goiDangBan = '/api/admin/subscriptions/plans/active';
   static const goiMua = '/api/admin/subscriptions/purchase';
+
+  /// Đổi một lượt mua trên Google Play lấy gói AI.
+  ///
+  /// Chỉ app Android gọi. Web vẫn mua bằng ví như cũ — chính sách của Google
+  /// chỉ ràng buộc thứ bán TRONG ứng dụng Android.
+  static const googlePlayDoiGoi = '/api/v1/billing/google-play/redeem';
   static String goiCuaToi(String userId) =>
       '/api/admin/subscriptions/users/$userId/purchases/active';
   static String goiLuotDung(String userId) =>
