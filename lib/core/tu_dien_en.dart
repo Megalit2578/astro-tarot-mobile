@@ -24,7 +24,8 @@ const Map<String, String> tuDienEn = {
   'Liên hệ với chúng tôi': 'Contact us',
   'Mở menu': 'Open menu',
   'Đóng menu': 'Close menu',
-  'Số dư Ví ASTROTAROT — Bấm để nạp tiền': 'ASTROTAROT Wallet balance — tap to top up',
+  'Số dư Ví ASTROTAROT — Bấm để nạp tiền':
+      'ASTROTAROT Wallet balance — tap to top up',
   'Bài viết': 'Articles',
   'Gian hàng': 'Shop',
   'Đăng nhập': 'Sign in',
@@ -37,7 +38,8 @@ const Map<String, String> tuDienEn = {
   'Chưa có Reader nào': 'No Readers yet',
   'Không có Reader nào khớp': 'No Readers match',
   'Không tải được danh sách Reader': 'Could not load the Reader list',
-  'Đặt lịch với các Reader Tarot và Chiêm tinh đã được duyệt.': 'Book an approved Tarot or astrology Reader.',
+  'Đặt lịch với các Reader Tarot và Chiêm tinh đã được duyệt.':
+      'Book an approved Tarot or astrology Reader.',
   'chỉ từ': 'from',
   'tạm ngưng nhận lịch': 'not taking bookings',
   'đang nhận lịch': 'taking bookings',
@@ -62,7 +64,8 @@ const Map<String, String> tuDienEn = {
   'Đăng nhập để đặt lịch': 'Sign in to book',
   'Không đặt được lịch': 'Could not book',
   'Không tải được lịch': 'Could not load the calendar',
-  'Khung gạch ngang đã có người. Khung còn lại vẫn đặt được.': 'Struck-through slots are taken. The rest are still open.',
+  'Khung gạch ngang đã có người. Khung còn lại vẫn đặt được.':
+      'Struck-through slots are taken. The rest are still open.',
   'Cùng một ngày nhiều người đặt được, miễn khác khung giờ. Khung gạch ngang đã có người.': 'Several people can book the same day as long as the times differ. Struck-through slots are taken.',
   'Ngày trống gần nhất': 'Nearest free day',
   'Reader nghỉ ngày này.': 'The Reader is off on this day.',
@@ -70,9 +73,11 @@ const Map<String, String> tuDienEn = {
   'Ngày này đã kín.': 'This day is fully booked.',
   'Ngày đã qua.': 'This day has passed.',
   'Ngày này không còn khung trống.': 'No slots left on this day.',
-  'Hôm nay đã qua giờ làm việc của Reader.': 'The Reader\'s working hours have ended for today.',
+  'Hôm nay đã qua giờ làm việc của Reader.':
+      'The Reader\'s working hours have ended for today.',
   'Đánh giá từ khách': 'Reviews from customers',
-  'Chưa có đánh giá nào. Bạn có thể là người đầu tiên.': 'No reviews yet. You could be the first.',
+  'Chưa có đánh giá nào. Bạn có thể là người đầu tiên.':
+      'No reviews yet. You could be the first.',
   'phút': 'min',
   'Thử lại': 'Try again',
   'Đã hiểu': 'Got it',
@@ -87,8 +92,10 @@ const Map<String, String> tuDienEn = {
   'Xác nhận': 'Confirm',
   'Chưa có': 'None yet',
   'Tử vi · Tarot': 'Astrology · Tarot',
-  'ASTROTAROT — Tử vi · Tarot · Cộng đồng': 'ASTROTAROT — Astrology · Tarot · Community',
-  'ASTROTAROT — Giới thiệu · Tử vi · Tarot AI · Cộng đồng Reader': 'ASTROTAROT — About · Astrology · AI Tarot · Reader community',
+  'ASTROTAROT — Tử vi · Tarot · Cộng đồng':
+      'ASTROTAROT — Astrology · Tarot · Community',
+  'ASTROTAROT — Giới thiệu · Tử vi · Tarot AI · Cộng đồng Reader':
+      'ASTROTAROT — About · Astrology · AI Tarot · Reader community',
   'Rút bài miễn phí, không cần tài khoản. AI đọc theo câu hỏi và bản đồ sao của bạn.': 'Draw cards free, no account needed. The AI reads your question and your star chart.',
   'Trò chuyện': 'Chat',
   'Nhắn tin': 'Message',
@@ -150,7 +157,8 @@ const Map<String, String> tuDienEn = {
   'Việc này không hoàn tác được.': 'This cannot be undone.',
   'Không tải được hồ sơ Reader.': 'Could not load the Reader profile.',
   'Đang mở thanh toán…': 'Opening payment…',
-  'Đăng nhập để đặt lịch và trò chuyện với Reader': 'Sign in to book and chat with a Reader',
+  'Đăng nhập để đặt lịch và trò chuyện với Reader':
+      'Sign in to book and chat with a Reader',
   'Mật khẩu': 'Password',
   'Xem Reader trước khi đăng nhập': 'Browse Readers without signing in',
   'Quên mật khẩu': 'Forgot password',
@@ -160,18 +168,22 @@ const Map<String, String> tuDienEn = {
   'Hiện mật khẩu': 'Show password',
   'Ẩn mật khẩu': 'Hide password',
   'Gửi lại thư xác minh': 'Resend the verification email',
-  'Không gửi lại được thư xác minh.': 'Could not resend the verification email.',
+  'Không gửi lại được thư xác minh.':
+      'Could not resend the verification email.',
   'Hôm nay bạn muốn hỏi điều gì?': 'What would you like to ask today?',
   'Câu hỏi của bạn…': 'Your question…',
   'Hãy đặt một câu hỏi trước': 'Ask a question first',
-  'Đặt một câu hỏi, AI rút bài và giải nghĩa': 'Ask a question — the AI draws the cards and reads them',
+  'Đặt một câu hỏi, AI rút bài và giải nghĩa':
+      'Ask a question — the AI draws the cards and reads them',
   'Kiểu trải': 'Spread',
   'Một lá': 'One card',
   'Ba lá': 'Three cards',
   'Năm lá': 'Five cards',
-  'Câu trả lời ngắn cho một câu hỏi rõ ràng': 'A short answer to a clear question',
+  'Câu trả lời ngắn cho một câu hỏi rõ ràng':
+      'A short answer to a clear question',
   'Quá khứ · Hiện tại · Tương lai': 'Past · Present · Future',
-  'Nhìn sâu hơn: nguyên nhân, trở ngại, lời khuyên': 'A deeper look: cause, obstacle, advice',
+  'Nhìn sâu hơn: nguyên nhân, trở ngại, lời khuyên':
+      'A deeper look: cause, obstacle, advice',
   'Nguyên nhân': 'Cause',
   'Trở ngại': 'Obstacle',
   'Lời khuyên': 'Advice',
@@ -191,7 +203,8 @@ const Map<String, String> tuDienEn = {
   'Lịch sử bài': 'Card history',
   'Xem tất cả': 'See all',
   'Bản đồ sao của bạn': 'Your star chart',
-  'Bạn chưa khai ngày giờ nơi sinh': 'You have not entered your birth date, time and place',
+  'Bạn chưa khai ngày giờ nơi sinh':
+      'You have not entered your birth date, time and place',
   'Khai ngày giờ nơi sinh': 'Enter birth date, time and place',
   'Khai ngày giờ nơi sinh trước': 'Enter your birth details first',
   'Khai rồi thì lời giải Tarot và tử vi bám vào bản đồ sao của chính bạn, thay vì trả lời chung chung.': 'Once entered, your Tarot and astrology readings follow your own chart instead of staying generic.',
@@ -224,7 +237,8 @@ const Map<String, String> tuDienEn = {
   'Đã thanh toán': 'Paid',
   'Chờ nhận': 'Awaiting',
   'Đã nhận': 'Received',
-  'Chưa thanh toán — vào tab Lịch hẹn để trả': 'Unpaid — go to the Bookings tab to pay',
+  'Chưa thanh toán — vào tab Lịch hẹn để trả':
+      'Unpaid — go to the Bookings tab to pay',
   'Đã đặt cọc — vào tab Lịch hẹn để trả nốt sau khi Reader đọc xong': 'Deposit paid — go to the Bookings tab to pay the rest once the Reader is done',
   'Không tạo được thanh toán.': 'Could not start the payment.',
   'Lưu hồ sơ': 'Save profile',
@@ -241,7 +255,8 @@ const Map<String, String> tuDienEn = {
   'Chọn ngày sinh': 'Pick your date of birth',
   'Chưa chọn': 'Not chosen',
   'Không được để trống': 'This cannot be empty',
-  'Số điện thoại gồm 10 chữ số và bắt đầu bằng 0': 'A phone number has 10 digits and starts with 0',
+  'Số điện thoại gồm 10 chữ số và bắt đầu bằng 0':
+      'A phone number has 10 digits and starts with 0',
   'Email và tên đăng nhập không sửa ở đây: đổi email phải đi qua luồng xác minh riêng.': 'Email and username are not edited here: changing your email goes through its own verification flow.',
   'Xác minh email': 'Verify email',
   'Đã xác minh': 'Verified',
@@ -251,7 +266,8 @@ const Map<String, String> tuDienEn = {
   'Giới thiệu': 'About',
   'Đơn làm Reader đang chờ duyệt': 'Your Reader application is under review',
   'Đơn làm Reader chưa được duyệt': 'Your Reader application was not approved',
-  'Bạn sẽ nhận thông báo khi có kết quả.': 'You will be notified when there is a decision.',
+  'Bạn sẽ nhận thông báo khi có kết quả.':
+      'You will be notified when there is a decision.',
   'Thông báo': 'Notifications',
   'Bản đồ sao của tôi': 'My star chart',
   'Bạn chưa có hồ sơ chiêm tinh nào': 'You have no astrology profile yet',
@@ -276,14 +292,16 @@ const Map<String, String> tuDienEn = {
   'Gõ tên tỉnh, thành phố...': 'Type a province or city...',
   'Hãy chọn ngày sinh.': 'Please pick a date of birth.',
   'Hãy nhập nơi sinh': 'Please enter a place of birth',
-  'Hãy chọn nơi sinh trong danh sách gợi ý để có toạ độ.': 'Pick a birthplace from the suggestions so we get its coordinates.',
+  'Hãy chọn nơi sinh trong danh sách gợi ý để có toạ độ.':
+      'Pick a birthplace from the suggestions so we get its coordinates.',
   'Hãy đặt tên hồ sơ': 'Please name the profile',
   'Không lưu được hồ sơ.': 'Could not save the profile.',
   'Không xoá được hồ sơ.': 'Could not delete the profile.',
   'Đã tạo hồ sơ.': 'Profile created.',
   'Đã xoá hồ sơ.': 'Profile deleted.',
   'Đã lưu thay đổi.': 'Changes saved.',
-  'Không tải được danh sách hồ sơ. Thử lại sau.': 'Could not load your profiles. Try again later.',
+  'Không tải được danh sách hồ sơ. Thử lại sau.':
+      'Could not load your profiles. Try again later.',
   'Tối đa 50 ký tự': 'Up to 50 characters',
   'Tối đa 100 ký tự': 'Up to 100 characters',
   'Tối đa 255 ký tự': 'Up to 255 characters',
@@ -295,21 +313,25 @@ const Map<String, String> tuDienEn = {
   'Xoá từ khoá': 'Clear keyword',
   'đánh giá': 'reviews',
   'Đang tạm ngưng nhận lịch': 'Not taking bookings right now',
-  'Reader này đang tạm ngưng nhận lịch.': 'This Reader is not taking bookings right now.',
+  'Reader này đang tạm ngưng nhận lịch.':
+      'This Reader is not taking bookings right now.',
   'Reader này chưa đặt giá cho mốc nào, nên chưa nhận đặt lịch.': 'This Reader has not set a price for any length yet, so bookings are closed.',
-  'Hồ sơ Reader phải được duyệt và đặt giá mới xuất hiện ở đây.': 'A Reader profile only appears here once it is approved and priced.',
+  'Hồ sơ Reader phải được duyệt và đặt giá mới xuất hiện ở đây.':
+      'A Reader profile only appears here once it is approved and priced.',
   'Đăng nhập để đặt khung giờ này': 'Sign in to book this slot',
   'Đã đặt lịch': 'Booked',
   'Chọn gói': 'Choose a plan',
   'Gói đã mua': 'Your plan',
   'Gói miễn phí': 'Free plan',
   'Chưa có gói nào đang bán': 'No plans on sale yet',
-  'Không tải được danh sách gói. Thử lại sau.': 'Could not load the plans. Try again later.',
+  'Không tải được danh sách gói. Thử lại sau.':
+      'Could not load the plans. Try again later.',
   'Mua bằng ví': 'Pay from wallet',
   'Xác nhận mua': 'Confirm purchase',
   'Đang mua…': 'Purchasing…',
   'Mua không thành công.': 'The purchase did not go through.',
-  'Hạn mức mỗi ngày, số dư ví, mua gói': 'Daily limit, wallet balance, buy a plan',
+  'Hạn mức mỗi ngày, số dư ví, mua gói':
+      'Daily limit, wallet balance, buy a plan',
   'Số dư ví': 'Wallet balance',
   'Số dư và lịch sử giao dịch của bạn': 'Your balance and transaction history',
   'Sổ ví': 'Wallet ledger',
@@ -337,21 +359,29 @@ const Map<String, String> tuDienEn = {
   'Mở PayOS để quét VietQR hoặc chuyển khoản. Hệ thống xác nhận tự động sau khi nhận tiền.': 'Open PayOS to scan the VietQR code or transfer. Payment is confirmed automatically once received.',
   'Quét bằng ứng dụng ngân hàng — số tiền và nội dung đã điền sẵn.': 'Scan with your banking app — the amount and reference are filled in already.',
   'Không mở được trang thanh toán.': 'Could not open the payment page.',
-  'Thanh toán xong thì quay lại đây và kéo xuống để làm mới.': 'Once you have paid, come back here and pull down to refresh.',
-  'Đóng — trạng thái cập nhật ở trang Lịch hẹn': 'Close — the status updates on the Bookings page',
-  'Bạn thanh toán toàn bộ một lần, không đặt cọc.': 'You pay the full amount at once, with no deposit.',
+  'Thanh toán xong thì quay lại đây và kéo xuống để làm mới.':
+      'Once you have paid, come back here and pull down to refresh.',
+  'Đóng — trạng thái cập nhật ở trang Lịch hẹn':
+      'Close — the status updates on the Bookings page',
+  'Bạn thanh toán toàn bộ một lần, không đặt cọc.':
+      'You pay the full amount at once, with no deposit.',
   'Đây là khoản đặt cọc 50%. Sau khi Reader đọc xong, thanh toán nốt 50% còn lại.': 'This is the 50% deposit. Once the Reader is done, you pay the remaining 50%.',
-  'Đây là 50% còn lại. Reader đọc xong thì chuyển khoản nốt số này.': 'This is the remaining 50%. Transfer it once the Reader has finished.',
+  'Đây là 50% còn lại. Reader đọc xong thì chuyển khoản nốt số này.':
+      'This is the remaining 50%. Transfer it once the Reader has finished.',
   'Tên, ảnh đại diện, ngày sinh': 'Name, photo, date of birth',
   'Xem lại lời giải AI đã lưu': 'Look back at saved AI readings',
   'Kiến thức Tarot và chiêm tinh': 'Tarot and astrology knowledge',
-  'Bài Tarot, đá, phụ kiện chọn lọc': 'Hand-picked Tarot decks, crystals and accessories',
+  'Bài Tarot, đá, phụ kiện chọn lọc':
+      'Hand-picked Tarot decks, crystals and accessories',
   'Khám phá': 'Explore',
   'Gửi yêu cầu và xem phản hồi': 'Send a request and read the replies',
-  'Khảo sát ngắn — ASTROTAROT có giúp bạn không?': 'A short survey — is ASTROTAROT helping you?',
+  'Khảo sát ngắn — ASTROTAROT có giúp bạn không?':
+      'A short survey — is ASTROTAROT helping you?',
   'Nộp đơn hoặc xem trạng thái đơn': 'Apply or check your application',
-  'Nhân sự, hồ sơ Reader, báo cáo, gian hàng': 'People, Reader profiles, reports, shop',
-  'Tổng quan, tài khoản, tiền, nhật ký, sản phẩm': 'Overview, accounts, money, logs, products',
+  'Nhân sự, hồ sơ Reader, báo cáo, gian hàng':
+      'People, Reader profiles, reports, shop',
+  'Tổng quan, tài khoản, tiền, nhật ký, sản phẩm':
+      'Overview, accounts, money, logs, products',
   'Khu quản lý': 'Management area',
   'Trợ giúp': 'Help',
   'Chính sách riêng tư': 'Privacy policy',
@@ -386,45 +416,55 @@ const Map<String, String> tuDienEn = {
   'Không xử lý được liên kết này.': 'Could not process this link.',
   'Không mở được liên kết.': 'Could not open the link.',
   'Đây là liên kết xác minh email.': 'This is an email verification link.',
-  'Đây là liên kết đặt lại mật khẩu. Nhập mật khẩu mới bên dưới.': 'This is a password reset link. Enter a new password below.',
-  'Tài khoản đã được kích hoạt. Bạn có thể đăng nhập ngay.': 'Your account is now active. You can sign in right away.',
-  'Đã đặt mật khẩu mới. Đăng nhập bằng mật khẩu vừa đặt nhé.': 'New password set. Sign in with the one you just chose.',
+  'Đây là liên kết đặt lại mật khẩu. Nhập mật khẩu mới bên dưới.':
+      'This is a password reset link. Enter a new password below.',
+  'Tài khoản đã được kích hoạt. Bạn có thể đăng nhập ngay.':
+      'Your account is now active. You can sign in right away.',
+  'Đã đặt mật khẩu mới. Đăng nhập bằng mật khẩu vừa đặt nhé.':
+      'New password set. Sign in with the one you just chose.',
   'Tìm bài viết, tác giả...': 'Search articles or authors...',
   'Chưa có bài viết nào': 'No articles yet',
   'Không tìm thấy bài nào': 'No articles found',
-  'Thử một từ khoá khác, hoặc xoá ô tìm để xem tất cả.': 'Try a different keyword, or clear the search to see everything.',
+  'Thử một từ khoá khác, hoặc xoá ô tìm để xem tất cả.':
+      'Try a different keyword, or clear the search to see everything.',
   'Không tải được bài viết.': 'Could not load the article.',
   'Bài viết này chưa có nội dung.': 'This article has no content yet.',
   'Chép liên kết bài viết': 'Copy article link',
   'Đã chép liên kết bài viết.': 'Article link copied.',
   'ĐỌC TIẾP': 'READ NEXT',
   'Đọc hết': 'Read in full',
-  'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.': 'Once an article is approved and published, it shows up here.',
+  'Khi có bài được duyệt và xuất bản, bạn sẽ thấy ở đây.':
+      'Once an article is approved and published, it shows up here.',
   'Sản phẩm': 'Product',
   'Gian hàng đang trống': 'The shop is empty',
   'Chưa có sản phẩm nào được đưa lên.': 'No products have been listed yet.',
   'Không có sản phẩm phù hợp': 'No matching products',
   'Không tìm thấy sản phẩm': 'Product not found',
-  'Thử từ khoá khác hoặc bỏ bộ lọc.': 'Try another keyword or clear the filter.',
+  'Thử từ khoá khác hoặc bỏ bộ lọc.':
+      'Try another keyword or clear the filter.',
   'Không tải được gian hàng.': 'Could not load the shop.',
-  'Sản phẩm này có thể đã ngừng bán hoặc đường dẫn không đúng.': 'This product may be discontinued, or the link is wrong.',
+  'Sản phẩm này có thể đã ngừng bán hoặc đường dẫn không đúng.':
+      'This product may be discontinued, or the link is wrong.',
   'Món này chưa có liên kết mua.': 'This item has no purchase link yet.',
   'Ảnh minh hoạ': 'Illustrative photo',
-  'Ảnh mang tính minh hoạ — hàng thật có thể khác đôi chút.': 'Photo is illustrative — the real item may differ a little.',
+  'Ảnh mang tính minh hoạ — hàng thật có thể khác đôi chút.':
+      'Photo is illustrative — the real item may differ a little.',
   'Đây là những món chúng tôi chọn lọc. Bấm mua sẽ mở sàn thương mại điện tử; chúng tôi nhận hoa hồng cho mỗi đơn, còn giá bạn trả không đổi.': 'These are hand-picked. Tapping buy opens the marketplace; we earn a commission on each order, and the price you pay is unchanged.',
   'Gửi yêu cầu': 'Send request',
   'Gửi yêu cầu hỗ trợ': 'Send a support request',
   'Chưa có yêu cầu nào': 'No requests yet',
   'Gặp trục trặc gì thì gửi cho chúng tôi một yêu cầu. Nhân viên sẽ trả lời ngay trong phiếu.': 'If something goes wrong, send us a request. Staff reply right inside the ticket.',
   'Tiêu đề — vấn đề của bạn là gì?': 'Subject — what is the problem?',
-  'Mô tả cụ thể: bạn đang làm gì, thấy gì, và mong điều gì xảy ra.': 'Be specific: what you were doing, what you saw, and what you expected.',
+  'Mô tả cụ thể: bạn đang làm gì, thấy gì, và mong điều gì xảy ra.':
+      'Be specific: what you were doing, what you saw, and what you expected.',
   'Vui lòng nhập tiêu đề': 'Please enter a subject',
   'Vui lòng nhập nội dung': 'Please enter a description',
   'Tiêu đề tối đa 200 ký tự': 'Subject can be at most 200 characters',
   'Nội dung tối đa 5000 ký tự': 'Description can be at most 5000 characters',
   'Trả lời…': 'Reply…',
   'Phiếu này chưa có nội dung nào.': 'This ticket has no messages yet.',
-  'Phiếu đã đóng. Cần thêm trợ giúp thì gửi một yêu cầu mới.': 'This ticket is closed. If you need more help, send a new request.',
+  'Phiếu đã đóng. Cần thêm trợ giúp thì gửi một yêu cầu mới.':
+      'This ticket is closed. If you need more help, send a new request.',
   'Không tải được yêu cầu hỗ trợ.': 'Could not load your support requests.',
   'Không tải được nội dung phiếu.': 'Could not load the ticket.',
   'Bạn đang xem ở chế độ giám sát — tài khoản này không trả lời khách.': 'You are viewing in oversight mode — this account does not reply to customers.',
@@ -432,18 +472,36 @@ const Map<String, String> tuDienEn = {
   'ASTROTAROT có giúp bạn không?': 'Is ASTROTAROT helping you?',
   'Bạn có sẵn sàng giới thiệu ASTROTAROT cho bạn bè? (0 = không, 10 = chắc chắn)': 'How likely are you to recommend ASTROTAROT to a friend? (0 = not at all, 10 = definitely)',
   'Chọn điểm từ 0 đến 10 trước.': 'Pick a score from 0 to 10 first.',
-  'Góp ý thêm (tuỳ chọn): điều gì nên cải thiện?': 'Anything else (optional): what should we improve?',
+  'Góp ý thêm (tuỳ chọn): điều gì nên cải thiện?':
+      'Anything else (optional): what should we improve?',
   'Đánh giá trải nghiệm (tuỳ chọn)': 'Rate your experience (optional)',
-  'Cảm ơn bạn — phản hồi đã được ghi nhận.': 'Thank you — your feedback has been recorded.',
-  'Bạn đã gửi phản hồi rồi — cảm ơn bạn đã giúp chúng tôi.': 'You have already sent feedback — thank you for helping us.',
+  'Cảm ơn bạn — phản hồi đã được ghi nhận.':
+      'Thank you — your feedback has been recorded.',
+  'Bạn đã gửi phản hồi rồi — cảm ơn bạn đã giúp chúng tôi.':
+      'You have already sent feedback — thank you for helping us.',
   'Không gửi được phản hồi.': 'Could not send your feedback.',
   'Chưa có thông báo nào': 'No notifications yet',
   'Khi có người nhận lịch, nhắn tin hay thanh toán, bạn sẽ thấy ở đây.': 'When someone accepts a booking, sends a message or pays, it shows up here.',
   'Ghim lên đầu': 'Pin to top',
   'Bỏ ghim': 'Unpin',
   'Xoá thông báo': 'Delete notification',
-  'Xoá thông báo đã đọc (trừ tin ghim)': 'Delete read notifications (except pinned)',
+  'Xoá thông báo đã đọc (trừ tin ghim)':
+      'Delete read notifications (except pinned)',
   'Không tải được thông báo.': 'Could not load notifications.',
   'Không đổi được trạng thái.': 'Could not change the status.',
   'Tìm bộ bài, đá, phụ kiện...': 'Search decks, crystals, accessories...',
+
+  // ---- Mua gói qua Google Play ----
+  'Mua qua Google Play': 'Buy with Google Play',
+  'Đang lấy giá…': 'Fetching the price…',
+  'Chưa mở bán trong ứng dụng': 'Not on sale in the app yet',
+  'Không mua được': 'Cannot buy',
+  'Google đang xử lý thanh toán. Gói vào ngay khi xong.': 'Google is processing the payment. The plan arrives as soon as it clears.',
+  'Đã kích hoạt gói.': 'Your plan is active.',
+  'Thanh toán không xong.': 'The payment did not go through.',
+  'Không mở được thanh toán Google': 'Could not open Google Play billing',
+  'Bạn đang dùng gói này rồi.': 'You are already on this plan.',
+  'Bạn đang có gói tháng. Chỉ đổi lên được gói có hạn mức hoặc giá cao hơn.':
+      'You are on a monthly plan. You can only move up to a plan with a higher '
+      'quota or price.',
 };

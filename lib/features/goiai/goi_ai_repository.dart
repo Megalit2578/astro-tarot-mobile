@@ -14,6 +14,7 @@ class GoiAi {
     required this.gia,
     required this.soNgay,
     this.moTa,
+    this.maGooglePlay,
   });
 
   final String id;
@@ -26,6 +27,12 @@ class GoiAi {
   final int soNgay;
   final String? moTa;
 
+  /// Mã sản phẩm tương ứng trong Play Console.
+  ///
+  /// Null nghĩa là gói này chưa khai bên Google, nên trên Android không mua
+  /// được — giao diện phải ẩn nó đi thay vì để bấm vào rồi lỗi.
+  final String? maGooglePlay;
+
   factory GoiAi.fromJson(Map<String, dynamic> j) => GoiAi(
     id: (j['id'] ?? '').toString(),
     loai: (j['planType'] ?? 'FREE') as String,
@@ -34,6 +41,7 @@ class GoiAi {
     gia: (j['price'] as num?)?.toInt() ?? 0,
     soNgay: (j['durationDays'] as num?)?.toInt() ?? 0,
     moTa: j['description'] as String?,
+    maGooglePlay: j['googlePlayProductId'] as String?,
   );
 }
 
@@ -41,6 +49,7 @@ class GoiAi {
 class LuotMuaGoi {
   const LuotMuaGoi({
     required this.id,
+    required this.maGoi,
     required this.tenGoi,
     required this.hanMucNgay,
     required this.gia,
@@ -51,6 +60,9 @@ class LuotMuaGoi {
   });
 
   final String id;
+
+  /// Id của gói đã mua, để đối chiếu với danh sách gói đang bán.
+  final String maGoi;
   final String tenGoi;
   final int hanMucNgay;
   final int gia;
@@ -60,10 +72,19 @@ class LuotMuaGoi {
   /// ACTIVE, EXPIRED, SUPERSEDED hoặc CANCELLED.
   final String trangThai;
 
-  /// STRIPE, PAYOS, WALLET hoặc MANUAL.
+  /// STRIPE, PAYOS, WALLET, MANUAL hoặc GOOGLE_PLAY.
   final String kieuMua;
 
   bool get dangChay => trangThai == 'ACTIVE';
+
+  /// Thật sự còn hiệu lực lúc này.
+  ///
+  /// Khác [dangChay]: máy chủ chỉ đổi trạng thái sang EXPIRED khi có việc chạy
+  /// qua, nên một lượt đã hết hạn vẫn còn mang nhãn ACTIVE một lúc. Chỗ nào
+  /// quyết định cho mua hay không thì phải xem mốc hết hạn, giống hệt
+  /// `UserPlanPurchase.isActive()` bên máy chủ.
+  bool get conHieuLuc =>
+      dangChay && (ketThuc == null || ketThuc!.isAfter(DateTime.now()));
 
   /// Số ngày còn lại, 0 nếu đã hết hạn.
   int get soNgayConLai {
@@ -74,6 +95,7 @@ class LuotMuaGoi {
 
   factory LuotMuaGoi.fromJson(Map<String, dynamic> j) => LuotMuaGoi(
     id: (j['id'] ?? '').toString(),
+    maGoi: (j['planId'] ?? '').toString(),
     tenGoi: (j['planNameSnapshot'] ?? j['planName'] ?? '') as String,
     hanMucNgay: (j['dailyQuotaSnapshot'] ?? j['dailyQuota'] as num?) is num
         ? ((j['dailyQuotaSnapshot'] ?? j['dailyQuota']) as num).toInt()

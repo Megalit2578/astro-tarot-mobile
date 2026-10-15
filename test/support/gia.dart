@@ -58,10 +58,10 @@ class MayChuGia implements HttpClientAdapter {
   /// Trả `{success, message, data}` như backend thật.
   void tra(String route, dynamic data, {int ma = 200, String? message}) {
     _route[route] = (_) => TraLoi(ma, {
-          'success': ma < 400,
-          'message': message ?? (ma < 400 ? 'OK' : 'Lỗi giả'),
-          'data': data,
-        });
+      'success': ma < 400,
+      'message': message ?? (ma < 400 ? 'OK' : 'Lỗi giả'),
+      'data': data,
+    });
   }
 
   /// Trả lỗi với câu máy chủ gửi.
@@ -99,12 +99,9 @@ class MayChuGia implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     final uri = options.uri;
-    final g = LoiGoi(
-      options.method,
-      uri.path,
-      {...uri.queryParameters},
-      options.data is FormData ? '<form>' : options.data,
-    );
+    final g = LoiGoi(options.method, uri.path, {
+      ...uri.queryParameters,
+    }, options.data is FormData ? '<form>' : options.data);
     goi.add(g);
     XuLy? f = _route['${g.phuongThuc} ${g.duong}'];
     if (f == null) {
@@ -115,7 +112,8 @@ class MayChuGia implements HttpClientAdapter {
         }
       }
     }
-    final tl = f?.call(g) ??
+    final tl =
+        f?.call(g) ??
         TraLoi(404, {
           'success': false,
           'message': 'Không có route giả: ${g.phuongThuc} ${g.duong}',
@@ -176,10 +174,11 @@ class AuthGia extends AuthController {
 
   @override
   AuthState build() => AuthState(
-        trangThai:
-            u == null ? TrangThaiPhien.chuaDangNhap : TrangThaiPhien.daDangNhap,
-        user: u,
-      );
+    trangThai: u == null
+        ? TrangThaiPhien.chuaDangNhap
+        : TrangThaiPhien.daDangNhap,
+    user: u,
+  );
 }
 
 /// Người dùng mẫu theo vai trò, quyền khớp CustomUserDetails của backend.
@@ -196,21 +195,46 @@ AppUser nguoiDung({
   const bang = {
     'USER': ['USER_BASIC', 'CUSTOMER_ACTIONS', 'READER_APPLY'],
     'STAFF': [
-      'USER_BASIC', 'READER_APPLY', 'READER_MANAGE_PROFILE', 'SUPPORT_VIEW',
-      'SUPPORT_RESPOND', 'PAYOUT_REQUEST', 'ADMIN_READERS_VIEW',
-      'ADMIN_READERS_REVIEW', 'BLOG_CREATE',
+      'USER_BASIC',
+      'READER_APPLY',
+      'READER_MANAGE_PROFILE',
+      'SUPPORT_VIEW',
+      'SUPPORT_RESPOND',
+      'PAYOUT_REQUEST',
+      'ADMIN_READERS_VIEW',
+      'ADMIN_READERS_REVIEW',
+      'BLOG_CREATE',
     ],
     'MANAGER': [
-      'USER_BASIC', 'SUPPORT_VIEW', 'STAFF_VIEW', 'STAFF_MANAGE',
-      'ADMIN_READERS_VIEW', 'ADMIN_READERS_REVIEW', 'REPORT_REVIEW',
-      'BLOG_CREATE', 'BLOG_REVIEW', 'CATALOG_MANAGE',
+      'USER_BASIC',
+      'SUPPORT_VIEW',
+      'STAFF_VIEW',
+      'STAFF_MANAGE',
+      'ADMIN_READERS_VIEW',
+      'ADMIN_READERS_REVIEW',
+      'REPORT_REVIEW',
+      'BLOG_CREATE',
+      'BLOG_REVIEW',
+      'CATALOG_MANAGE',
     ],
     'ADMIN': [
-      'USER_BASIC', 'READER_MANAGE_PROFILE', 'SUPPORT_VIEW', 'SUPPORT_RESPOND',
-      'STAFF_VIEW', 'STAFF_MANAGE', 'ADMIN_READERS_VIEW',
-      'ADMIN_READERS_REVIEW', 'BLOG_CREATE', 'BLOG_REVIEW', 'CATALOG_MANAGE',
-      'ORDERS_MANAGE', 'USERS_MANAGE', 'AUDIT_VIEW', 'PAYMENTS_MANAGE',
-      'PAYOUT_REVIEW', 'REPORT_REVIEW',
+      'USER_BASIC',
+      'READER_MANAGE_PROFILE',
+      'SUPPORT_VIEW',
+      'SUPPORT_RESPOND',
+      'STAFF_VIEW',
+      'STAFF_MANAGE',
+      'ADMIN_READERS_VIEW',
+      'ADMIN_READERS_REVIEW',
+      'BLOG_CREATE',
+      'BLOG_REVIEW',
+      'CATALOG_MANAGE',
+      'ORDERS_MANAGE',
+      'USERS_MANAGE',
+      'AUDIT_VIEW',
+      'PAYMENTS_MANAGE',
+      'PAYOUT_REVIEW',
+      'REPORT_REVIEW',
     ],
   };
   return AppUser.fromJson({
@@ -244,9 +268,9 @@ class LauncherGia extends UrlLauncherPlatform {
 /// Mọi thứ một test màn hình cần.
 class MoiTruong {
   MoiTruong({this.user, List<String>? token})
-      : mayChu = MayChuGia(),
-        realtime = RealtimeGia(),
-        launcher = LauncherGia() {
+    : mayChu = MayChuGia(),
+      realtime = RealtimeGia(),
+      launcher = LauncherGia() {
     FlutterSecureStorage.setMockInitialValues({
       if (token != null) ...{
         'astrotarot_access_token': token[0],
@@ -273,12 +297,12 @@ class MoiTruong {
 
   /// [thatAuth]: dùng AuthController thật (màn đăng nhập, khởi động app).
   List overrides({bool thatAuth = false}) => [
-        tokenStoreProvider.overrideWithValue(store),
-        apiClientProvider.overrideWithValue(api),
-        realtimeProvider.overrideWithValue(realtime),
-        timDiaDanhProvider.overrideWithValue((q) async => diaDanh),
-        if (!thatAuth) authControllerProvider.overrideWith(() => AuthGia(user)),
-      ];
+    tokenStoreProvider.overrideWithValue(store),
+    apiClientProvider.overrideWithValue(api),
+    realtimeProvider.overrideWithValue(realtime),
+    timDiaDanhProvider.overrideWithValue((q) async => diaDanh),
+    if (!thatAuth) authControllerProvider.overrideWith(() => AuthGia(user)),
+  ];
 
   /// Nội dung clipboard giả.
   String? clipboard;
@@ -294,6 +318,7 @@ class MoiTruong {
     bool thatAuth = false,
     bool quaDuong = false,
     Size co = const Size(420, 900),
+    List<dynamic> them = const [],
   }) async {
     tester.view.physicalSize = co;
     tester.view.devicePixelRatio = 1;
@@ -319,26 +344,33 @@ class MoiTruong {
         key: UniqueKey(),
         // Tắt tự thử lại: test cần thấy lỗi ngay, không chờ backoff.
         retry: (_, _) => null,
-        overrides: [...overrides(thatAuth: thatAuth)],
-        child: Consumer(builder: (context, ref, _) {
-          c = ProviderScope.containerOf(context);
-          return MaterialApp(
-            theme: buildTheme(),
-            home: quaDuong
-                ? Builder(
-                    builder: (ctx) => Scaffold(
-                      body: Center(
-                        child: TextButton(
-                          onPressed: () => Navigator.of(ctx)
-                              .push(MaterialPageRoute(builder: (_) => man)),
-                          child: const Text('MỞ MÀN'),
+        // [them] đặt SAU để test ghi đè được phần dựng sẵn — dùng cho những
+        // provider không chặn được ở tầng HTTP, như giá lấy từ Google Play.
+        overrides: [
+          ...overrides(thatAuth: thatAuth),
+          ...them,
+        ],
+        child: Consumer(
+          builder: (context, ref, _) {
+            c = ProviderScope.containerOf(context);
+            return MaterialApp(
+              theme: buildTheme(),
+              home: quaDuong
+                  ? Builder(
+                      builder: (ctx) => Scaffold(
+                        body: Center(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(ctx)
+                                .push(MaterialPageRoute(builder: (_) => man)),
+                            child: const Text('MỞ MÀN'),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : man,
-          );
-        }),
+                    )
+                  : man,
+            );
+          },
+        ),
       ),
     );
     await xong(tester);
@@ -365,15 +397,19 @@ Future<void> xong(WidgetTester tester, {int lan = 12}) async {
 Future<void> cuonToi(WidgetTester tester, Finder f) async {
   if (_coThay(f)) return;
   final doc = find.byWidgetPredicate(
-      (w) => w is Scrollable && w.axisDirection == AxisDirection.down);
+    (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+  );
   for (final e in doc.evaluate().toList()) {
     // Thử cuộn xuống trước, rồi cuộn lên — thứ cần tìm có thể ở phía trên
     // nếu trước đó test đã cuộn danh sách xuống.
     for (final buoc in const [250.0, -250.0]) {
       try {
-        await tester.scrollUntilVisible(f, buoc,
-            scrollable: find.byElementPredicate((x) => x == e),
-            maxScrolls: 40);
+        await tester.scrollUntilVisible(
+          f,
+          buoc,
+          scrollable: find.byElementPredicate((x) => x == e),
+          maxScrolls: 40,
+        );
         return;
       } catch (_) {
         // Không thấy theo chiều này / trong danh sách này — thử tiếp.
@@ -421,14 +457,17 @@ Future<void> bam(WidgetTester tester, Finder f) async {
 }
 
 /// Một trang Spring rỗng/đầy.
-Map<String, dynamic> trang(List<Map<String, dynamic>> muc,
-        {int so = 0, int tongTrang = 1, int? tong}) =>
-    {
-      'content': muc,
-      'number': so,
-      'totalPages': tongTrang,
-      'totalElements': tong ?? muc.length,
-    };
+Map<String, dynamic> trang(
+  List<Map<String, dynamic>> muc, {
+  int so = 0,
+  int tongTrang = 1,
+  int? tong,
+}) => {
+  'content': muc,
+  'number': so,
+  'totalPages': tongTrang,
+  'totalElements': tong ?? muc.length,
+};
 
 /// Chọn một mục trong ô lọc trạng thái (`LocTrangThai`).
 ///
