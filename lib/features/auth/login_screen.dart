@@ -62,6 +62,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .dangNhap(_email.text, _matKhau.text);
   }
 
+  Future<void> _guiGoogle() async {
+    // Không kiểm form: đăng nhập Google không cần email hay mật khẩu, bắt
+    // điền trước là chặn đúng người muốn tránh phải điền.
+    FocusScope.of(context).unfocus();
+    await ref.read(authControllerProvider.notifier).dangNhapBangGoogle();
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
@@ -188,6 +195,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(Ngu.d('Đăng nhập')),
+                    ),
+
+                    // Đăng nhập Google. Để NGAY dưới nút chính, trước những
+                    // lối phụ: người đã có tài khoản Google bấm vào đây là
+                    // xong, không phải nhớ mật khẩu nào cả.
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            Ngu.d('hoặc'),
+                            style: TextStyle(color: Mau.chuMo, fontSize: 12),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      onPressed: auth.dangXuLy ? null : _guiGoogle,
+                      icon: const Icon(Icons.g_mobiledata, size: 26),
+                      label: Text(Ngu.d('Tiếp tục với Google')),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        side: BorderSide(color: Mau.vien),
+                      ),
                     ),
                     const SizedBox(height: 14),
                     // Xem Reader không cần đăng nhập — endpoint /api/v1/readers

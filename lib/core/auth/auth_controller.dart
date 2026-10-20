@@ -4,6 +4,7 @@ import '../api/api_client.dart';
 import '../api/endpoints.dart';
 import '../api/token_store.dart';
 import '../theo_doi.dart';
+import 'dang_nhap_google.dart';
 import '../realtime/realtime_client.dart';
 import 'app_user.dart';
 
@@ -130,6 +131,36 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  /// Đăng nhập bằng Google.
+  ///
+  /// Dùng chung phần "vào phiên" với [dangNhap] — máy chủ trả về đúng một
+  /// kiểu phản hồi cho cả hai lối, nên không có lý do gì xử lý khác nhau.
+  ///
+  /// Người dùng bấm huỷ KHÔNG phải lỗi: không đặt câu lỗi đỏ, chỉ tắt trạng
+  /// thái đang xử lý rồi để họ ở nguyên màn đăng nhập.
+  Future<bool> dangNhapBangGoogle() async {
+    state = state.copy(dangXuLy: true, xoaLoi: true);
+    try {
+      final data = await ref.read(dangNhapGoogleProvider).dangNhap();
+      await _store.luu(
+        data['accessToken'] as String,
+        data['refreshToken'] as String,
+      );
+      _vaoPhien(AppUser.fromJson(data));
+      return true;
+    } on LoiDangNhapGoogle catch (e) {
+      final huy = e.message.contains('huỷ');
+      state = state.copy(dangXuLy: false, loi: huy ? null : e.message);
+      return false;
+    } on ApiException catch (e) {
+      state = state.copy(dangXuLy: false, loi: e.message);
+      return false;
+    } catch (_) {
+      state = state.copy(dangXuLy: false, loi: 'Không đăng nhập được bằng Google.');
+      return false;
+    }
+  }
+
   /// Đăng ký. **Không** trả token — tài khoản phải xác minh email đã.
   ///
   /// Trả về câu cần nói với người dùng, hoặc ném [ApiException].
@@ -235,6 +266,10 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> _donPhien() async {
     ref.read(realtimeProvider).ngat();
+    // Quên tài khoản Google đã chọn. Không quên thì lần sau bấm "Tiếp tục
+    // với Google" là vào thẳng tài khoản cũ mà không được hỏi — đúng thứ gây
+    // hoang mang khi máy dùng chung.
+    await ref.read(dangNhapGoogleProvider).quenTaiKhoan();
     await _store.xoa();
     state = const AuthState(trangThai: TrangThaiPhien.chuaDangNhap);
   }

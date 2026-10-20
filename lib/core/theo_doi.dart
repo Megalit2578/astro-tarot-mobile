@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api/api_client.dart';
 import 'api/endpoints.dart';
 import 'auth/auth_controller.dart';
+import 'ma_khach.dart';
 
 /// Ghi lại việc người dùng vừa LÀM, để biết khách đến từ kênh nào thì làm gì.
 ///
@@ -31,9 +32,17 @@ import 'auth/auth_controller.dart';
 /// Theo dõi là việc phụ. Mạng rớt, máy chủ ngủ, token hết hạn — không được
 /// phép làm hỏng thao tác người dùng vừa làm, và càng không được hiện lỗi.
 class TheoDoi {
-  const TheoDoi(this._api);
+  const TheoDoi(this._api, this._maKhach);
 
   final ApiClient _api;
+  final MaKhach _maKhach;
+
+  /// Ghi một lượt XEM MÀN HÌNH.
+  ///
+  /// Vì sao cần, dù đã có [ghi]: [ghi] chỉ chạy khi người dùng làm xong một
+  /// việc cụ thể. Ai mở app, lướt vài màn rồi thoát — phần lớn phiên thật —
+  /// không để lại dòng nào, nên hành trình của họ trống trơn.
+  void xemMan(String tenMan) => ghi('xem_man', kem: {'man': tenMan});
 
   /// Gọi SAU khi việc đó đã thành công.
   ///
@@ -52,6 +61,10 @@ class TheoDoi {
         body: {
           'eventName': ten,
           'path': 'app:$ten',
+          // Nối các hành động của cùng một người. Rỗng thì máy chủ ghi NULL
+          // và riêng hành trình của khách ấy không dựng được — mọi thứ khác
+          // vẫn chạy.
+          'visitorId': _maKhach.ma,
           'metadata': kem == null ? null : jsonEncode(kem),
         },
       );
@@ -61,6 +74,9 @@ class TheoDoi {
   }
 }
 
+/// Mã khách dùng chung cho cả app — một bản duy nhất, nạp một lần.
+final maKhachProvider = Provider<MaKhach>((ref) => MaKhach());
+
 final theoDoiProvider = Provider<TheoDoi>(
-  (ref) => TheoDoi(ref.read(apiClientProvider)),
+  (ref) => TheoDoi(ref.read(apiClientProvider), ref.read(maKhachProvider)),
 );
