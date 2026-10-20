@@ -12,6 +12,8 @@ import '../bookings/bookings_repository.dart';
 import '../bookings/bookings_screen.dart';
 import '../bookings/nut_chat_noi.dart';
 import '../home/home_screen.dart';
+import '../khuyenmai/khuyen_mai_repository.dart';
+import '../khuyenmai/loi_chuc_dip_le.dart';
 import '../money/money_repository.dart';
 import '../notifications/notifications_screen.dart';
 import '../readers/readers_screen.dart';
@@ -49,6 +51,7 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _chon = 0;
   VoidCallback? _huyNgheSuKien;
+  VoidCallback? _huyNgheKhuyenMai;
 
   @override
   void initState() {
@@ -82,11 +85,29 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         ref.invalidate(ticketsCuaToiProvider);
       }
     });
+
+    // Lời chúc dịp lễ. Đặt ở KHUNG chứ không ở một màn cụ thể: người dùng
+    // vào app rơi vào tab nào là tuỳ vai trò, gắn vào một màn thì Reader và
+    // Nhân viên không bao giờ thấy.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      hienLoiChucNeuCo(context, ref);
+    });
+
+    // Quản trị vừa tạo đợt mới thì người đang mở app cũng thấy giá đổi theo.
+    _huyNgheKhuyenMai = ref.read(realtimeProvider).nghe('/topic/khuyen-mai', (
+      _,
+    ) {
+      if (!mounted) return;
+      ref.invalidate(giaGoiProvider);
+      ref.invalidate(khuyenMaiDangChayProvider);
+    });
   }
 
   @override
   void dispose() {
     _huyNgheSuKien?.call();
+    _huyNgheKhuyenMai?.call();
     super.dispose();
   }
 

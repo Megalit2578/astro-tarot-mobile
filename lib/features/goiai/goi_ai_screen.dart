@@ -10,6 +10,7 @@ import '../../core/format.dart';
 import '../../core/ngon_ngu.dart';
 import '../../theme.dart';
 import '../../widgets/trang_thai.dart';
+import '../khuyenmai/khuyen_mai_repository.dart';
 import 'goi_ai_repository.dart';
 import 'google_billing.dart';
 import 'vi_repository.dart';
@@ -387,16 +388,22 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
     final g = widget.goi;
     final soDu = ref.read(viCuaToiProvider).asData?.value.soDu ?? 0;
 
+    // Giá SAU khuyến mãi — đúng con số máy chủ sẽ trừ. Dùng giá niêm yết ở
+    // đây thì câu "thiếu bao nhiêu" báo nhầm, và người dùng đi nạp thêm tiền
+    // trong khi ví đã đủ trả.
+    final giam = ref.read(giaGoiProvider).asData?.value[g.id];
+    final giaPhaiTra = giam?.coGiam == true ? giam!.giaCuoi : g.gia;
+
     // Chặn ở đây thay vì để máy chủ trả lỗi: câu "số dư không đủ" nói rõ còn
     // thiếu bao nhiêu thì người dùng biết phải nạp bao nhiêu, còn lỗi từ máy
     // chủ chỉ nói là thất bại.
-    if (soDu < g.gia) {
+    if (soDu < giaPhaiTra) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Số dư còn ${Dinh.tien(soDu)}, thiếu '
-            '${Dinh.tien(g.gia - soDu)} để mua ${g.ten}.',
+            '${Dinh.tien(giaPhaiTra - soDu)} để mua ${g.ten}.',
           ),
         ),
       );
@@ -409,9 +416,9 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
         backgroundColor: Mau.the,
         title: Text(Ngu.d('Xác nhận mua')),
         content: Text(
-          'Mua ${g.ten} với giá ${Dinh.tien(g.gia)}?\n\n'
+          'Mua ${g.ten} với giá ${Dinh.tien(giaPhaiTra)}?\n\n'
           'Tiền trừ thẳng từ số dư ví. Sau khi mua, số dư còn '
-          '${Dinh.tien(soDu - g.gia)}.',
+          '${Dinh.tien(soDu - giaPhaiTra)}.',
         ),
         actions: [
           TextButton(
@@ -462,7 +469,14 @@ class _TheGoiState extends ConsumerState<_TheGoi> {
     // Google bắt hiện đúng con số thư viện trả về — đã gồm thuế và đúng tiền
     // tệ từng nước — và con số ấy chỉnh ở Play Console. Giá trên app cao hơn
     // giá web vì Google thu hoa hồng mỗi lượt mua.
-    final gia = sp?.price ?? Dinh.tien(g.gia);
+    //
+    // Hệ quả: KHUYẾN MÃI KHÔNG ÁP ĐƯỢC cho lối mua qua Google. Máy chủ không
+    // đổi được giá bên Play, nên hiện giá đã giảm ở đây là nói dối — khách
+    // bấm vào rồi Google vẫn thu đúng giá niêm yết. Giảm giá trên Android
+    // phải đặt bên Play Console.
+    final giam = ref.watch(giaGoiProvider).asData?.value[g.id];
+    final coGiamQuaVi = !nenDungGooglePlay && (giam?.coGiam ?? false);
+    final gia = sp?.price ?? Dinh.tien(coGiamQuaVi ? giam!.giaCuoi : g.gia);
 
     final String nhan;
     final VoidCallback? bam;
