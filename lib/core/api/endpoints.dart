@@ -105,6 +105,12 @@ class Endpoints {
   /// Đánh giá là POST, khác bốn hành động PATCH ở trên.
   static String bookingReview(String id) => '/api/v1/bookings/$id/review';
 
+  /// Đổi ID token của Google lấy token của hệ thống.
+  ///
+  /// Tiền tố `/api/auth`, KHÔNG có `/v1` — cùng nhóm với
+  /// `OAuthExchangeController` bên web. Xem bảng năm quy ước ở đầu tệp.
+  static const googleMobile = '/api/auth/oauth/google/mobile';
+
   // ---- Khuyến mãi dịp lễ ----
   /// Đợt đang chạy. Khách chưa đăng nhập cũng gọi được.
   static const khuyenMaiDangChay = '/api/v1/khuyen-mai/dang-chay';

@@ -50,6 +50,7 @@ dependencies:
   # của Google xếp nội dung số dùng trong app vào diện phải dùng Play Billing,
   # và Việt Nam không có cửa thanh toán thay thế nào.
   in_app_purchase: ^3.2.4
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:

@@ -6,6 +6,7 @@ import '../../core/auth/app_user.dart';
 import '../../core/ngon_ngu.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/realtime/dinh_tuyen_su_kien.dart';
+import '../../core/theo_doi.dart';
 import '../../theme.dart';
 import '../account/account_screen.dart';
 import '../bookings/bookings_repository.dart';
@@ -86,6 +87,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       }
     });
 
+    // Nạp mã khách rồi ghi lượt mở app. Nạp TRƯỚC khi ghi: mã đọc từ
+    // Keystore nên chưa sẵn ngay, và sự kiện gửi lúc chưa có mã thì máy chủ
+    // ghi NULL, hành trình của phiên này không nối được với phiên sau.
+    ref.read(maKhachProvider).nap().then((_) {
+      if (!mounted) return;
+      ref.read(theoDoiProvider).xemMan('mo_app');
+    });
+
     // Lời chúc dịp lễ. Đặt ở KHUNG chứ không ở một màn cụ thể: người dùng
     // vào app rơi vào tab nào là tuỳ vai trò, gắn vào một màn thì Reader và
     // Nhân viên không bao giờ thấy.
@@ -154,7 +163,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       floatingActionButton: const NutChatNoi(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: chon,
-        onDestinationSelected: (i) => setState(() => _chon = i),
+        onDestinationSelected: (i) {
+          setState(() => _chon = i);
+          // Ghi tên tab, không ghi chỉ số: số thứ tự đổi theo vai trò (Reader
+          // có thêm Bàn làm việc), nên "tab 2" của người này không cùng màn
+          // với "tab 2" của người kia.
+          ref.read(theoDoiProvider).xemMan(tabs[i].nhan);
+        },
         destinations: [
           for (final t in tabs)
             NavigationDestination(
