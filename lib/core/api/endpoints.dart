@@ -105,6 +105,16 @@ class Endpoints {
   /// Đánh giá là POST, khác bốn hành động PATCH ở trên.
   static String bookingReview(String id) => '/api/v1/bookings/$id/review';
 
+  // ---- Khuyến mãi dịp lễ ----
+  /// Đợt đang chạy. Khách chưa đăng nhập cũng gọi được.
+  static const khuyenMaiDangChay = '/api/v1/khuyen-mai/dang-chay';
+
+  /// Giá sau giảm của mọi gói, khoá là id gói. Máy chủ tính, app chỉ hiện.
+  static const khuyenMaiGiaGoi = '/api/v1/khuyen-mai/gia-goi';
+
+  /// POST chứ không GET: lượt gọi này ĐÁNH DẤU đã xem.
+  static const khuyenMaiLoiChuc = '/api/v1/khuyen-mai/loi-chuc';
+
   /// Ghi lại việc người dùng vừa làm — dựng bảng "khách đến từ đâu, rồi làm
   /// gì" ở trang quản trị. Khách chưa đăng nhập cũng gọi được.
   static const marketingEvents = '/api/v1/marketing/events';
