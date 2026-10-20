@@ -105,6 +105,10 @@ class Endpoints {
   /// Đánh giá là POST, khác bốn hành động PATCH ở trên.
   static String bookingReview(String id) => '/api/v1/bookings/$id/review';
 
+  /// Ghi lại việc người dùng vừa làm — dựng bảng "khách đến từ đâu, rồi làm
+  /// gì" ở trang quản trị. Khách chưa đăng nhập cũng gọi được.
+  static const marketingEvents = '/api/v1/marketing/events';
+
   /// Kênh sự kiện chung (thông báo). Khác hai hàng đợi của buổi tư vấn.
   static const queueEvents = '/user/queue/events';
 

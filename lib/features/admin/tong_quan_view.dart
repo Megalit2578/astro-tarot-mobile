@@ -58,6 +58,7 @@ class TongQuanView extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
           children: [
             LuoiSoLieu(o: _kpi(s)),
+            if (s.coKhoi('tongQuan')) ..._soLieuChinh(s),
             if (s.coKhoi('traction')) ..._traction(s),
             if (s.coKhoi('revenue')) ..._doanhThu(s),
             BieuDoThanh(
@@ -175,6 +176,54 @@ class TongQuanView extends ConsumerWidget {
           so: dinhSo(s.so('subscriptions', 'activeNow')),
           goiY: '${dinhSo(s.so('subscriptions', 'plansOnSale'))} gói đang bán',
         ),
+    ];
+  }
+
+  /// Bốn con số hay bị hỏi nhất, mỗi ô ghi rõ nó ĐẾM CÁI GÌ.
+  ///
+  /// Chỗ gây hiểu nhầm không phải con số mà là cái tên. "Giao dịch" với
+  /// "người trả phí" nghe như nhau nhưng lệch nhau vài lần, vì một người nạp
+  /// ví ba lần vẫn là một người. Và "Đánh giá" trước đây chỉ một lúc hai thứ
+  /// khác hẳn: sao khách chấm cho Reader sau buổi xem, với phiếu góp ý về sản
+  /// phẩm — cộng lại là cộng táo với cam.
+  ///
+  /// Số lớn là tổng, gồm cả dữ liệu gieo sẵn để demo; gợi ý bên dưới tách
+  /// riêng phần không phải seed, để lúc cần thì có sẵn.
+  List<Widget> _soLieuChinh(ThongKe s) {
+    String khongSeed(String truong) =>
+        'Không tính seed: ${dinhSo(s.so('tongQuan', truong))}';
+    String tienKhongSeed(String truong) =>
+        'Không tính seed: ${Dinh.tien(s.so('tongQuan', truong))}';
+
+    return [
+      const TieuDeKhoi('Số liệu chính'),
+      LuoiSoLieu(o: [
+        OSoLieu(
+          nhan: 'Doanh thu',
+          so: Dinh.tien(s.so('tongQuan', 'doanhThu')),
+          goiY: tienKhongSeed('doanhThuThat'),
+        ),
+        OSoLieu(
+          nhan: 'Số lượng giao dịch',
+          so: dinhSo(s.so('tongQuan', 'soGiaoDich')),
+          goiY: khongSeed('soGiaoDichThat'),
+        ),
+        OSoLieu(
+          nhan: 'Người dùng trả phí',
+          so: dinhSo(s.so('tongQuan', 'nguoiTraPhi')),
+          goiY: khongSeed('nguoiTraPhiThat'),
+        ),
+        OSoLieu(
+          nhan: 'Đánh giá Reader',
+          so: dinhSo(s.so('tongQuan', 'danhGiaReader')),
+          goiY: khongSeed('danhGiaReaderThat'),
+        ),
+        OSoLieu(
+          nhan: 'Góp ý sản phẩm',
+          so: dinhSo(s.so('tongQuan', 'gopYKhaoSat')),
+          goiY: khongSeed('gopYKhaoSatThat'),
+        ),
+      ]),
     ];
   }
 

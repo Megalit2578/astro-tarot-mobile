@@ -1,4 +1,5 @@
 import '../../core/ngon_ngu.dart';
+import '../../core/theo_doi.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -88,6 +89,8 @@ class _ReaderDetailScreenState extends ConsumerState<ReaderDetailScreen> {
       final b = await ref
           .read(bookingsRepositoryProvider)
           .dat(readerProfileId: widget.readerId, batDau: s.batDau, phut: _phut);
+      ref.read(theoDoiProvider).ghi('dat_lich_reader', kem: {'phut': _phut});
+
       // Danh sách lịch hẹn giờ đã cũ.
       ref.invalidate(myBookingsProvider);
       ref.invalidate(lichThangProvider);
