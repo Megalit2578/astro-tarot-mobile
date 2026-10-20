@@ -1,4 +1,5 @@
 import '../../core/ngon_ngu.dart';
+import '../../core/theo_doi.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,6 +73,10 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             kieuTrai: _kieu.firstWhere((k) => k.so == _soLa).ten,
             coNguoc: _coNguoc,
           );
+      // Ghi sau khi máy chủ trả bài: đếm lượt rút THÀNH CÔNG, không đếm
+      // những lần hết hạn mức hay mạng rớt giữa chừng.
+      ref.read(theoDoiProvider).ghi('rut_bai_tarot', kem: {'so_la': _soLa});
+
       if (!mounted) return;
       setState(() => _ketQua = kq);
       // Form chiếm gần hết màn điện thoại; không cuộn thì kết quả nằm dưới

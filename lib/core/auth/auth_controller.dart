@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../api/endpoints.dart';
 import '../api/token_store.dart';
+import '../theo_doi.dart';
 import '../realtime/realtime_client.dart';
 import 'app_user.dart';
 
@@ -147,6 +148,10 @@ class AuthController extends Notifier<AuthState> {
         'fullName': hoTen.trim(),
       },
     );
+    // Mốc quan trọng nhất của phễu: từ người xem thành người có tài khoản.
+    // Ghi SAU khi máy chủ nhận, để không đếm những lần điền sai.
+    ref.read(theoDoiProvider).ghi('dang_ky_tai_khoan');
+
     final daGui = data['verificationEmailSent'] == true;
     return daGui
         ? 'Đã gửi thư xác minh tới ${email.trim()}. Mở thư và bấm liên kết '

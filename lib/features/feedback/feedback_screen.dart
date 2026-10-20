@@ -1,4 +1,5 @@
 import '../../core/ngon_ngu.dart';
+import '../../core/theo_doi.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,6 +82,8 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
               'utmSource': 'mobile_app',
             },
           );
+      ref.read(theoDoiProvider).ghi('gui_gop_y', kem: {'nps': _nps, 'sao': _sao});
+
       ref.invalidate(tinhTrangGopYProvider);
       if (!mounted) return;
       baoTin(context, Ngu.d('Cảm ơn bạn — phản hồi đã được ghi nhận.'));

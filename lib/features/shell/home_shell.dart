@@ -5,14 +5,18 @@ import '../../core/api/endpoints.dart';
 import '../../core/auth/app_user.dart';
 import '../../core/ngon_ngu.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/realtime/dinh_tuyen_su_kien.dart';
 import '../../theme.dart';
 import '../account/account_screen.dart';
+import '../bookings/bookings_repository.dart';
 import '../bookings/bookings_screen.dart';
 import '../bookings/nut_chat_noi.dart';
 import '../home/home_screen.dart';
+import '../money/money_repository.dart';
 import '../notifications/notifications_screen.dart';
 import '../readers/readers_screen.dart';
 import '../staff/staff_screen.dart';
+import '../support/support_repository.dart';
 import '../tarot/tarot_screen.dart';
 
 /// Một mục trên thanh điều hướng.
@@ -54,11 +58,29 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     // màn thông báo thì nó chỉ chạy đúng lúc màn ấy đang mở — tức là đúng lúc
     // không cần nữa.
     _huyNgheSuKien = ref.read(realtimeProvider).nghe(Endpoints.queueEvents, (
-      _,
+      goi,
     ) {
       if (!mounted) return;
+      // Gói tin phải được ĐỌC, không phải vứt đi. Trước đây chỗ này nhận `_`
+      // rồi chỉ làm mới chuông, nên tiền về ví mà số dư vẫn là số cũ, Reader
+      // xác nhận lịch mà danh sách không đổi — người dùng thấy thông báo
+      // hiện lên rồi tưởng app hỏng.
       ref.invalidate(soChuaDocProvider);
       ref.read(thucThongBaoProvider.notifier).thuc();
+
+      final phan = phanDaCu(goi);
+      if (phan.contains(PhanDuLieu.lichHen)) {
+        ref.invalidate(myBookingsProvider);
+        ref.invalidate(readerBookingsProvider);
+      }
+      if (phan.contains(PhanDuLieu.tien)) {
+        ref.invalidate(soDuProvider);
+        ref.invalidate(giaoDichProvider);
+        ref.invalidate(yeuCauRutProvider);
+      }
+      if (phan.contains(PhanDuLieu.hoTro)) {
+        ref.invalidate(ticketsCuaToiProvider);
+      }
     });
   }
 
