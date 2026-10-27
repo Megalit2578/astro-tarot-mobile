@@ -9,6 +9,7 @@ import '../blog/duyet_bai_view.dart';
 import 'admin_repository.dart';
 import 'hang_cho_views.dart';
 import 'nhat_ky_view.dart';
+import 'gop_y_view.dart';
 import 'phan_quyen_view.dart';
 import 'san_pham_admin_view.dart';
 import 'tai_khoan_view.dart';
@@ -63,6 +64,9 @@ List<MucQuanTri> mucQuanTri(AppUser u) {
     // tôi" ở đây là hai lối tới cùng một màn.
     if (u.co('BLOG_REVIEW'))
       MucQuanTri('Duyệt bài', () => const DuyetBaiView()),
+    // Cùng điều kiện với /api/v1/admin/feedback — xem AdminFeedbackController.
+    if (quanTriVien || u.co('AUDIT_VIEW'))
+      MucQuanTri('Đánh giá & Góp ý', () => const GopYView()),
     if (u.co('AUDIT_VIEW'))
       MucQuanTri('Nhật ký', () => const NhatKyView()),
     if (quanTriVien)

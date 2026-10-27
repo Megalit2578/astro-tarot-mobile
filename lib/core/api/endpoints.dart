@@ -153,6 +153,7 @@ class Endpoints {
   static String adminUserResendVerification(String id) =>
       '/api/v1/admin/users/$id/resend-verification';
   static const adminActivityLogs = '/api/v1/admin/activity-logs';
+  static const adminFeedback = '/api/v1/admin/feedback';
   static const adminReaderApplications = '/api/v1/admin/readers/applications';
   static String adminReaderReview(String applicationId) =>
       '/api/v1/admin/readers/$applicationId/review';

@@ -1,6 +1,5 @@
 import 'package:astrotarot_mobile/features/bookings/lich_va_danh_sach.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/gia.dart';
