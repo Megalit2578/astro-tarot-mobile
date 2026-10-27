@@ -42,7 +42,29 @@ class TheoDoi {
   /// Vì sao cần, dù đã có [ghi]: [ghi] chỉ chạy khi người dùng làm xong một
   /// việc cụ thể. Ai mở app, lướt vài màn rồi thoát — phần lớn phiên thật —
   /// không để lại dòng nào, nên hành trình của họ trống trơn.
+  ///
+  /// [tenMan] là NHÃN NGƯỜI ĐỌC ĐƯỢC, đúng chữ người dùng thấy trên thanh
+  /// điều hướng ("Tài khoản", "Bàn làm việc"), vì nó được in thẳng ra bảng
+  /// "Hành trình người dùng" ở trang quản trị. Đừng truyền khoá thô kiểu
+  /// `mo_app` hay `tab_account`: trang quản trị không có bảng tra nào để dịch
+  /// lại, nên người đọc báo cáo nhận đúng cái khoá ấy giữa màn.
+  ///
+  /// Và chỉ dùng cho MÀN THẬT. Một sự kiện không phải lượt xem màn thì gọi
+  /// [ghi] với tên riêng của nó — xem [moApp].
   void xemMan(String tenMan) => ghi('xem_man', kem: {'man': tenMan});
+
+  /// Ghi lượt MỞ APP.
+  ///
+  /// Vì sao không gọi [xemMan]: mở app không phải một màn hình. Chỗ này từng
+  /// gọi `xemMan('mo_app')`, nên bảng "Hành trình người dùng" in ra dòng
+  /// "Xem màn mo_app" — sai hai lần: vừa không phải lượt xem màn, vừa là khoá
+  /// thô lọt ra trước mặt người đọc báo cáo. Bên web đã phải dựng một bảng
+  /// đổi tên để che chỗ ấy, tức là nuôi một nguồn-thứ-hai cho thứ đáng ra chỉ
+  /// cần gửi đúng từ đây.
+  ///
+  /// Cố ý KHÔNG kèm `man`: chính việc thiếu trường ấy là thứ phân biệt "mở
+  /// app" với một lượt xem màn, ở cả hai phía.
+  void moApp() => ghi('mo_app');
 
   /// Gọi SAU khi việc đó đã thành công.
   ///

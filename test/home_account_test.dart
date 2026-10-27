@@ -118,6 +118,44 @@ void main() {
       expect(find.text('Lan Hương'), findsOneWidget);
     });
 
+    testWidgets('mở app ghi mo_app, không ghi như một lượt xem màn', (t) async {
+      // Mở app KHÔNG phải một màn hình. Chỗ này từng gọi `xemMan('mo_app')`,
+      // nên bảng "Hành trình người dùng" ở trang quản trị in ra dòng "Xem màn
+      // mo_app": sai loại sự kiện, và khoá thô lọt ra trước mặt người đọc.
+      //
+      // Phép kiểm nhìn vào THÂN YÊU CẦU chứ không vào giao diện, vì đây là chỗ hỏng
+      // duy nhất — app vẫn chạy đúng, chỉ báo cáo sai, nên không màn nào đổi
+      // khác đi để mà bắt.
+      final m = MoiTruong(user: nguoiDung());
+      khaiTrangChu(m.mayChu);
+      m.mayChu.tra('GET /api/v1/readers', [mauReader()]);
+      m.mayChu.tra('POST /api/v1/marketing/events', null);
+      await m.dung(t, const HomeShell());
+
+      const duong = 'POST /api/v1/marketing/events';
+      List<dynamic> tenSuKien() => m.mayChu
+          .cacLan(duong)
+          .map((g) => (g.than as Map)['eventName'])
+          .toList();
+
+      expect(tenSuKien(), contains('mo_app'));
+      expect(tenSuKien(), isNot(contains('xem_man')));
+      // Không kèm `man`: thiếu trường ấy là thứ phân biệt "mở app" với một
+      // lượt xem màn, nên nó cũng là thứ đáng kiểm.
+      final mo = m.mayChu
+          .cacLan(duong)
+          .firstWhere((g) => (g.than as Map)['eventName'] == 'mo_app');
+      expect((mo.than as Map)['metadata'], isNull);
+
+      // Còn chuyển tab thì VẪN là lượt xem màn, và nhãn phải là chữ người
+      // dùng đọc được — không phải khoá thô.
+      await bam(t, find.text('Reader'));
+      final xem = m.mayChu
+          .cacLan(duong)
+          .firstWhere((g) => (g.than as Map)['eventName'] == 'xem_man');
+      expect((xem.than as Map)['metadata'], '{"man":"Reader"}');
+    });
+
     testWidgets('nhân sự có thêm Bàn làm việc', (t) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'STAFF'));
       khaiTrangChu(m.mayChu);
