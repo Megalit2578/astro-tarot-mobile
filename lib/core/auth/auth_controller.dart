@@ -5,6 +5,7 @@ import '../api/endpoints.dart';
 import '../api/token_store.dart';
 import '../theo_doi.dart';
 import 'dang_nhap_google.dart';
+import 'tu_dong_dang_nhap.dart';
 import '../realtime/realtime_client.dart';
 import 'app_user.dart';
 
@@ -91,6 +92,14 @@ class AuthController extends Notifier<AuthState> {
   Future<void> khoiDong() async {
     await _store.nap();
     if (!_store.coPhien) {
+      // Chưa có phiên: thử bộ đăng nhập mà máy ảo được mở kèm theo. Chỉ có
+      // thật ở bản gỡ lỗi — xem `tu_dong_dang_nhap.dart` về hai lớp chặn.
+      //
+      // Đặt ở đây, sau khi đã biết chắc KHÔNG có phiên cũ, để nó không bao
+      // giờ đè lên phiên người ta đang dùng.
+      final bo = await ref.read(docBoDangNhapThuProvider).doc();
+      if (bo != null && await dangNhap(bo.email, bo.matKhau)) return;
+
       state = state.copy(trangThai: TrangThaiPhien.chuaDangNhap);
       return;
     }
