@@ -154,6 +154,9 @@ class Endpoints {
       '/api/v1/admin/users/$id/resend-verification';
   static const adminActivityLogs = '/api/v1/admin/activity-logs';
   static const adminFeedback = '/api/v1/admin/feedback';
+  static const adminKhuyenMai = '/api/v1/khuyen-mai/admin';
+  static const adminGoiAi = '/api/admin/subscriptions/plans';
+  static const adminGa4 = '/api/v1/admin/analytics/report';
   static const adminReaderApplications = '/api/v1/admin/readers/applications';
   static String adminReaderReview(String applicationId) =>
       '/api/v1/admin/readers/$applicationId/review';

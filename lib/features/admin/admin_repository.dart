@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
+import 'ga4_view.dart';
+import 'goi_ai_admin_view.dart';
 import 'gop_y_view.dart';
+import 'khuyen_mai_view.dart';
 import '../../core/api/trang.dart';
 import '../../core/auth/auth_controller.dart';
 import '../shop/shop_repository.dart';
@@ -626,6 +629,48 @@ class AdminRepository {
       'size': coTrang,
     });
     return Trang.tu(d, GopY.fromJson);
+  }
+
+  // ---- Khuyến mãi ----
+
+  Future<List<KhuyenMai>> khuyenMai() async {
+    final d = await _api.get<List<dynamic>>(Endpoints.adminKhuyenMai);
+    return [
+      for (final e in d)
+        if (e is Map) KhuyenMai.fromJson(e.cast<String, dynamic>()),
+    ];
+  }
+
+  Future<void> taoKhuyenMai(Map<String, dynamic> body) =>
+      _api.post<dynamic>(Endpoints.adminKhuyenMai, body: body);
+
+  Future<void> suaKhuyenMai(String id, Map<String, dynamic> body) =>
+      _api.put<dynamic>('${Endpoints.adminKhuyenMai}/$id', body: body);
+
+  Future<void> xoaKhuyenMai(String id) =>
+      _api.delete<dynamic>('${Endpoints.adminKhuyenMai}/$id');
+
+  // ---- Gói AI ----
+
+  Future<List<GoiAi>> goiAi() async {
+    final d = await _api.get<List<dynamic>>(Endpoints.adminGoiAi);
+    return [
+      for (final e in d)
+        if (e is Map) GoiAi.fromJson(e.cast<String, dynamic>()),
+    ];
+  }
+
+  Future<void> suaGoiAi(String id, Map<String, dynamic> body) =>
+      _api.put<dynamic>('${Endpoints.adminGoiAi}/$id', body: body);
+
+  // ---- Lưu lượng GA4 ----
+
+  Future<BaoCaoGa4> ga4(String tuNgay) async {
+    final d = await _api.get<Map<String, dynamic>>(
+      Endpoints.adminGa4,
+      query: {'startDate': tuNgay, 'endDate': 'today'},
+    );
+    return BaoCaoGa4.fromJson(d);
   }
 
   // ---- Đơn Reader ----

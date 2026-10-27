@@ -1,4 +1,5 @@
 import 'package:astrotarot_mobile/features/admin/admin_hub.dart';
+import 'package:astrotarot_mobile/features/admin/khuyen_mai_view.dart';
 import 'package:astrotarot_mobile/features/admin/admin_repository.dart';
 import 'package:astrotarot_mobile/features/admin/tai_khoan_chi_tiet_screen.dart';
 import 'package:astrotarot_mobile/features/admin/tao_tai_khoan_screen.dart';
@@ -147,15 +148,16 @@ Future<void> moTab(WidgetTester t, String nhan) async {
 
 void main() {
   group('Khu quản trị', () {
-    testWidgets('Quản trị viên thấy đủ mười một mục', (t) async {
+    testWidgets('Quản trị viên thấy đủ mười bốn mục, khớp bảng tab của web', (t) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'ADMIN'));
       khaiQuanTri(m.mayChu);
       await m.dung(t, const AdminHub());
       expect(find.text('Quản trị'), findsOneWidget);
       expect(mucQuanTri(nguoiDung(vaiTro: 'ADMIN')).map((e) => e.nhan), [
         'Tổng quan', 'Tài khoản', 'Hồ sơ Reader', 'Thanh toán', 'Rút tiền',
-        'Báo cáo vi phạm', 'Duyệt bài', 'Đánh giá & Góp ý', 'Nhật ký',
-        'Phân quyền', 'Sản phẩm liên kết',
+        'Báo cáo vi phạm', 'Duyệt bài', 'Khuyến mãi', 'Đánh giá & Góp ý',
+        'Gói AI', 'Lưu lượng & GA4', 'Nhật ký', 'Phân quyền',
+        'Sản phẩm liên kết',
       ]);
       // Tổng quan: KPI + biểu đồ.
       expect(find.text('Hồ sơ Reader chờ duyệt'), findsOneWidget);
@@ -190,7 +192,22 @@ void main() {
       // AdminFeedbackController ('USERS_MANAGE' hoặc 'AUDIT_VIEW').
       expect(
           mucQuanTri(nguoiDung(quyen: {'AUDIT_VIEW'})).map((e) => e.nhan),
-          ['Tổng quan', 'Đánh giá & Góp ý', 'Nhật ký']);
+          ['Tổng quan', 'Khuyến mãi', 'Đánh giá & Góp ý', 'Lưu lượng & GA4',
+           'Nhật ký']);
+      // Gói AI đi theo PAYMENTS_MANAGE chứ KHÔNG theo USERS_MANAGE: đó là
+      // tiền, và SubscriptionController gác đúng quyền ấy.
+      expect(
+          mucQuanTri(nguoiDung(quyen: {'PAYMENTS_MANAGE'})).map((e) => e.nhan),
+          ['Thanh toán', 'Gói AI']);
+      // Chỉ ĐỌC được khuyến mãi thì không có nút sửa.
+      final chiDoc = mucQuanTri(nguoiDung(quyen: {'AUDIT_VIEW'}))
+          .firstWhere((e) => e.nhan == 'Khuyến mãi')
+          .dung() as KhuyenMaiView;
+      expect(chiDoc.suaDuoc, isFalse);
+      final toanQuyen = mucQuanTri(nguoiDung(quyen: {'USERS_MANAGE'}))
+          .firstWhere((e) => e.nhan == 'Khuyến mãi')
+          .dung() as KhuyenMaiView;
+      expect(toanQuyen.suaDuoc, isTrue);
     });
 
     testWidgets('Tổng quan lỗi thì có nút thử lại', (t) async {
