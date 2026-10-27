@@ -19,10 +19,36 @@ final lichHenThangProvider = FutureProvider.family<List<Booking>, _Khoa>((
 });
 
 /// Lịch tháng của chính mình: khách thấy buổi đã đặt, Reader thấy buổi khách đặt.
+///
+/// ## Vì sao thu gọn được
+///
+/// Lưới tháng chiếm sáu hàng ô vuông, tức khoảng nửa màn hình điện thoại.
+/// Đặt cố định trên đầu thì danh sách buổi hẹn chỉ còn một khe hẹp bên dưới,
+/// và người dùng phải cuộn trong một ô nhỏ xíu trong khi nửa màn hình trên
+/// đứng yên. Mở màn ra là thấy chật.
+///
+/// Nên khi cuộn danh sách, lưới thu lại thành MỘT DÒNG tóm tắt vẫn dính trên
+/// đầu — không biến mất hẳn, vì tháng đang xem và số buổi trong ngày đã chọn
+/// là thứ người ta cần nhìn trong lúc đọc danh sách. Bấm vào dòng ấy thì lưới
+/// mở lại.
+///
+/// Trạng thái mở/thu do widget cha giữ: cha là nơi nghe được tiếng cuộn của
+/// danh sách (danh sách là anh em, không nằm trong cây con của lịch).
 class LichHenThang extends ConsumerStatefulWidget {
-  const LichHenThang({super.key, required this.cuaReader});
+  const LichHenThang({
+    super.key,
+    required this.cuaReader,
+    this.moRong = true,
+    this.doiMoRong,
+  });
 
   final bool cuaReader;
+
+  /// Đang bày cả lưới tháng, hay chỉ còn dòng tóm tắt.
+  final bool moRong;
+
+  /// Bấm vào dòng tóm tắt. `null` thì không cho đổi — lịch luôn mở.
+  final VoidCallback? doiMoRong;
 
   @override
   ConsumerState<LichHenThang> createState() => _LichHenThangState();
@@ -101,6 +127,22 @@ class _LichHenThangState extends ConsumerState<LichHenThang> {
                       l.month == chon.month &&
                       l.day == chon.day;
                 }).toList();
+          final trongThang = dem.values.fold<int>(0, (a, b) => a + b);
+
+          // Một dòng duy nhất khi thu: tháng đang xem, số buổi của tháng, và
+          // phần tóm tắt của ngày đang chọn nếu có.
+          if (!widget.moRong) {
+            return _DongTomTat(
+              nhan: 'Tháng ${_thang.month}/${_thang.year}',
+              phu: chon == null
+                  ? (trongThang == 0 ? 'không có buổi nào' : '$trongThang buổi')
+                  : (trongNgay.isEmpty
+                        ? 'ngày ${chon.day}/${chon.month}: không có buổi'
+                        : 'ngày ${chon.day}/${chon.month}: ${trongNgay.length} buổi'),
+              bam: widget.doiMoRong,
+            );
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -139,6 +181,24 @@ class _LichHenThangState extends ConsumerState<LichHenThang> {
                     style: const TextStyle(fontSize: 12, color: Mau.chuMo),
                   ),
                 ),
+              if (widget.doiMoRong != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: widget.doiMoRong,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: const Size(0, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      foregroundColor: Mau.vang,
+                    ),
+                    icon: const Icon(Icons.expand_less, size: 16),
+                    label: const Text(
+                      'Thu gọn lịch',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ),
             ],
           );
         },
@@ -151,5 +211,55 @@ class _LichHenThangState extends ConsumerState<LichHenThang> {
     final h = l.hour.toString().padLeft(2, '0');
     final m = l.minute.toString().padLeft(2, '0');
     return '$h:$m';
+  }
+}
+
+/// Dòng tóm tắt khi lịch đã thu.
+class _DongTomTat extends StatelessWidget {
+  const _DongTomTat({required this.nhan, required this.phu, this.bam});
+
+  final String nhan;
+  final String phu;
+  final VoidCallback? bam;
+
+  @override
+  Widget build(BuildContext context) {
+    // Tự bọc Material: InkWell đòi một Material tổ tiên, và dựa vào Scaffold
+    // của màn cha là một ràng buộc ngầm — nó vỡ ngay lúc ai đó nhúng lịch ở
+    // chỗ khác, mà lỗi lúc ấy lại nói về InkWell chứ không nói về chỗ nhúng.
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: bam,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_month, size: 16, color: Mau.vang),
+              const SizedBox(width: 6),
+              Text(
+                nhan,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Mau.vang,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  phu,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: Mau.chuMo),
+                ),
+              ),
+              if (bam != null)
+                const Icon(Icons.expand_more, size: 18, color: Mau.chuMo),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
