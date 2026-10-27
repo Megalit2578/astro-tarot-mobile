@@ -92,7 +92,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     // ghi NULL, hành trình của phiên này không nối được với phiên sau.
     ref.read(maKhachProvider).nap().then((_) {
       if (!mounted) return;
-      ref.read(theoDoiProvider).xemMan('mo_app');
+      ref.read(theoDoiProvider).moApp();
     });
 
     // Lời chúc dịp lễ. Đặt ở KHUNG chứ không ở một màn cụ thể: người dùng
