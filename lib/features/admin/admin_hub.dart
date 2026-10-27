@@ -9,7 +9,10 @@ import '../blog/duyet_bai_view.dart';
 import 'admin_repository.dart';
 import 'hang_cho_views.dart';
 import 'nhat_ky_view.dart';
+import 'ga4_view.dart';
+import 'goi_ai_admin_view.dart';
 import 'gop_y_view.dart';
+import 'khuyen_mai_view.dart';
 import 'phan_quyen_view.dart';
 import 'san_pham_admin_view.dart';
 import 'tai_khoan_view.dart';
@@ -65,8 +68,18 @@ List<MucQuanTri> mucQuanTri(AppUser u) {
     if (u.co('BLOG_REVIEW'))
       MucQuanTri('Duyệt bài', () => const DuyetBaiView()),
     // Cùng điều kiện với /api/v1/admin/feedback — xem AdminFeedbackController.
+    // Đọc được với AUDIT_VIEW, nhưng tạo/sửa/xoá chỉ USERS_MANAGE — xem
+    // KhuyenMaiController.
+    if (quanTriVien || u.co('AUDIT_VIEW'))
+      MucQuanTri('Khuyến mãi', () => KhuyenMaiView(suaDuoc: quanTriVien)),
     if (quanTriVien || u.co('AUDIT_VIEW'))
       MucQuanTri('Đánh giá & Góp ý', () => const GopYView()),
+    // Gói AI đi theo PAYMENTS_MANAGE, KHÔNG phải USERS_MANAGE: đó là tiền,
+    // và SubscriptionController gác đúng quyền ấy.
+    if (u.co('PAYMENTS_MANAGE'))
+      MucQuanTri('Gói AI', () => const GoiAiAdminView()),
+    if (quanTriVien || u.co('AUDIT_VIEW'))
+      MucQuanTri('Lưu lượng & GA4', () => const Ga4View()),
     if (u.co('AUDIT_VIEW'))
       MucQuanTri('Nhật ký', () => const NhatKyView()),
     if (quanTriVien)
