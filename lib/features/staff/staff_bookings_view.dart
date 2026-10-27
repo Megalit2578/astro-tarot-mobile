@@ -10,7 +10,7 @@ import '../../widgets/trang_thai.dart';
 import '../bookings/booking.dart';
 import '../bookings/bookings_repository.dart';
 import '../bookings/chat_screen.dart';
-import '../bookings/lich_hen_thang.dart';
+import '../bookings/lich_va_danh_sach.dart';
 
 /// Lịch hẹn Reader nhận được — một mục trong Bàn làm việc.
 ///
@@ -64,9 +64,10 @@ class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
             nhan: _nhanLoc,
             doi: (v) => setState(() => _khoaLoc = v),
           ),
-          const LichHenThang(cuaReader: true),
           Expanded(
-            child: DanhSachPhanTrang<Booking>(
+            child: LichVaDanhSach(
+              cuaReader: true,
+              danhSach: DanhSachPhanTrang<Booking>(
               // Đổi bộ lọc thì dựng lại từ trang đầu.
               key: ValueKey(_khoaLoc),
               dieuKhien: _dieuKhien,
@@ -85,7 +86,8 @@ class _StaffBookingsViewState extends ConsumerState<StaffBookingsView> {
                       tieuDe: 'Không có buổi nào "${_nhanLoc[_khoaLoc]}"',
                       moTa: 'Chọn "Tất cả" để xem toàn bộ lịch hẹn.',
                     ),
-              dong: (_, b) => _TheViec(booking: b, taiLai: _dieuKhien.taiLai),
+                dong: (_, b) => _TheViec(booking: b, taiLai: _dieuKhien.taiLai),
+              ),
             ),
           ),
         ],

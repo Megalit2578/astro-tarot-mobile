@@ -147,15 +147,15 @@ Future<void> moTab(WidgetTester t, String nhan) async {
 
 void main() {
   group('Khu quản trị', () {
-    testWidgets('Quản trị viên thấy đủ mười mục', (t) async {
+    testWidgets('Quản trị viên thấy đủ mười một mục', (t) async {
       final m = MoiTruong(user: nguoiDung(vaiTro: 'ADMIN'));
       khaiQuanTri(m.mayChu);
       await m.dung(t, const AdminHub());
       expect(find.text('Quản trị'), findsOneWidget);
       expect(mucQuanTri(nguoiDung(vaiTro: 'ADMIN')).map((e) => e.nhan), [
         'Tổng quan', 'Tài khoản', 'Hồ sơ Reader', 'Thanh toán', 'Rút tiền',
-        'Báo cáo vi phạm', 'Duyệt bài', 'Nhật ký', 'Phân quyền',
-        'Sản phẩm liên kết',
+        'Báo cáo vi phạm', 'Duyệt bài', 'Đánh giá & Góp ý', 'Nhật ký',
+        'Phân quyền', 'Sản phẩm liên kết',
       ]);
       // Tổng quan: KPI + biểu đồ.
       expect(find.text('Hồ sơ Reader chờ duyệt'), findsOneWidget);
@@ -186,9 +186,11 @@ void main() {
     testWidgets('mucQuanTri khớp đúng quyền', (t) async {
       expect(mucQuanTri(nguoiDung(quyen: {'REPORT_REVIEW'})).map((e) => e.nhan),
           ['Báo cáo vi phạm']);
+      // AUDIT_VIEW mở cả ba mục CHỈ ĐỌC — khớp đúng @PreAuthorize của
+      // AdminFeedbackController ('USERS_MANAGE' hoặc 'AUDIT_VIEW').
       expect(
           mucQuanTri(nguoiDung(quyen: {'AUDIT_VIEW'})).map((e) => e.nhan),
-          ['Tổng quan', 'Nhật ký']);
+          ['Tổng quan', 'Đánh giá & Góp ý', 'Nhật ký']);
     });
 
     testWidgets('Tổng quan lỗi thì có nút thử lại', (t) async {

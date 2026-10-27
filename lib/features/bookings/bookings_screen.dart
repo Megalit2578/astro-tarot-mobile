@@ -13,7 +13,7 @@ import '../money/payment_sheet.dart';
 import 'booking.dart';
 import 'bookings_repository.dart';
 import 'chat_screen.dart';
-import 'lich_hen_thang.dart';
+import 'lich_va_danh_sach.dart';
 import 'report_sheet.dart';
 import 'review_sheet.dart';
 
@@ -56,11 +56,9 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          const LichHenThang(cuaReader: false),
-          Expanded(
-            child: DanhSachPhanTrang<Booking>(
+      body: LichVaDanhSach(
+        cuaReader: false,
+        danhSach: DanhSachPhanTrang<Booking>(
               key: ValueKey(_chon),
               tai: (t) => repo.cuaToi(trang: t, loc: loc),
               loiDuPhong: Ngu.d('Không tải được lịch hẹn.'),
@@ -77,10 +75,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                       tieuDe: 'Không có buổi nào "${_loc[_chon].$1}"',
                       moTa: Ngu.d('Chọn "Tất cả" để xem toàn bộ lịch hẹn.'),
                     ),
-              dong: (_, b) => _TheBuoi(booking: b),
-            ),
-          ),
-        ],
+          dong: (_, b) => _TheBuoi(booking: b),
+        ),
       ),
     );
   }

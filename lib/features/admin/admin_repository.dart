@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
+import 'gop_y_view.dart';
 import '../../core/api/trang.dart';
 import '../../core/auth/auth_controller.dart';
 import '../shop/shop_repository.dart';
@@ -614,6 +615,17 @@ class AdminRepository {
       'size': coTrang,
     });
     return Trang.tu(d, NhatKy.fromJson);
+  }
+
+  // ---- Góp ý ----
+
+  Future<Trang<GopY>> gopY({String sao = '', int trang = 0}) async {
+    final d = await _api.get<dynamic>(Endpoints.adminFeedback, query: {
+      ..._loc({'rating': sao}),
+      'page': trang,
+      'size': coTrang,
+    });
+    return Trang.tu(d, GopY.fromJson);
   }
 
   // ---- Đơn Reader ----
