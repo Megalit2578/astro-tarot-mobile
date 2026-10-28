@@ -56,7 +56,6 @@ class Endpoints {
   // subscriptionPurchases/subscriptionUsage chỉ cho xem của CHÍNH MÌNH,
   // nên luôn truyền id của người đang đăng nhập.
   static const vi = '/api/v1/wallet/me';
-  static const viNap = '/api/v1/wallet/topup';
   static const viGiaoDich = '/api/v1/wallet/transactions';
   static const goiDangBan = '/api/admin/subscriptions/plans/active';
   static const goiMua = '/api/admin/subscriptions/purchase';

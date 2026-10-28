@@ -71,39 +71,6 @@ class GiaoDichVi {
   );
 }
 
-/// Hướng dẫn chuyển khoản mà máy chủ trả về sau khi tạo lệnh nạp.
-class HuongDanNap {
-  const HuongDanNap({
-    required this.soTien,
-    this.maThamChieu,
-    this.tenNganHang,
-    this.soTaiKhoan,
-    this.chuTaiKhoan,
-    this.noiDung,
-    this.duongDanThanhToan,
-    this.anhQr,
-  });
-
-  final int soTien;
-  final String? maThamChieu;
-  final String? tenNganHang;
-  final String? soTaiKhoan;
-  final String? chuTaiKhoan;
-  final String? noiDung;
-  final String? duongDanThanhToan;
-  final String? anhQr;
-
-  factory HuongDanNap.fromJson(Map<String, dynamic> j) => HuongDanNap(
-    soTien: (j['amount'] as num?)?.toInt() ?? 0,
-    maThamChieu: j['referenceCode'] as String?,
-    tenNganHang: j['bankName'] as String?,
-    soTaiKhoan: j['bankAccountNumber'] as String?,
-    chuTaiKhoan: j['bankAccountHolder'] as String?,
-    noiDung: j['transferContent'] as String?,
-    duongDanThanhToan: j['checkoutUrl'] as String?,
-    anhQr: j['qrCode'] as String?,
-  );
-}
 
 class ViRepository {
   ViRepository(this._api);
@@ -123,12 +90,6 @@ class ViRepository {
         .toList();
   }
 
-  Future<HuongDanNap> nap(int soTien) async => HuongDanNap.fromJson(
-    await _api.post<Map<String, dynamic>>(
-      Endpoints.viNap,
-      body: {'amount': soTien},
-    ),
-  );
 }
 
 final viRepositoryProvider = Provider(
