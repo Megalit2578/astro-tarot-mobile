@@ -29,7 +29,7 @@ void main() {
       'ùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂĂÈÉẸÊÌÍÒÓỌÔƠÙÚƯỲÝĐ';
 
   /// Số chỗ còn lại lúc viết test. CHỈ ĐƯỢC GIẢM.
-  const nguong = 210;
+  const nguong = 206;
 
   final mau = RegExp(
     r"(?:Text\(\s*|tooltip:\s*|hintText:\s*|label:\s*Text\(\s*)'([^']{3,80})'",

@@ -137,7 +137,7 @@ class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
-              _TheVi(napDuoc: laKhach),
+              const _TheVi(),
               if (laKhach) ...[
                 const SizedBox(height: 12),
                 const _HanMucHomNay(),
@@ -175,14 +175,20 @@ class _GoiAiScreenState extends ConsumerState<GoiAiScreen> {
   }
 }
 
-/// Số dư ví, kèm lối nạp thêm.
+/// Số dư ví. CHỈ xem, không nạp.
+///
+/// ## Vì sao bỏ lối nạp tiền
+///
+/// Nạp ví đi đường chuyển khoản ngân hàng, ngoài Play Billing. Mà tiền trong
+/// ví dùng mua được gói AI — tức là nội dung số, thứ Google bắt buộc phải
+/// bán qua hệ thống thanh toán của họ, và Việt Nam không nằm trong nhóm
+/// nước được dùng thanh toán thay thế.
+///
+/// Để nguyên thì đó là một đường vòng qua Play Billing nằm ngay trong app,
+/// đúng lúc hồ sơ đang xin phát hành công khai. Số dư vẫn hiện vì đó là tiền
+/// của người dùng; chỉ bỏ lối nạp thêm.
 class _TheVi extends ConsumerWidget {
-  const _TheVi({required this.napDuoc});
-
-  /// Nạp ví đòi CUSTOMER_ACTIONS ở backend. Bày nút cho người không có quyền
-  /// là hứa một việc máy chủ sẽ từ chối — số dư thì vẫn hiện, vì đó là tiền
-  /// của họ.
-  final bool napDuoc;
+  const _TheVi();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -222,11 +228,6 @@ class _TheVi extends ConsumerWidget {
               ],
             ),
           ),
-          if (napDuoc)
-            OutlinedButton(
-              onPressed: () => _moNap(context, ref),
-              child: Text(Ngu.d('Nạp tiền')),
-            ),
         ],
       ),
     );
@@ -676,119 +677,6 @@ class _LuotMuaCuaToi extends ConsumerWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// Mở ô nhập số tiền nạp.
-Future<void> _moNap(BuildContext context, WidgetRef ref) async {
-  final o = TextEditingController();
-  final soTien = await showDialog<int>(
-    context: context,
-    builder: (c) => AlertDialog(
-      backgroundColor: Mau.the,
-      title: Text(Ngu.d('Nạp tiền vào ví')),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: o,
-            keyboardType: TextInputType.number,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: Ngu.d('Số tiền'),
-              suffixText: 'đ',
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final m in [50000, 100000, 200000, 500000])
-                ActionChip(
-                  label: Text(Dinh.tien(m)),
-                  onPressed: () => o.text = '$m',
-                ),
-            ],
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(c),
-          child: Text(Ngu.d('Thôi')),
-        ),
-        FilledButton(
-          onPressed: () {
-            final v = int.tryParse(o.text.trim());
-            if (v != null && v > 0) Navigator.pop(c, v);
-          },
-          child: Text(Ngu.d('Tạo mã nạp')),
-        ),
-      ],
-    ),
-  );
-  if (soTien == null) return;
-
-  try {
-    final h = await ref.read(viRepositoryProvider).nap(soTien);
-    if (!context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: Mau.the,
-        title: Text(Ngu.d('Chuyển khoản để nạp')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Số tiền: ${Dinh.tien(h.soTien)}'),
-            if (h.tenNganHang != null) Text('Ngân hàng: ${h.tenNganHang}'),
-            if (h.soTaiKhoan != null) Text('Số tài khoản: ${h.soTaiKhoan}'),
-            if (h.chuTaiKhoan != null) Text('Chủ tài khoản: ${h.chuTaiKhoan}'),
-            if (h.noiDung != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                Ngu.d('Nội dung chuyển khoản — ghi ĐÚNG:'),
-                style: TextStyle(fontSize: 12, color: Mau.chuMo),
-              ),
-              SelectableText(
-                h.noiDung!,
-                style: const TextStyle(
-                  color: Mau.vangNhat,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                Ngu.d(
-                  'Sai nội dung thì hệ thống không khớp được lượt chuyển với ví của bạn, và tiền phải đối soát tay.',
-                ),
-                style: TextStyle(fontSize: 11.5, color: Mau.chuMo),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(c);
-              ref.invalidate(viCuaToiProvider);
-              ref.invalidate(giaoDichViProvider);
-            },
-            child: const Text('Xong'),
-          ),
-        ],
-      ),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          e is ApiException ? e.message : Ngu.d('Không tạo được lệnh nạp.'),
-        ),
-      ),
     );
   }
 }
