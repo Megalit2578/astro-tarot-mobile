@@ -1,6 +1,5 @@
 import 'package:astrotarot_mobile/features/shell/home_shell.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/gia.dart';
@@ -14,25 +13,35 @@ import 'support/gia.dart';
 /// test vẫn xanh.
 void baoCuon(
   WidgetTester tester, {
-  required ScrollDirection huong,
-  double daiCuonDuoc = 3000,
+  required double dich,
+  bool dangKeoTay = true,
+  double daiCuonDuoc = 4000,
+  double viTri = 800,
+  double caoKhungNhin = 2000,
   Axis truc = Axis.vertical,
   int doSau = 0,
 }) {
   final ctx = tester.element(find.byType(IndexedStack));
-  UserScrollNotification(
+  ScrollUpdateNotification(
     metrics: FixedScrollMetrics(
       minScrollExtent: 0,
       maxScrollExtent: daiCuonDuoc,
-      pixels: 100,
-      viewportDimension: 800,
+      pixels: viTri,
+      viewportDimension: caoKhungNhin,
       axisDirection: truc == Axis.vertical
           ? AxisDirection.down
           : AxisDirection.right,
       devicePixelRatio: 1,
     ),
     context: ctx,
-    direction: huong,
+    scrollDelta: dich,
+    dragDetails: dangKeoTay
+        ? DragUpdateDetails(
+            globalPosition: Offset.zero,
+            delta: Offset(0, -dich),
+          )
+        : null,
+    depth: doSau,
   ).dispatch(ctx);
 }
 
@@ -62,7 +71,7 @@ void main() {
       final banDau = caoThanh(tester);
       expect(banDau, greaterThan(0), reason: 'lúc mở app thanh phải hiện');
 
-      baoCuon(tester, huong: ScrollDirection.reverse);
+      baoCuon(tester, dich: 40);
       await xongHoatAnh(tester);
       expect(
         caoThanh(tester),
@@ -70,7 +79,7 @@ void main() {
         reason: 'cuộn xuống thì thanh phải khuất hẳn',
       );
 
-      baoCuon(tester, huong: ScrollDirection.forward);
+      baoCuon(tester, dich: -40);
       await xongHoatAnh(tester);
       expect(
         caoThanh(tester),
@@ -86,7 +95,7 @@ void main() {
       await m.dung(tester, const HomeShell());
       final banDau = caoThanh(tester);
 
-      baoCuon(tester, huong: ScrollDirection.reverse);
+      baoCuon(tester, dich: 40);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 60));
       final giua = caoThanh(tester);
@@ -104,11 +113,7 @@ void main() {
       await m.dung(tester, const HomeShell());
       final banDau = caoThanh(tester);
 
-      baoCuon(
-        tester,
-        huong: ScrollDirection.reverse,
-        truc: Axis.horizontal,
-      );
+      baoCuon(tester, dich: 40, truc: Axis.horizontal);
       await xongHoatAnh(tester);
       expect(caoThanh(tester), banDau);
     });
@@ -118,7 +123,28 @@ void main() {
       await m.dung(tester, const HomeShell());
       final banDau = caoThanh(tester);
 
-      baoCuon(tester, huong: ScrollDirection.reverse, daiCuonDuoc: 40);
+      baoCuon(tester, dich: 40, daiCuonDuoc: 40);
+      await xongHoatAnh(tester);
+      expect(caoThanh(tester), banDau);
+    });
+
+    testWidgets('DỰNG LẠI NGÕ CỤT: giấu rồi về đầu danh sách thì hiện lại', (
+      tester,
+    ) async {
+      // Trên máy thật, đây là lúc app mất hẳn đường chuyển tab: thanh đang
+      // giấu, danh sách đã về đầu, kéo xuống thì ClampingScrollPhysics không
+      // cho nội dung nhúc nhích nên KHÔNG thông báo nào được phát nữa.
+      final m = MoiTruong(user: nguoiDung());
+      await m.dung(tester, const HomeShell());
+      final banDau = caoThanh(tester);
+
+      baoCuon(tester, dich: 40);
+      await xongHoatAnh(tester);
+      expect(caoThanh(tester), lessThan(1), reason: 'phải giấu trước đã');
+
+      // Cú cuộn đưa danh sách về đầu. Ngón tay đã nhấc, không còn dịch
+      // chuyển — chỉ còn mỗi vị trí nói lên điều gì.
+      baoCuon(tester, dich: 0, viTri: 0, dangKeoTay: false);
       await xongHoatAnh(tester);
       expect(caoThanh(tester), banDau);
     });
@@ -128,7 +154,7 @@ void main() {
       await m.dung(tester, const HomeShell());
       final banDau = caoThanh(tester);
 
-      baoCuon(tester, huong: ScrollDirection.reverse);
+      baoCuon(tester, dich: 40);
       await xongHoatAnh(tester);
       expect(caoThanh(tester), lessThan(1));
 

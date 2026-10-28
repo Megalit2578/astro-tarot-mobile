@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/endpoints.dart';
@@ -59,6 +58,9 @@ class _HomeShellState extends ConsumerState<HomeShell>
 
   /// 1 là thanh điều hướng hiện đủ, 0 là đã trượt khuất hẳn xuống dưới.
   late final AnimationController _navHien;
+
+  /// Quãng đã kéo cộng dồn từ lần quyết gần nhất. Xem [nguongDich].
+  double _tichDich = 0;
 
   @override
   void initState() {
@@ -146,19 +148,32 @@ class _HomeShellState extends ConsumerState<HomeShell>
   /// Luật nằm ở [yNavTuCuon]; chỗ này chỉ dịch thông báo sang tham số rồi
   /// thi hành kết quả.
   bool _theoCuon(ScrollNotification tin) {
+    // Chỉ `ScrollUpdateNotification` mới mang được hai thứ cần thiết: ngón
+    // tay có còn trên màn không (`dragDetails`), và nội dung dịch theo chiều
+    // nào (`scrollDelta`). Những loại thông báo khác vẫn được cho đi qua, vì
+    // luật "về đầu danh sách thì hiện" chỉ cần đọc vị trí — và chính nó là
+    // thứ cứu app khỏi ngõ cụt thanh-nav-khuất-vĩnh-viễn.
+    final capNhat = tin is ScrollUpdateNotification ? tin : null;
+    final dangKeo = capNhat?.dragDetails != null;
+    // Nhấc tay là quên hết: quãng kéo của cú vuốt trước không được cộng vào
+    // cú sau, nếu không thì hai cú vuốt ngắn ngược chiều lại thành một quyết
+    // định.
+    _tichDich = dangKeo ? _tichDich + (capNhat?.scrollDelta ?? 0) : 0;
     final y = yNavTuCuon(
-      laCuaNguoiDung: tin is UserScrollNotification,
+      dangKeoTay: dangKeo,
       doSau: tin.depth,
       truc: tin.metrics.axis,
       daiCuonDuoc: tin.metrics.maxScrollExtent,
-      huong: tin is UserScrollNotification
-          ? tin.direction
-          : ScrollDirection.idle,
+      caoKhungNhin: tin.metrics.viewportDimension,
+      viTri: tin.metrics.pixels,
+      dich: _tichDich,
     );
     switch (y) {
       case YNav.hien:
+        _tichDich = 0;
         _navHien.forward();
       case YNav.giau:
+        _tichDich = 0;
         _navHien.reverse();
       case YNav.giuNguyen:
         break;
