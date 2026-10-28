@@ -72,3 +72,43 @@ String danhGiaSoNhieu(int so) {
   if (Ngu.hien.value != 'en') return 'đánh giá';
   return so == 1 ? 'review' : 'reviews';
 }
+
+/// Tên tháng để hiện trên đầu một khối lịch.
+///
+/// ## Vì sao không nhét vào từ điển
+///
+/// Từ điển tra chuỗi sang chuỗi. Nhét vào thì phải có đủ mười hai khoá
+/// "Tháng 1 năm 2026", "Tháng 1 năm 2027"... — tức là vô hạn khoá, vì năm
+/// thì không có giới hạn.
+///
+/// Và hai thứ tiếng xếp khác nhau chứ không chỉ khác chữ: tiếng Việt viết
+/// "Tháng 10 năm 2026" còn tiếng Anh viết "October 2026", không có từ nào
+/// tương ứng với "năm". Ghép chuỗi theo kiểu "${Ngu.d('Tháng')} $thang" sẽ
+/// ra "October 10 2026".
+String tenThang(DateTime d) {
+  if (Ngu.hien.value != 'en') return 'Tháng ${d.month} năm ${d.year}';
+  const ten = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  return '${ten[d.month - 1]} ${d.year}';
+}
+
+/// Tên tháng dạng ngắn: "Tháng 10/2026" / "Oct 2026".
+String tenThangNgan(DateTime d) {
+  if (Ngu.hien.value != 'en') return 'Tháng ${d.month}/${d.year}';
+  const ten = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return '${ten[d.month - 1]} ${d.year}';
+}
+
+/// Bảy chữ viết tắt của thứ, bắt đầu từ thứ Hai.
+///
+/// Tiếng Việt đánh số ngày trong tuần (T2 là thứ Hai), tiếng Anh viết tắt
+/// tên riêng. Không đổi được bằng cách tra từ điển từng chữ vì "T2" một mình
+/// chẳng mang nghĩa gì để dịch.
+List<String> get thuVietTat => Ngu.hien.value == 'en'
+    ? const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    : const ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];

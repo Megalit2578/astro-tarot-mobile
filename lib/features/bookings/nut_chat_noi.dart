@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/ngon_ngu.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
@@ -61,9 +63,13 @@ class NutChatNoi extends ConsumerWidget {
       heroTag: 'nut-chat-noi',
       backgroundColor: Mau.vang,
       foregroundColor: Colors.black,
+      // Dịch phần chữ rồi mới ghép tên vào, thay vì dịch cả câu: tên người
+      // là dữ liệu, không nằm trong từ điển được. Cách này chỉ đúng khi hai
+      // thứ tiếng đặt tên ở cùng chỗ trong câu — "Nhắn tin với X" và "Chat
+      // with X" thì đúng, nên dùng được ở đây.
       tooltip: mo.length == 1
-          ? 'Nhắn tin với ${_doiPhuong(mo.first, u.id)}'
-          : '${mo.length} cuộc trò chuyện',
+          ? '${Ngu.d('Nhắn tin với')} ${_doiPhuong(mo.first, u.id)}'
+          : '${mo.length} ${Ngu.d('cuộc trò chuyện')}',
       onPressed: () {
         // Một cuộc thì vào thẳng. Bắt người ta chọn trong danh sách chỉ có một
         // dòng là thêm một bước vô nghĩa.

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/ngon_ngu.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
@@ -556,7 +558,7 @@ class _KhungRanh extends ConsumerWidget {
 }
 
 /// Nhãn ngắn của thứ, chỉ số khớp [tenThu] (1 = Thứ Hai … 7 = Chủ nhật).
-const _thuNgan = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+List<String> get _thuNgan => ['', ...thuVietTat];
 
 class _NutGio extends StatelessWidget {
   const _NutGio({required this.nhan, required this.gio, required this.onPick});

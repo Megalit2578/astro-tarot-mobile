@@ -1,3 +1,5 @@
+import '../../core/ngon_ngu.dart';
+
 /// Trạng thái buổi hẹn, khớp enum bên backend.
 enum TrangThaiBuoi { pending, confirmed, completed, cancelled, khac }
 
@@ -122,13 +124,35 @@ class Booking {
   /// Còn phải trả: chưa trả gì, hoặc đã cọc nhưng chưa trả nốt.
   bool get conPhaiTra => chuaTra || daCoc;
   bool get dangCho => trangThai == TrangThaiBuoi.pending;
+
+  /// Giờ hẹn đã trôi qua.
+  bool get daQuaGio => batDau.isBefore(DateTime.now());
+
+  /// Còn được trả khoản đầu tiên (đặt cọc hoặc trả hết) không.
+  ///
+  /// ## Vì sao buổi đã qua giờ mà Reader chưa nhận thì KHÔNG
+  ///
+  /// Thấy trên máy thật ngày 29/10/2026: hai buổi hẹn ngày 08/10 và 13/10
+  /// vẫn nằm ở trạng thái "Chờ Reader nhận" và vẫn mời "Đặt cọc 50%" /
+  /// "Thanh toán hết". Tức là app mời khách trả tiền cho một buổi đã trôi qua
+  /// từ ba tuần trước mà chưa ai nhận — tiền đi ra, không đổi lấy gì.
+  ///
+  /// Buổi đã qua giờ nhưng Reader ĐÃ nhận thì vẫn cho trả: buổi có thể đã
+  /// diễn ra xong và Reader còn chờ tiền. Chặn chỗ ấy là quỵt công người ta.
+  bool get conTraDuocKhoanDau =>
+      chuaTra &&
+      trangThai != TrangThaiBuoi.cancelled &&
+      !(dangCho && daQuaGio);
+
+  /// Buổi chết: quá giờ mà chưa ai nhận.
+  bool get daLoHen => dangCho && daQuaGio;
 }
 
 /// Nhãn tiếng Việt cho trạng thái, dùng chung cả phía khách lẫn phía Reader.
-String nhanTrangThai(TrangThaiBuoi t) => switch (t) {
+String nhanTrangThai(TrangThaiBuoi t) => Ngu.d(switch (t) {
   TrangThaiBuoi.pending => 'Chờ Reader nhận',
   TrangThaiBuoi.confirmed => 'Đã nhận lịch',
   TrangThaiBuoi.completed => 'Đã hoàn tất',
   TrangThaiBuoi.cancelled => 'Đã huỷ',
   TrangThaiBuoi.khac => '—',
-};
+});

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/ngon_ngu.dart';
+
 import '../features/readers/slot.dart';
 import '../theme.dart';
 
@@ -31,7 +33,7 @@ class LuoiThang extends StatelessWidget {
   /// Lịch đặt: ngày đã qua không bấm được. Lịch riêng vẫn xem buổi cũ.
   final bool khoaQuaKhu;
 
-  static const _thu = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
 
   static String khoa(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'
@@ -51,13 +53,13 @@ class LuoiThang extends StatelessWidget {
         Row(
           children: [
             _Mui(
-              tooltip: 'Tháng trước',
+              tooltip: Ngu.d('Tháng trước'),
               icon: Icons.chevron_left,
               onTap: coTruoc ? () => doiThang(-1) : null,
             ),
             Expanded(
               child: Text(
-                'Tháng ${thang.month} năm ${thang.year}',
+                tenThang(thang),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 16,
@@ -66,7 +68,7 @@ class LuoiThang extends StatelessWidget {
               ),
             ),
             _Mui(
-              tooltip: 'Tháng sau',
+              tooltip: Ngu.d('Tháng sau'),
               icon: Icons.chevron_right,
               onTap: coSau ? () => doiThang(1) : null,
             ),
@@ -75,7 +77,7 @@ class LuoiThang extends StatelessWidget {
         const SizedBox(height: 6),
         Row(
           children: [
-            for (final t in _thu)
+            for (final t in thuVietTat)
               Expanded(
                 child: Text(
                   t,

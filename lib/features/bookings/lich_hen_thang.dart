@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/ngon_ngu.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
@@ -133,9 +135,11 @@ class _LichHenThangState extends ConsumerState<LichHenThang> {
           // phần tóm tắt của ngày đang chọn nếu có.
           if (!widget.moRong) {
             return _DongTomTat(
-              nhan: 'Tháng ${_thang.month}/${_thang.year}',
+              nhan: tenThangNgan(_thang),
               phu: chon == null
-                  ? (trongThang == 0 ? 'không có buổi nào' : '$trongThang buổi')
+                  ? (trongThang == 0
+                        ? Ngu.d('không có buổi nào')
+                        : '$trongThang ${Ngu.d('buổi')}')
                   : (trongNgay.isEmpty
                         ? 'ngày ${chon.day}/${chon.month}: không có buổi'
                         : 'ngày ${chon.day}/${chon.month}: ${trongNgay.length} buổi'),
@@ -171,7 +175,7 @@ class _LichHenThangState extends ConsumerState<LichHenThang> {
                   padding: const EdgeInsets.only(top: 6, bottom: 2),
                   child: Text(
                     trongNgay.isEmpty
-                        ? 'Ngày ${chon.day}/${chon.month} không có buổi nào.'
+                        ? '${Ngu.d('Ngày')} ${chon.day}/${chon.month} ${Ngu.d('không có buổi nào')}.'
                         : trongNgay
                               .map(
                                 (b) =>
@@ -193,9 +197,9 @@ class _LichHenThangState extends ConsumerState<LichHenThang> {
                       foregroundColor: Mau.vang,
                     ),
                     icon: const Icon(Icons.expand_less, size: 16),
-                    label: const Text(
-                      'Thu gọn lịch',
-                      style: TextStyle(fontSize: 12),
+                    label: Text(
+                      Ngu.d('Thu gọn lịch'),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ),

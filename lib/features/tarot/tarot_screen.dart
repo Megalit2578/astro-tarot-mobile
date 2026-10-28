@@ -157,7 +157,7 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
           ),
 
           const SizedBox(height: 14),
-          Text('Kiểu trải', style: TextStyle(fontSize: 12, color: Mau.chuMo)),
+          Text(Ngu.d('Kiểu trải'), style: TextStyle(fontSize: 12, color: Mau.chuMo)),
           const SizedBox(height: 8),
           for (final k in _kieu)
             Padding(
@@ -190,10 +190,10 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(k.ten, style: const TextStyle(fontSize: 13.5)),
+                            Text(Ngu.d(k.ten), style: const TextStyle(fontSize: 13.5)),
                             const SizedBox(height: 2),
                             Text(
-                              k.moTa,
+                              Ngu.d(k.moTa),
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 color: Mau.chuMo,
@@ -213,9 +213,12 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
             onChanged: _dangTrai ? null : (v) => setState(() => _coNguoc = v),
             contentPadding: EdgeInsets.zero,
             activeThumbColor: Mau.vang,
-            title: Text('Cho phép bài ngược', style: TextStyle(fontSize: 13.5)),
+            title: Text(Ngu.d('Cho phép bài ngược'), style: TextStyle(fontSize: 13.5)),
             subtitle: Text(
-              'Bài ngược đổi hẳn nghĩa của lá bài. Tắt đi nếu bạn mới bắt đầu.',
+              Ngu.d(
+                'Bài ngược đổi hẳn nghĩa của lá bài. Tắt đi nếu bạn mới bắt '
+                'đầu.',
+              ),
               style: TextStyle(fontSize: 11.5, color: Mau.chuMo, height: 1.5),
             ),
           ),
@@ -249,7 +252,7 @@ class _TarotScreenState extends ConsumerState<TarotScreen> {
                       Text('Đang trải bài…'),
                     ],
                   )
-                : Text('Trải bài'),
+                : Text(Ngu.d('Trải bài')),
           ),
           if (_dangTrai) ...[
             const SizedBox(height: 10),
