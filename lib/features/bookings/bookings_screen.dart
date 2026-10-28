@@ -202,7 +202,7 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
             ),
             const SizedBox(height: 3),
             Text(
-              '${Dinh.ngayGio(b.batDau)} · ${b.phut} phút',
+              '${Dinh.ngayGio(b.batDau)} · ${b.phut} ${Ngu.d('phút')}',
               style: const TextStyle(color: Mau.chuMo, fontSize: 12.5),
             ),
             const SizedBox(height: 8),
@@ -288,12 +288,34 @@ class _TheBuoiState extends ConsumerState<_TheBuoi> {
                 ),
               ),
             ],
+            // Buổi chết thì phải NÓI ra, không được chỉ lặng lẽ giấu nút
+            // trả tiền đi. Người dùng thấy "Chưa thanh toán" mà không có chỗ
+            // nào trả thì tưởng app hỏng, rồi đi khiếu nại.
+            if (b.daLoHen) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Mau.vang.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  Ngu.d(
+                    'Đã qua giờ hẹn mà Reader chưa nhận buổi này, nên không '
+                    'còn thu tiền nữa. Bạn huỷ đi rồi đặt lại khung giờ khác '
+                    'nhé.',
+                  ),
+                  style: TextStyle(fontSize: 12, color: Mau.chuMo, height: 1.5),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                if (b.chuaTra && b.trangThai != TrangThaiBuoi.cancelled) ...[
+                if (b.conTraDuocKhoanDau) ...[
                   FilledButton(
                     onPressed: _dangTra
                         ? null

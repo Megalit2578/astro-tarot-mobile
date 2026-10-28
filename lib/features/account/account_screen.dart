@@ -430,7 +430,7 @@ class _HopQuyen extends StatelessWidget {
           iconColor: Mau.chuMo,
           collapsedIconColor: Mau.chuMo,
           title: Text(
-            'Quyền máy chủ cấp cho phiên này (${ds.length})',
+            '${Ngu.d('Quyền máy chủ cấp cho phiên này')} (${ds.length})',
             style: const TextStyle(fontSize: 12, color: Mau.chuMo),
           ),
           children: [
