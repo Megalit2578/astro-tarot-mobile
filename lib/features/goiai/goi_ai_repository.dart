@@ -124,6 +124,35 @@ class LuotDungNgay {
   );
 }
 
+/// Hạn mức AI hôm nay, đã cộng đủ mọi nguồn.
+///
+/// [tuGoi] và [tuGame] tách riêng để màn hình nói được "3 từ gói, cộng 3 lượt
+/// bạn vừa chơi game". Gộp một cục thì người chơi xong một ván không thấy
+/// công của mình ở đâu — đúng cái khiến họ tưởng phần thưởng không chạy.
+class HanMucAi {
+  const HanMucAi({
+    required this.tong,
+    required this.tuGoi,
+    required this.tuGame,
+    required this.daDung,
+    required this.conLai,
+  });
+
+  final int tong;
+  final int tuGoi;
+  final int tuGame;
+  final int daDung;
+  final int conLai;
+
+  factory HanMucAi.fromJson(Map<String, dynamic> j) => HanMucAi(
+    tong: (j['tongHanMuc'] as num?)?.toInt() ?? 0,
+    tuGoi: (j['tuGoi'] as num?)?.toInt() ?? 0,
+    tuGame: (j['tuGame'] as num?)?.toInt() ?? 0,
+    daDung: (j['daDung'] as num?)?.toInt() ?? 0,
+    conLai: (j['conLai'] as num?)?.toInt() ?? 0,
+  );
+}
+
 class GoiAiRepository {
   GoiAiRepository(this._api);
   final ApiClient _api;
@@ -157,6 +186,16 @@ class GoiAiRepository {
         .toList();
   }
 
+  /// Hạn mức AI hôm nay, do MÁY CHỦ tính.
+  ///
+  /// Đừng dựng lại con số này từ danh sách gói. Bên web từng làm thế ở ba
+  /// chỗ, và bản sao ấy lệch ngay khi mini game bắt đầu thưởng lượt: máy chủ
+  /// CỘNG phần thưởng vào, giao diện không biết gì về nó. Người dùng chơi
+  /// game được 3 lượt mà huy hiệu vẫn ghi "3/3".
+  Future<HanMucAi> hanMuc(String userId) async => HanMucAi.fromJson(
+    await _api.get<Map<String, dynamic>>(Endpoints.goiHanMuc(userId)),
+  );
+
   /// Mua gói, trừ thẳng vào số dư ví.
   ///
   /// Chỉ có WALLET chứ không có PayOS: trên app, dẫn người dùng sang cổng
@@ -184,6 +223,13 @@ final goiCuaToiProvider = FutureProvider<List<LuotMuaGoi>>((ref) async {
   final u = ref.watch(authControllerProvider).user;
   if (u == null) return const [];
   return ref.watch(goiAiRepositoryProvider).cuaToi(u.id);
+});
+
+/// Hạn mức hôm nay của chính người đang đăng nhập.
+final hanMucHomNayProvider = FutureProvider<HanMucAi?>((ref) async {
+  final u = ref.watch(authControllerProvider).user;
+  if (u == null) return null;
+  return ref.watch(goiAiRepositoryProvider).hanMuc(u.id);
 });
 
 final luotDungHomNayProvider = FutureProvider<int>((ref) async {

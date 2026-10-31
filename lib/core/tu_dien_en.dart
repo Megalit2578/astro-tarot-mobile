@@ -336,6 +336,8 @@ const Map<String, String> tuDienEn = {
   'Đã đặt lịch': 'Booked',
   'Chọn gói': 'Choose a plan',
   'Gói đã mua': 'Your plan',
+  'từ gói': 'from plan',
+  'thưởng từ Game': 'bonus from Game',
   'Gói miễn phí': 'Free plan',
   'Chưa có gói nào đang bán': 'No plans on sale yet',
   'Không tải được danh sách gói. Thử lại sau.':

@@ -67,6 +67,10 @@ class Endpoints {
   static const googlePlayDoiGoi = '/api/v1/billing/google-play/redeem';
   static String goiCuaToi(String userId) =>
       '/api/admin/subscriptions/users/$userId/purchases/active';
+  /// Hạn mức AI hôm nay, đã cộng cả lượt thưởng từ mini game.
+  static String goiHanMuc(String userId) =>
+      '/api/admin/subscriptions/users/$userId/quota';
+
   static String goiLuotDung(String userId) =>
       '/api/admin/subscriptions/users/$userId/ai-usage';
 
