@@ -240,17 +240,22 @@ class _HanMucHomNay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final daDung = ref.watch(luotDungHomNayProvider).asData?.value ?? 0;
+    // Hạn mức hỏi THẲNG máy chủ. Bản trước lấy hạn mức của gói đang chạy,
+    // và con số ấy không biết gì về lượt thưởng từ mini game — chơi xong một
+    // ván được 3 lượt mà màn hình vẫn ghi con số cũ.
+    //
+    // Bản trước cũng cố ý không bịa hạn mức của gói miễn phí (nên khi chưa
+    // mua gói nào thì chỉ hiện số đã dùng, không có tổng). Giờ máy chủ trả về
+    // cả con số ấy nên hiện được đủ.
+    final hm = ref.watch(hanMucHomNayProvider).asData?.value;
     final goi = ref.watch(goiCuaToiProvider).asData?.value ?? const [];
     final dangChay = goi.where((g) => g.dangChay).toList();
 
-    // Không có gói nào đang chạy thì vẫn còn hạn mức miễn phí của hệ thống.
-    // Không bịa con số ấy ra ở đây: chỉ nói đang dùng gói miễn phí, để mình
-    // không nói một đằng mà máy chủ chặn một nẻo.
+    final daDung = hm?.daDung ?? 0;
     final ten = dangChay.isEmpty
         ? Ngu.d('Gói miễn phí')
         : dangChay.first.tenGoi;
-    final tong = dangChay.isEmpty ? null : dangChay.first.hanMucNgay;
+    final tong = hm?.tong;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -278,6 +283,15 @@ class _HanMucHomNay extends ConsumerWidget {
               ),
             ],
           ),
+          // Nói rõ phần thưởng từ game, nếu không người chơi xong một ván
+          // không thấy công của mình ở đâu trong con số tổng.
+          if (hm != null && hm.tuGame > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${hm.tuGoi} ${Ngu.d('từ gói')} + ${hm.tuGame} ${Ngu.d('thưởng từ Game')}',
+              style: const TextStyle(color: Mau.vangNhat, fontSize: 11.5),
+            ),
+          ],
           if (tong != null && tong > 0) ...[
             const SizedBox(height: 10),
             ClipRRect(
