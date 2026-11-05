@@ -123,22 +123,26 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     final tt = ref.watch(tinhTrangGopYProvider).asData?.value;
     return Scaffold(
       appBar: AppBar(title: Text(Ngu.d('Góp ý'))),
-      body: tt?.daGui == true
-          ? Center(
-              child: Padding(
-                padding: EdgeInsets.all(30),
-                child: Text(
-                  Ngu.d(
-                    'Bạn đã gửi phản hồi rồi — cảm ơn bạn đã giúp chúng tôi.',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, height: 1.6),
-                ),
-              ),
-            )
-          : ListView(
+      // Gửi rồi vẫn góp ý tiếp được.
+      //
+      // Trước đây màn này khoá hẳn: đã gửi một lần là chỉ còn một câu cảm ơn,
+      // không có form nào nữa. Nhưng một người dùng sản phẩm nhiều lần thì có
+      // nhiều điều để nói, ở những thời điểm khác nhau — khoá lại là tự bịt
+      // tai trước đúng những người dùng nhiều nhất.
+      //
+      // `daGui` giờ chỉ đổi lời chào, không chặn gì.
+      body: ListView(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
+                if (tt?.daGui == true) ...[
+                  Text(
+                    Ngu.d(
+                      'Cảm ơn bạn đã góp ý trước đó. Có thêm điều muốn nói thì cứ gửi tiếp nhé.',
+                    ),
+                    style: TextStyle(fontSize: 13, height: 1.5),
+                  ),
+                  const SizedBox(height: 18),
+                ],
                 Text(
                   Ngu.d('ASTROTAROT có giúp bạn không?'),
                   style: TextStyle(fontSize: 18),

@@ -759,11 +759,20 @@ void main() {
       expect(g.than['comment'], 'Thêm nhiều Reader');
     });
 
-    testWidgets('góp ý đã gửi rồi; gửi lỗi', (t) async {
+    testWidgets('gửi rồi vẫn góp ý tiếp được; gửi lỗi', (t) async {
+      // Trước đây màn này khoá hẳn khi đã gửi một lần: chỉ còn câu cảm ơn,
+      // không có form. Một người dùng sản phẩm nhiều lần thì có nhiều điều để
+      // nói ở những thời điểm khác nhau, nên khoá lại là tự bịt tai trước
+      // đúng những người dùng nhiều nhất.
       final m = MoiTruong(user: nguoiDung());
       m.mayChu.tra('GET /api/v1/feedback/me/status', {'submitted': true});
-      await m.dung(t, const FeedbackScreen());
-      expect(find.textContaining('Bạn đã gửi phản hồi rồi'), findsOneWidget);
+      m.mayChu.tra('POST /api/v1/feedback', null);
+      await m.dung(t, const FeedbackScreen(), quaDuong: true);
+      expect(find.textContaining('Cảm ơn bạn đã góp ý trước đó'), findsOneWidget);
+      // Quan trọng nhất: form vẫn còn và vẫn gửi được.
+      await bam(t, find.byKey(const ValueKey('o-diem-8-false')));
+      await bam(t, find.text('Gửi phản hồi'));
+      expect(m.mayChu.lanCuoi('POST /api/v1/feedback')!.than['nps'], 8);
       final m2 = MoiTruong(user: nguoiDung());
       m2.mayChu.loi('GET /api/v1/feedback/me/status', 'x');
       m2.mayChu.loi('POST /api/v1/feedback', 'Bạn đã gửi rồi');

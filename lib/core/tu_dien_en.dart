@@ -490,8 +490,8 @@ const Map<String, String> tuDienEn = {
   'Đánh giá trải nghiệm (tuỳ chọn)': 'Rate your experience (optional)',
   'Cảm ơn bạn — phản hồi đã được ghi nhận.':
       'Thank you — your feedback has been recorded.',
-  'Bạn đã gửi phản hồi rồi — cảm ơn bạn đã giúp chúng tôi.':
-      'You have already sent feedback — thank you for helping us.',
+  'Cảm ơn bạn đã góp ý trước đó. Có thêm điều muốn nói thì cứ gửi tiếp nhé.':
+      'Thanks for your earlier feedback. If there is more on your mind, send it along.',
   'Không gửi được phản hồi.': 'Could not send your feedback.',
   'Chưa có thông báo nào': 'No notifications yet',
   'Khi có người nhận lịch, nhắn tin hay thanh toán, bạn sẽ thấy ở đây.': 'When someone accepts a booking, sends a message or pays, it shows up here.',
